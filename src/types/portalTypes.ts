@@ -1,0 +1,51 @@
+export type AdminPageId = 
+  | 'dashboard'
+  | 'residents'
+  | 'guards'
+  | 'buildings'
+  | 'visitors'
+  | 'vehicles'
+  | 'incidents'
+  | 'emergency'
+  | 'amenities'
+  | 'maintenance'
+  | 'complaints'
+  | 'notices'
+  | 'billing'
+  | 'reports'
+  | 'audit'
+  | 'settings'
+  // Legacy IDs for compatibility
+  | 'manage_guards'
+  | 'manage_residents'
+  | 'view_reports'
+  | 'analytics'
+  | 'visitor_mgmt'
+  | 'incident_mgmt'
+  | 'emergency_mgmt'
+  | 'amenity_mgmt'
+  | 'maintenance_mgmt'
+  | 'billing_fees'
+  | 'audit_logs'
+  | 'community_config'
+  | 'staff_vendor';
+
+export type ResidentPageId =
+  | 'dashboard'
+  | 'paying_bills'
+  | 'approve_visitors'
+  | 'raise_complaints'
+  | 'book_amenity'
+  | 'announcements_events';
+
+export type SecurityPageId =
+  | 'dashboard'
+  | 'check_in_out'
+  | 'log_deliveries'
+  | 'delivery_mgmt'
+  | 'vehicle_mgmt'
+  | 'resident_verification'
+  | 'emergency_sos'
+  | 'incident_reporting'
+  | 'guard_shifts'
+  | 'lost_and_found';

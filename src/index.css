@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F6F3EC;
+    color: #172D25;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F6F3EC;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9DBEB2;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #627636;
+}
+
+/* Ultra-modern editorial card styling */
+.modern-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 237, 226, 0.8) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(37, 66, 56, 0.12);
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px -10px rgba(25, 49, 41, 0.08), 0 4px 6px -4px rgba(25, 49, 41, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modern-card:hover {
+  border-color: rgba(98, 118, 54, 0.35);
+  box-shadow: 0 20px 40px -15px rgba(25, 49, 41, 0.15);
+}
+
+.modern-hero-card {
+  background-color: #9DBEB2;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.4) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(37, 66, 56, 0.25) 0px, transparent 50%);
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 25px 50px -12px rgba(25, 49, 41, 0.2);
+}
+
+.modern-sidebar {
+  background: linear-gradient(180deg, #1C352C 0%, #12241D 100%);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.12);
+}
+
+.serif-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+}
+
+.glow-pill {
+  box-shadow: 0 0 15px rgba(98, 118, 54, 0.3);
+}
