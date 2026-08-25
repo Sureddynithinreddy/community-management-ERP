@@ -6,7 +6,8 @@ import {
   ShieldAlert, LogOut, Menu, X, Bell, UserPlus, PhoneCall, ChevronRight,
   TrendingUp, BarChart3, Radio, FileText, CheckCheck, RefreshCw, KeyRound,
   Lock, Eye, Shield, Users, Building2, MapPin, Truck, AlertOctagon, UserX,
-  BadgeCheck, Hammer, Sparkle, Printer, Share2, ArrowUpRight, ShieldQuestion
+  BadgeCheck, Hammer, Sparkle, Printer, Share2, ArrowUpRight, ShieldQuestion,
+  Snowflake, Scan, Compass, ShieldBan, Tag
 } from 'lucide-react';
 import { SecurityAnalytics } from './SecurityAnalytics';
 
@@ -17,7 +18,6 @@ interface SecurityPortalProps {
 type SecurityNavSection = 
   | 'dashboard'
   | 'visitors'
-  | 'checkout'
   | 'parcels'
   | 'anpr'
   | 'staff'
@@ -54,12 +54,42 @@ interface ParcelEntry {
   courier: string;
   orderNo: string;
   flat: string;
+  residentName: string;
   shelf: string;
+  category: 'Standard Parcel' | 'Cold Storage (Dairy/Food)' | 'Fragile Box' | 'Document';
   loggedTime: string;
   dwell: string;
   status: 'Awaiting Pickup' | 'Picked Up';
   pickupOtp: string;
   recipientPhone: string;
+  collectedBy?: string;
+  collectedTime?: string;
+}
+
+interface ResidentVehicle {
+  id: string;
+  plate: string;
+  model: string;
+  color: string;
+  flat: string;
+  owner: string;
+  phone: string;
+  slot: string;
+  rfidTag: string;
+  status: 'Whitelisted FastTag Active' | 'Tag Inactive';
+}
+
+interface ParkingViolation {
+  id: string;
+  plate: string;
+  vehicleModel: string;
+  flat: string;
+  location: string;
+  violation: string;
+  severity: 'Critical' | 'High' | 'Moderate';
+  status: 'Warning Issued' | 'Citation Logged' | 'Under Inspection';
+  time: string;
+  fineAmount?: string;
 }
 
 interface StaffEntry {
@@ -78,8 +108,10 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // Navigation State
   const [activeSection, setActiveSection] = useState<SecurityNavSection>('dashboard');
 
-  // Visitor Workspace Sub-Tab State
-  const [visitorSubTab, setVisitorSubTab] = useState<'checkin' | 'checkout' | 'ledger' | 'preapproved'>('ledger');
+  // Sub-Tab Navigation States
+  const [visitorSubTab, setVisitorSubTab] = useState<'ledger' | 'checkin' | 'checkout' | 'preapproved'>('ledger');
+  const [parcelSubTab, setParcelSubTab] = useState<'inventory' | 'log' | 'verify' | 'history'>('inventory');
+  const [anprSubTab, setAnprSubTab] = useState<'scanner' | 'directory' | 'violations' | 'bays'>('scanner');
 
   // Offline Sync State
   const [isOffline, setIsOffline] = useState<boolean>(false);
@@ -96,18 +128,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // Printable Visitor Badge Modal
   const [badgeVisitor, setBadgeVisitor] = useState<VisitorEntry | null>(null);
 
-  // =========================================================================
-  // 1. VISITOR CHECK-IN STATE & FORM
-  // =========================================================================
-  const [vName, setVName] = useState<string>('Rajesh Kumar');
-  const [vPhone, setVPhone] = useState<string>('98765 12099');
-  const [vFlat, setVFlat] = useState<string>('Flat B-108');
-  const [vPurpose, setVPurpose] = useState<'Delivery' | 'Guest' | 'Cab' | 'Service Tech' | 'Daily Staff'>('Delivery');
-  const [vCompany, setVCompany] = useState<string>('Blinkit 10-Min Delivery');
-  const [vOrderNo, setVOrderNo] = useState<string>('#BK-90214');
-  const [vVehicle, setVVehicle] = useState<string>('TS-08-EM-4921 (EV Bike)');
-  const [hasCameraSnapshot, setHasCameraSnapshot] = useState<boolean>(true);
-
   // Resident Lookup Map
   const residentDatabase: Record<string, { owner: string; phone: string; type: string; autoApprove: string }> = {
     'Flat B-108': { owner: 'Ananya Sharma', phone: '+91 98765 11111', type: 'Primary Owner (Tower B)', autoApprove: 'Deliveries & Cabs Auto-Approved' },
@@ -116,6 +136,17 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
     'Flat A-104': { owner: 'Pooja Hegde', phone: '+91 98123 99999', type: 'Owner (Tower A)', autoApprove: 'Pre-Approved Guests Only' },
     'Flat B-204': { owner: 'Rohan Deshmukh', phone: '+91 98990 11223', type: 'Owner (Tower B)', autoApprove: 'Manual Verification' }
   };
+
+  // =========================================================================
+  // 1. VISITOR REGISTER STATE (6 Active Entries)
+  // =========================================================================
+  const [vName, setVName] = useState<string>('Rajesh Kumar');
+  const [vPhone, setVPhone] = useState<string>('98765 12099');
+  const [vFlat, setVFlat] = useState<string>('Flat B-108');
+  const [vPurpose, setVPurpose] = useState<'Delivery' | 'Guest' | 'Cab' | 'Service Tech' | 'Daily Staff'>('Delivery');
+  const [vCompany, setVCompany] = useState<string>('Blinkit 10-Min Delivery');
+  const [vOrderNo, setVOrderNo] = useState<string>('#BK-90214');
+  const [vVehicle, setVVehicle] = useState<string>('TS-08-EM-4921 (EV Bike)');
 
   const [visitorRegister, setVisitorRegister] = useState<VisitorEntry[]>([
     { id: 'VIS-901', name: 'Rajesh Kumar', phone: '98765 12099', flat: 'Flat B-108', residentName: 'Ananya Sharma', purpose: 'Delivery', company: 'Blinkit', orderNo: '#BK-90214', vehicle: 'TS-08-EM-4921 (EV Bike)', entryTime: '11:45 AM', exitTime: '--', dwellTime: '15 mins in campus', status: 'Inside', photo: 'CAM-101.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh', badgeNo: 'BDG-901', overstay: false },
@@ -126,47 +157,99 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
     { id: 'VIS-896', name: 'Driver Alok (Uber)', phone: '98123 99999', flat: 'Flat A-104', residentName: 'Pooja Hegde', purpose: 'Cab', vehicle: 'KA-01-PH-7711 (White Dzire)', entryTime: '11:20 AM', exitTime: '11:32 AM', dwellTime: '12 Mins (Departed)', status: 'Departed', photo: 'CAM-090.jpg', gate: 'Gate 2 Rear', guardName: 'Guard Ramu', badgeNo: 'BDG-896', overstay: false },
   ]);
 
-  // Visitor Filter & Search
+  // Visitor Filters
   const [visitorFilterTab, setVisitorFilterTab] = useState<'all' | 'inside' | 'departed'>('inside');
   const [visitorSearch, setVisitorSearch] = useState<string>('');
-
-  // Exit Search
   const [exitSearchQuery, setExitSearchQuery] = useState<string>('');
 
   // =========================================================================
-  // 2. PARCEL LOCKER REGISTER STATE (5 Parcels)
+  // 2. PARCEL & DELIVERY LOCKER STATE
   // =========================================================================
   const [delCompany, setDelCompany] = useState<string>('Amazon Courier');
   const [delFlat, setDelFlat] = useState<string>('Flat B-108');
   const [delOrderNo, setDelOrderNo] = useState<string>('#AZ-9021');
   const [delShelf, setDelShelf] = useState<string>('Shelf B-4');
+  const [delCategory, setDelCategory] = useState<'Standard Parcel' | 'Cold Storage (Dairy/Food)' | 'Fragile Box' | 'Document'>('Standard Parcel');
   const [delPhone, setDelPhone] = useState<string>('98765 11111');
+  const [parcelVerifyOtp, setParcelVerifyOtp] = useState<string>('');
+  const [parcelVerifyResult, setParcelVerifyResult] = useState<string | null>(null);
 
   const [deliveryParcels, setDeliveryParcels] = useState<ParcelEntry[]>([
-    { id: 'PAR-101', courier: 'Amazon Courier', orderNo: '#AZ-9021', flat: 'Flat B-108', shelf: 'Shelf B-4', loggedTime: '11:20 AM', dwell: '1.2 Hours', status: 'Awaiting Pickup', pickupOtp: '4091', recipientPhone: '98765 11111' },
-    { id: 'PAR-102', courier: 'Swiggy InstaMart', orderNo: '#SW-4912', flat: 'Flat B-108', shelf: 'Cold Storage Locker #02', loggedTime: '11:32 AM', dwell: '45 Mins', status: 'Awaiting Pickup', pickupOtp: '8821', recipientPhone: '98765 11111' },
-    { id: 'PAR-103', courier: 'Zomato Food', orderNo: '#ZM-8812', flat: 'Flat A-402', shelf: 'Shelf A-1 (Hot Food)', loggedTime: '12:01 PM', dwell: '20 Mins', status: 'Awaiting Pickup', pickupOtp: '3312', recipientPhone: '98765 22334' },
-    { id: 'PAR-104', courier: 'Flipkart Logistics', orderNo: '#FK-1102', flat: 'Flat A-104', shelf: 'Shelf A-2', loggedTime: '09:45 AM', dwell: '3.1 Hours', status: 'Awaiting Pickup', pickupOtp: '1904', recipientPhone: '98123 44556' },
-    { id: 'PAR-099', courier: 'Blinkit Instant', orderNo: '#BK-5541', flat: 'Flat B-204', shelf: 'Shelf B-1', loggedTime: '08:15 AM', dwell: 'Picked Up', status: 'Picked Up', pickupOtp: '7721', recipientPhone: '98990 11223' },
+    { id: 'PAR-101', courier: 'Amazon Courier', orderNo: '#AZ-9021', flat: 'Flat B-108', residentName: 'Ananya Sharma', shelf: 'Shelf B-4', category: 'Standard Parcel', loggedTime: '11:20 AM', dwell: '1.2 Hours', status: 'Awaiting Pickup', pickupOtp: '4091', recipientPhone: '98765 11111' },
+    { id: 'PAR-102', courier: 'Swiggy InstaMart', orderNo: '#SW-4912', flat: 'Flat B-108', residentName: 'Ananya Sharma', shelf: 'Cold Storage Locker #02', category: 'Cold Storage (Dairy/Food)', loggedTime: '11:32 AM', dwell: '45 Mins', status: 'Awaiting Pickup', pickupOtp: '8821', recipientPhone: '98765 11111' },
+    { id: 'PAR-103', courier: 'Zomato Food', orderNo: '#ZM-8812', flat: 'Flat A-402', residentName: 'Rajesh Mehta', shelf: 'Shelf A-1', category: 'Standard Parcel', loggedTime: '12:01 PM', dwell: '20 Mins', status: 'Awaiting Pickup', pickupOtp: '3312', recipientPhone: '98765 12345' },
+    { id: 'PAR-104', courier: 'Flipkart Logistics', orderNo: '#FK-1102', flat: 'Flat A-104', residentName: 'Pooja Hegde', shelf: 'Shelf A-2', category: 'Standard Parcel', loggedTime: '09:45 AM', dwell: '3.1 Hours', status: 'Awaiting Pickup', pickupOtp: '1904', recipientPhone: '98123 99999' },
+    { id: 'PAR-099', courier: 'Blinkit Instant', orderNo: '#BK-5541', flat: 'Flat B-204', residentName: 'Rohan Deshmukh', shelf: 'Shelf B-1', category: 'Standard Parcel', loggedTime: '08:15 AM', dwell: 'Picked Up', status: 'Picked Up', pickupOtp: '7721', recipientPhone: '98990 11223', collectedBy: 'Rohan Deshmukh', collectedTime: '09:30 AM' },
+    { id: 'PAR-098', courier: 'BlueDart Air', orderNo: '#BD-1092', flat: 'Flat C-301', residentName: 'Suresh Menon', shelf: 'Shelf A-3', category: 'Document', loggedTime: 'Yesterday', dwell: 'Picked Up', status: 'Picked Up', pickupOtp: '5512', recipientPhone: '98901 22334', collectedBy: 'Suresh Menon', collectedTime: 'Yesterday 06:10 PM' },
   ]);
 
+  // Visual Shelf Racks
+  const shelfRacks = [
+    { id: 'Shelf B-1', tower: 'Tower B', status: 'Available' },
+    { id: 'Shelf B-2', tower: 'Tower B', status: 'Available' },
+    { id: 'Shelf B-3', tower: 'Tower B', status: 'Available' },
+    { id: 'Shelf B-4', tower: 'Tower B', status: 'Occupied', parcelId: 'PAR-101', flat: 'Flat B-108' },
+    { id: 'Shelf B-5', tower: 'Tower B', status: 'Available' },
+    { id: 'Shelf B-6', tower: 'Tower B', status: 'Available' },
+    { id: 'Shelf A-1', tower: 'Tower A', status: 'Occupied', parcelId: 'PAR-103', flat: 'Flat A-402' },
+    { id: 'Shelf A-2', tower: 'Tower A', status: 'Occupied', parcelId: 'PAR-104', flat: 'Flat A-104' },
+    { id: 'Shelf A-3', tower: 'Tower A', status: 'Available' },
+    { id: 'Shelf A-4', tower: 'Tower A', status: 'Available' },
+    { id: 'Cold Storage Locker #01', tower: 'Refrigerated', status: 'Available' },
+    { id: 'Cold Storage Locker #02', tower: 'Refrigerated', status: 'Occupied', parcelId: 'PAR-102', flat: 'Flat B-108' },
+  ];
+
   // =========================================================================
-  // 3. ANPR LICENSE PLATE & VEHICLE TRACKER
+  // 3. VEHICLE, ANPR & PARKING MANAGEMENT STATE
   // =========================================================================
   const [plateQuery, setPlateQuery] = useState<string>('KA-03-MB-4921');
-  const [searchedPlateInfo, setSearchedPlateInfo] = useState<{ plate: string; owner: string; flat: string; slot: string; type: string; status: string } | null>({
+  const [cameraStreamActive, setCameraStreamActive] = useState<boolean>(true);
+  const [simulatedScanResult, setSimulatedScanResult] = useState<{
+    plate: string;
+    confidence: string;
+    status: 'Whitelisted Resident' | 'Visitor Pass' | 'Unregistered';
+    owner: string;
+    flat: string;
+    slot: string;
+    rfidTag: string;
+    barrierAction: string;
+  } | null>({
     plate: 'KA-03-MB-4921',
+    confidence: '99.4% OCR Match',
+    status: 'Whitelisted Resident',
     owner: 'Ananya Sharma',
     flat: 'Flat B-108 (Tower B)',
     slot: 'Basement 1 - Slot B-42',
-    type: 'Resident Honda City Sedan',
-    status: 'Whitelisted FastTag RFID Active ✓'
+    rfidTag: 'RFID-ANPR-8921-ACTIVE',
+    barrierAction: 'Automatic Barrier Lift Allowed ✓'
   });
 
-  const [flaggedVehicles, setFlaggedVehicles] = useState([
-    { plate: 'MH-12-PQ-9988', flat: 'Flat B-102 Visitor', violation: 'Parked blocking Tower B Basement Ramp', severity: 'Critical', status: 'Warning Issued', time: '10:15 AM' },
-    { plate: 'KA-05-AB-1234', flat: 'Flat C-301 Guest', violation: 'Overstayed visitor parking limit (6+ Hours)', severity: 'Moderate', status: 'Citation Logged', time: '09:40 AM' },
-    { plate: 'KA-01-XY-9999', flat: 'Unauthorized Vehicle', violation: 'Entered without ANPR plate registration', severity: 'High', status: 'Under Inspection', time: '08:20 AM' },
+  const [residentVehiclesList, setResidentVehiclesList] = useState<ResidentVehicle[]>([
+    { id: 'VEH-01', plate: 'KA-03-MB-4921', model: 'Honda City Sedan', color: 'White', flat: 'Flat B-108', owner: 'Ananya Sharma', phone: '+91 98765 11111', slot: 'Basement 1 - Slot B-42', rfidTag: 'RFID-ANPR-8921-ACTIVE', status: 'Whitelisted FastTag Active' },
+    { id: 'VEH-02', plate: 'KA-05-MA-1234', model: 'Hyundai Creta SUV', color: 'Silver', flat: 'Flat A-402', owner: 'Rajesh Mehta', phone: '+91 98765 12345', slot: 'Basement 1 - Slot A-12', rfidTag: 'RFID-ANPR-4412-ACTIVE', status: 'Whitelisted FastTag Active' },
+    { id: 'VEH-03', plate: 'TS-09-GA-1002', model: 'Maruti Brezza', color: 'Red', flat: 'Flat C-301', owner: 'Suresh Menon', phone: '+91 98901 22334', slot: 'Basement 2 - Slot C-08', rfidTag: 'RFID-ANPR-3319-ACTIVE', status: 'Whitelisted FastTag Active' },
+    { id: 'VEH-04', plate: 'KA-01-PH-7711', model: 'Kia Seltos', color: 'Black', flat: 'Flat A-104', owner: 'Pooja Hegde', phone: '+91 98123 99999', slot: 'Basement 1 - Slot A-04', rfidTag: 'RFID-ANPR-7711-ACTIVE', status: 'Whitelisted FastTag Active' },
+    { id: 'VEH-05', plate: 'TS-07-EX-8899', model: 'Ather 450X (2-Wheeler)', color: 'Grey', flat: 'Flat B-108', owner: 'Rahul Sharma', phone: '+91 98765 22222', slot: '2W Bay B-14', rfidTag: 'RFID-2W-8899-ACTIVE', status: 'Whitelisted FastTag Active' },
+  ]);
+
+  const [vehicleSearchQuery, setVehicleSearchQuery] = useState<string>('');
+
+  const [parkingViolationsList, setParkingViolationsList] = useState<ParkingViolation[]>([
+    { id: 'VIO-8921', plate: 'MH-12-PQ-9988', vehicleModel: 'Toyota Innova (Visitor)', flat: 'Flat B-102 Visitor', location: 'Tower B Basement Entry Ramp', violation: 'Parked blocking basement access ramp', severity: 'Critical', status: 'Warning Issued', time: '10:15 AM', fineAmount: '₹ 500' },
+    { id: 'VIO-8810', plate: 'KA-05-AB-1234', vehicleModel: 'Maruti Swift (Guest)', flat: 'Flat C-301 Guest', location: 'Visitor Parking Bay V-03', violation: 'Overstayed visitor parking limit (6+ Hours)', severity: 'Moderate', status: 'Citation Logged', time: '09:40 AM', fineAmount: '₹ 200' },
+    { id: 'VIO-8742', plate: 'KA-01-XY-9999', vehicleModel: 'Unknown White Sedan', flat: 'Unauthorized Vehicle', location: 'Clubhouse Fire Lane', violation: 'Parked in designated Fire Engine emergency lane', severity: 'Critical', status: 'Under Inspection', time: '08:20 AM', fineAmount: '₹ 1,000' },
+  ]);
+
+  // Visitor Parking Bays (V-01 to V-10)
+  const [visitorBays, setVisitorBays] = useState([
+    { id: 'V-01', plate: 'TS-08-EM-4921', visitor: 'Rajesh Kumar (Blinkit)', flat: 'Flat B-108', dwell: '15 Mins', status: 'Occupied' },
+    { id: 'V-02', plate: 'KA-05-MA-1234', visitor: 'Siddharth Verma', flat: 'Flat B-108', dwell: '1.5 Hours', status: 'Occupied' },
+    { id: 'V-03', plate: 'KA-05-AB-1234', visitor: 'Guest Car', flat: 'Flat C-301', dwell: '6.2 Hours (Overstay!)', status: 'Overstay' },
+    { id: 'V-04', plate: '--', visitor: '--', flat: '--', dwell: '--', status: 'Available' },
+    { id: 'V-05', plate: '--', visitor: '--', flat: '--', dwell: '--', status: 'Available' },
+    { id: 'V-06', plate: '--', visitor: '--', flat: '--', dwell: '--', status: 'Available' },
+    { id: 'V-07', plate: '--', visitor: '--', flat: '--', dwell: '--', status: 'Available' },
+    { id: 'V-08', plate: '--', visitor: '--', flat: '--', dwell: '--', status: 'Available' },
   ]);
 
   // =========================================================================
@@ -266,48 +349,87 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
     const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const newId = `PAR-${Math.floor(100 + Math.random() * 100)}`;
+    const residentInfo = residentDatabase[delFlat] || { owner: 'Resident', phone: delPhone };
+
     const newParcel: ParcelEntry = {
       id: newId,
       courier: delCompany,
       orderNo: delOrderNo,
       flat: delFlat,
+      residentName: residentInfo.owner,
       shelf: delShelf,
+      category: delCategory,
       loggedTime: 'Just Now',
       dwell: '0 Mins',
       status: 'Awaiting Pickup',
       pickupOtp: randomOtp,
-      recipientPhone: delPhone
+      recipientPhone: delPhone || residentInfo.phone
     };
 
     setDeliveryParcels([newParcel, ...deliveryParcels]);
     setShowParcelModal(false);
-    alert(`PARCEL STORED AT ${delShelf} (${newId}) ✓\nPickup Passcode OTP: ${randomOtp} dispatched to ${delFlat} resident!`);
+    setParcelSubTab('inventory');
+    alert(`PARCEL STORED AT ${delShelf} (${newId}) ✓\nPickup Passcode OTP: ${randomOtp} dispatched to ${delFlat} (${residentInfo.owner})!`);
   };
 
   const handleVerifyParcelPickup = (id: string) => {
-    setDeliveryParcels(prev => prev.map(p => p.id === id ? { ...p, status: 'Picked Up', dwell: 'Picked Up Just Now' } : p));
+    setDeliveryParcels(prev => prev.map(p => p.id === id ? { 
+      ...p, 
+      status: 'Picked Up', 
+      dwell: 'Collected Just Now',
+      collectedBy: p.residentName,
+      collectedTime: 'Just Now'
+    } : p));
     alert(`PARCEL HANDED OVER ✓\nMarked as collected by resident.`);
+  };
+
+  const handleVerifyParcelWithOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    const matched = deliveryParcels.find(p => p.pickupOtp === parcelVerifyOtp && p.status === 'Awaiting Pickup');
+    if (matched) {
+      handleVerifyParcelPickup(matched.id);
+      setParcelVerifyResult(`MATCH SUCCESS ✓: Handed over ${matched.courier} (${matched.orderNo}) to ${matched.residentName} (${matched.flat}) at ${matched.shelf}`);
+      setParcelVerifyOtp('');
+    } else {
+      setParcelVerifyResult('ERROR ❌: Invalid Pickup OTP or parcel already collected.');
+    }
   };
 
   const handlePlateSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (plateQuery.toUpperCase().includes('KA-03-MB-4921') || plateQuery.toUpperCase().includes('4921')) {
-      setSearchedPlateInfo({
+    const cleanQuery = plateQuery.toUpperCase().replace(/\s+/g, '');
+    if (cleanQuery.includes('4921') || cleanQuery.includes('KA-03-MB-4921') || cleanQuery.includes('KA03MB4921')) {
+      setSimulatedScanResult({
         plate: 'KA-03-MB-4921',
+        confidence: '99.4% OCR Match',
+        status: 'Whitelisted Resident',
         owner: 'Ananya Sharma',
         flat: 'Flat B-108 (Tower B)',
         slot: 'Basement 1 - Slot B-42',
-        type: 'Resident Honda City Sedan (White)',
-        status: 'Whitelisted FastTag RFID Active ✓'
+        rfidTag: 'RFID-ANPR-8921-ACTIVE',
+        barrierAction: 'Automatic Barrier Lift Allowed ✓'
+      });
+    } else if (cleanQuery.includes('1234') || cleanQuery.includes('KA-05-MA-1234')) {
+      setSimulatedScanResult({
+        plate: 'KA-05-MA-1234',
+        confidence: '98.8% OCR Match',
+        status: 'Whitelisted Resident',
+        owner: 'Rajesh Mehta',
+        flat: 'Flat A-402 (Tower A)',
+        slot: 'Basement 1 - Slot A-12',
+        rfidTag: 'RFID-ANPR-4412-ACTIVE',
+        barrierAction: 'Automatic Barrier Lift Allowed ✓'
       });
     } else {
-      setSearchedPlateInfo({
+      setSimulatedScanResult({
         plate: plateQuery.toUpperCase(),
-        owner: 'Visitor / Unregistered Vehicle',
-        flat: 'Not Associated to Any Resident',
-        slot: 'Temporary Visitor Parking Bay V-04',
-        type: 'Visitor Entry',
-        status: 'Non-Resident • Guard Gate Pass Required'
+        confidence: '95.2% OCR Match',
+        status: 'Visitor Pass',
+        owner: 'Visitor / Unregistered',
+        flat: 'Not Whitelisted in System',
+        slot: 'Allocate Visitor Bay (V-04)',
+        rfidTag: 'No Active FastTag Tag',
+        barrierAction: 'Guard Check-In Verification Required ⚠️'
       });
     }
   };
@@ -349,7 +471,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
     { id: 'dashboard', label: 'Security Command Dashboard', icon: LayoutDashboard },
     { id: 'visitors', label: 'Check-In / Out Visitors', icon: ShieldCheck, badge: `${insideCount} Inside`, badgeColor: 'bg-emerald-100 text-emerald-800 font-bold' },
     { id: 'parcels', label: 'Gate Shelf Parcel Lockers', icon: Package, badge: `${awaitingParcelsCount} Awaiting`, badgeColor: 'bg-amber-100 text-amber-900 font-bold' },
-    { id: 'anpr', label: 'ANPR AI Plate & Parking', icon: Car },
+    { id: 'anpr', label: 'ANPR AI Plate & Parking', icon: Car, badge: `${parkingViolationsList.length} Flagged`, badgeColor: 'bg-rose-100 text-rose-800 font-bold' },
     { id: 'staff', label: 'Daily Staff & Attendance', icon: Users, badge: `${staffInsideCount} Active`, badgeColor: 'bg-blue-100 text-blue-800 font-bold' },
     { id: 'sos', label: 'Emergency SOS Alarm Console', icon: Flame, badge: emergencyAlertActive ? '🚨 SIREN' : undefined, badgeColor: 'bg-red-600 text-white animate-pulse' },
     { id: 'incidents', label: 'Incident Occurrence Book', icon: FileText },
@@ -493,13 +615,13 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
             <button
               onClick={() => {
-                setActiveSection('visitors');
-                setVisitorSubTab('checkout');
+                setActiveSection('parcels');
+                setParcelSubTab('log');
               }}
               className="w-full p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl flex items-center justify-center gap-2 border border-slate-200 transition-transform active:scale-95 cursor-pointer"
             >
-              <LogOut className="w-4 h-4 text-slate-600" />
-              <span>Fast Exit / Check-Out</span>
+              <Package className="w-4 h-4 text-indigo-600" />
+              <span>+ Store Gate Parcel</span>
             </button>
           </div>
 
@@ -592,7 +714,10 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                   </button>
 
                   <button
-                    onClick={() => setShowParcelModal(true)}
+                    onClick={() => {
+                      setActiveSection('parcels');
+                      setParcelSubTab('log');
+                    }}
                     className="px-5 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
                   >
                     <Package className="w-4 h-4 text-indigo-600" />
@@ -639,7 +764,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                   </div>
                   <div>
                     <div className="text-xs font-medium text-slate-500">Flagged Vehicles</div>
-                    <div className="text-2xl font-black text-rose-600">{flaggedVehicles.length} Flagged</div>
+                    <div className="text-2xl font-black text-rose-600">{parkingViolationsList.length} Flagged</div>
                   </div>
                 </div>
               </div>
@@ -720,7 +845,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 2. UPGRADED: VISITOR CHECK-IN & CHECK-OUT WORKSPACE */}
+          {/* 2. VISITOR CHECK-IN & CHECK-OUT WORKSPACE */}
           {/* ========================================================================= */}
           {activeSection === 'visitors' && (
             <div className="space-y-6">
@@ -777,9 +902,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                 </div>
               </div>
 
-              {/* ========================================================================= */}
               {/* SUB-TAB 1: LIVE IN-CAMPUS VISITORS LEDGER */}
-              {/* ========================================================================= */}
               {visitorSubTab === 'ledger' && (
                 <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
@@ -884,9 +1007,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                 </div>
               )}
 
-              {/* ========================================================================= */}
               {/* SUB-TAB 2: NEW ENTRY CHECK-IN FORM */}
-              {/* ========================================================================= */}
               {visitorSubTab === 'checkin' && (
                 <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -901,7 +1022,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
                   <form onSubmit={handleCheckInVisitor} className="space-y-6 text-xs">
                     
-                    {/* Category Selector */}
                     <div className="space-y-2">
                       <label className="font-bold text-slate-700 block">1. Select Visitor Category:</label>
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -951,7 +1071,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                       </div>
                     </div>
 
-                    {/* Destination Flat & Resident Preview */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="font-bold text-slate-700 block">4. Destination Flat Number</label>
@@ -968,7 +1087,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                         </select>
                       </div>
 
-                      {/* Resident Info Preview Box */}
                       <div className="p-3.5 bg-indigo-50/60 border border-indigo-200 rounded-2xl space-y-1">
                         <div className="flex justify-between items-center text-xs">
                           <span className="font-bold text-slate-900">{residentDatabase[vFlat]?.owner}</span>
@@ -1003,20 +1121,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                       </div>
                     </div>
 
-                    {/* Camera Snapshot Toggle */}
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Camera className="w-5 h-5 text-indigo-600" />
-                        <div>
-                          <div className="font-bold text-xs text-slate-900">Gate AI Camera Snapshot Capture</div>
-                          <div className="text-[11px] text-slate-500">Live facial photo capture attached to visitor gate badge.</div>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
-                        ✓ Snapshot Ready (CAM-101.jpg)
-                      </span>
-                    </div>
-
                     <button
                       type="submit"
                       className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
@@ -1029,9 +1133,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                 </div>
               )}
 
-              {/* ========================================================================= */}
               {/* SUB-TAB 3: FAST EXIT / CHECK-OUT SCANNER */}
-              {/* ========================================================================= */}
               {visitorSubTab === 'checkout' && (
                 <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
                   <div>
@@ -1084,9 +1186,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                 </div>
               )}
 
-              {/* ========================================================================= */}
               {/* SUB-TAB 4: PRE-APPROVED FAST PASS SCANNER */}
-              {/* ========================================================================= */}
               {visitorSubTab === 'preapproved' && (
                 <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
                   <div>
@@ -1129,128 +1229,670 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 3. GATE SHELF PARCEL LOCKERS */}
+          {/* 3. UPGRADED: GATE SHELF PARCEL & DELIVERY MANAGEMENT */}
+          {/* ========================================================================= */}
           {activeSection === 'parcels' && (
             <div className="space-y-6">
+              
+              {/* Top Hero Banner */}
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                     <Package className="w-8 h-8" />
                   </div>
                   <div>
-                    <h2 className="font-black text-2xl text-slate-900">Gate Shelf Parcel Lockers</h2>
-                    <p className="text-xs text-slate-500 mt-1">Secure parcel storage for deliveries left at gate when residents are away</p>
+                    <h2 className="font-black text-2xl text-slate-900">Delivery & Parcel Locker Management</h2>
+                    <p className="text-xs text-slate-500 mt-1">Smart gate locker shelf storage, cold storage for dairy/groceries, and OTP pickup authentication</p>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setShowParcelModal(true)}
-                  className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
-                >
-                  + Store New Parcel
-                </button>
+                {/* Sub-Tabs */}
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl text-xs font-bold gap-1 self-stretch sm:self-center">
+                  <button
+                    onClick={() => setParcelSubTab('inventory')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      parcelSubTab === 'inventory' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📦 Shelf Inventory ({awaitingParcelsCount})
+                  </button>
+
+                  <button
+                    onClick={() => setParcelSubTab('log')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      parcelSubTab === 'log' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ➕ Store Inbound Parcel
+                  </button>
+
+                  <button
+                    onClick={() => setParcelSubTab('verify')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      parcelSubTab === 'verify' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🔑 Handover OTP Verify
+                  </button>
+
+                  <button
+                    onClick={() => setParcelSubTab('history')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      parcelSubTab === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📜 History Log
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {deliveryParcels.map(p => (
-                  <div key={p.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-black text-base text-slate-900">{p.courier} ({p.orderNo})</div>
-                        <div className="text-xs text-slate-500 mt-0.5">Target: <strong className="text-indigo-600 font-bold">{p.flat}</strong> • Phone: {p.recipientPhone}</div>
-                      </div>
-                      <span className={`px-2.5 py-1 rounded-full font-bold text-xs ${
-                        p.status === 'Awaiting Pickup' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {p.status}
-                      </span>
-                    </div>
+              {/* 4 Metric Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Awaiting Pickup</span>
+                  <span className="text-2xl font-black text-slate-900">{awaitingParcelsCount} Parcels</span>
+                </div>
 
-                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Assigned Shelf Location</span>
-                        <span className="font-bold text-slate-900">{p.shelf}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Pickup OTP Passcode</span>
-                        <span className="font-mono font-black text-sm text-indigo-600">OTP {p.pickupOtp}</span>
-                      </div>
-                    </div>
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Cold Storage Lockers</span>
+                  <span className="text-2xl font-black text-cyan-600">1 Occupied (4 Total)</span>
+                </div>
 
-                    {p.status === 'Awaiting Pickup' && (
-                      <button
-                        onClick={() => handleVerifyParcelPickup(p.id)}
-                        className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
-                      >
-                        Verify Pickup & Handover
-                      </button>
-                    )}
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Today's Inbound Deliveries</span>
+                  <span className="text-2xl font-black text-slate-900">14 Received</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Average Dwell Time</span>
+                  <span className="text-2xl font-black text-indigo-600">1.4 Hours</span>
+                </div>
+              </div>
+
+              {/* SUB-TAB 1: SHELF INVENTORY & VISUAL LOCKER RACK */}
+              {parcelSubTab === 'inventory' && (
+                <div className="space-y-6 animate-fade-in">
+                  
+                  {/* Visual Shelf Rack Matrix */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                    <span className="font-extrabold text-base text-slate-900 block">Gate Shelf Locker Rack Matrix</span>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 text-xs">
+                      {shelfRacks.map(shelf => (
+                        <div
+                          key={shelf.id}
+                          className={`p-4 rounded-2xl border flex flex-col justify-between transition-all ${
+                            shelf.status === 'Occupied'
+                              ? shelf.tower === 'Refrigerated' ? 'bg-cyan-50 border-cyan-300 text-cyan-950' : 'bg-amber-50 border-amber-300 text-amber-950 shadow-xs'
+                              : 'bg-slate-50 border-slate-200 text-slate-600'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-xs">{shelf.id}</span>
+                              {shelf.tower === 'Refrigerated' && <Snowflake className="w-3.5 h-3.5 text-cyan-600" />}
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">{shelf.tower}</div>
+                          </div>
+
+                          <div className="mt-3 pt-2 border-t border-slate-200/60">
+                            {shelf.status === 'Occupied' ? (
+                              <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded block text-center">
+                                {shelf.flat}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-slate-400 block text-center">
+                                Empty
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Active Shelf Packages Table */}
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                      <div>
+                        <h3 className="font-extrabold text-base text-slate-900">Active Gate Shelf Packages ({awaitingParcelsCount})</h3>
+                        <p className="text-xs text-slate-500">Packages stored awaiting resident pickup with OTP authentication</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {deliveryParcels.filter(p => p.status === 'Awaiting Pickup').map(p => (
+                        <div key={p.id} className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-black text-base text-slate-900">{p.courier} ({p.orderNo})</div>
+                              <div className="text-xs text-slate-500 mt-0.5">Target: <strong className="text-indigo-600 font-bold">{p.flat} ({p.residentName})</strong></div>
+                              <div className="text-[11px] text-slate-400 font-mono">Mobile: {p.recipientPhone}</div>
+                            </div>
+                            <span className="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full font-bold text-[10px]">
+                              {p.dwell}
+                            </span>
+                          </div>
+
+                          <div className="p-3 bg-white rounded-2xl border border-slate-200 flex justify-between items-center text-xs">
+                            <div>
+                              <span className="text-[10px] text-slate-400 uppercase font-bold block">Assigned Shelf</span>
+                              <span className="font-bold text-slate-900">{p.shelf}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] text-slate-400 uppercase font-bold block">Pickup Passcode</span>
+                              <span className="font-mono font-black text-sm text-indigo-600">OTP {p.pickupOtp}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleVerifyParcelPickup(p.id)}
+                              className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs"
+                            >
+                              Verify Handover
+                            </button>
+                            <button
+                              onClick={() => alert(`Resent Pickup Passcode OTP ${p.pickupOtp} via SMS to ${p.recipientPhone}!`)}
+                              className="p-3 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl cursor-pointer"
+                              title="Resend SMS"
+                            >
+                              <PhoneCall className="w-4 h-4 text-indigo-600" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* SUB-TAB 2: STORE INBOUND PARCEL FORM */}
+              {parcelSubTab === 'log' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900">Store Inbound Parcel at Gate Shelf</h3>
+                      <p className="text-xs text-slate-500">Record package details, assign locker shelf, and auto-dispatch OTP passcode to resident</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleLogParcel} className="space-y-6 text-xs">
+                    
+                    <div className="space-y-2">
+                      <label className="font-bold text-slate-700 block">1. Select Courier Service Provider:</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                        {['Amazon Courier', 'Flipkart Logistics', 'Blinkit Instant', 'Swiggy InstaMart', 'Zomato Food', 'BlueDart Express'].map(cr => (
+                          <button
+                            type="button"
+                            key={cr}
+                            onClick={() => setDelCompany(cr)}
+                            className={`p-3 rounded-xl border font-bold text-center cursor-pointer transition-all ${
+                              delCompany === cr ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {cr}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">2. Target Destination Flat</label>
+                        <select
+                          value={delFlat}
+                          onChange={(e) => setDelFlat(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold focus:outline-none"
+                        >
+                          <option value="Flat B-108">Flat B-108 (Ananya Sharma - Tower B)</option>
+                          <option value="Flat A-402">Flat A-402 (Rajesh Mehta - Tower A)</option>
+                          <option value="Flat C-301">Flat C-301 (Suresh Menon - Tower C)</option>
+                          <option value="Flat A-104">Flat A-104 (Pooja Hegde - Tower A)</option>
+                          <option value="Flat B-204">Flat B-204 (Rohan Deshmukh - Tower B)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">3. Tracking / Order Number</label>
+                        <input
+                          type="text"
+                          required
+                          value={delOrderNo}
+                          onChange={(e) => setDelOrderNo(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-mono font-medium focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">4. Locker Shelf Slot Assignment</label>
+                        <select
+                          value={delShelf}
+                          onChange={(e) => setDelShelf(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold focus:outline-none"
+                        >
+                          <option value="Shelf B-4">Shelf B-4 (Tower B Rack)</option>
+                          <option value="Shelf B-1">Shelf B-1</option>
+                          <option value="Shelf B-2">Shelf B-2</option>
+                          <option value="Shelf A-1">Shelf A-1 (Tower A Rack)</option>
+                          <option value="Cold Storage Locker #02">Cold Storage Locker #02 (Refrigerated)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">5. Package Category</label>
+                        <select
+                          value={delCategory}
+                          onChange={(e) => setDelCategory(e.target.value as any)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-medium focus:outline-none"
+                        >
+                          <option value="Standard Parcel">Standard E-Commerce Parcel</option>
+                          <option value="Cold Storage (Dairy/Food)">Cold Storage (Dairy, Milk, Ice Cream)</option>
+                          <option value="Fragile Box">Fragile Electronics Box</option>
+                          <option value="Document">Important Legal Document</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Package className="w-4 h-4" />
+                      <span>Assign Shelf & Dispatch Resident Pickup Passcode</span>
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* SUB-TAB 3: HANDOVER OTP VERIFICATION */}
+              {parcelSubTab === 'verify' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div>
+                    <h3 className="font-black text-lg text-slate-900">Verify Resident Pickup OTP & Release Package</h3>
+                    <p className="text-xs text-slate-500">Ask the resident for their 4-digit pickup passcode to release the stored package</p>
+                  </div>
+
+                  <form onSubmit={handleVerifyParcelWithOtp} className="space-y-4 max-w-md">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1 text-xs">Enter 4-Digit Pickup Passcode:</label>
+                      <input
+                        type="text"
+                        required
+                        maxLength={4}
+                        placeholder="e.g. 4091 or 8821"
+                        value={parcelVerifyOtp}
+                        onChange={(e) => setParcelVerifyOtp(e.target.value)}
+                        className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-mono text-center text-3xl font-black tracking-widest focus:outline-none focus:border-slate-900"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-lg cursor-pointer"
+                    >
+                      Authenticate & Release Parcel
+                    </button>
+                  </form>
+
+                  {parcelVerifyResult && (
+                    <div className={`p-5 rounded-2xl border text-xs font-bold ${
+                      parcelVerifyResult.includes('MATCH SUCCESS') ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'
+                    }`}>
+                      {parcelVerifyResult}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SUB-TAB 4: HANDOVER HISTORY & AUDIT LOG */}
+              {parcelSubTab === 'history' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 animate-fade-in">
+                  <span className="font-extrabold text-base text-slate-900 block">Delivered Parcels & Handover Audit History</span>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                          <th className="py-3">Courier & Tracking</th>
+                          <th className="py-3">Flat & Resident</th>
+                          <th className="py-3">Shelf</th>
+                          <th className="py-3">Stored Time</th>
+                          <th className="py-3">Collected Time</th>
+                          <th className="py-3 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {deliveryParcels.map(p => (
+                          <tr key={p.id} className="hover:bg-slate-50">
+                            <td className="py-3.5 font-bold text-slate-900">
+                              <div>{p.courier}</div>
+                              <div className="text-[11px] text-slate-400 font-mono">{p.orderNo}</div>
+                            </td>
+                            <td className="py-3.5 font-bold text-indigo-600">{p.flat} ({p.residentName})</td>
+                            <td className="py-3.5 font-medium text-slate-700">{p.shelf}</td>
+                            <td className="py-3.5 text-slate-500">{p.loggedTime}</td>
+                            <td className="py-3.5 text-slate-600">{p.collectedTime || '--'}</td>
+                            <td className="py-3.5 text-right">
+                              <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                p.status === 'Picked Up' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                              }`}>
+                                {p.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 4. ANPR AI CAMERA & VEHICLE SCANNER */}
+          {/* 4. UPGRADED: VEHICLE, ANPR & PARKING MANAGEMENT */}
           {activeSection === 'anpr' && (
             <div className="space-y-6">
               
-              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-                <span className="font-black text-xl text-slate-900 block">ANPR AI Camera & Plate OCR Scanner</span>
-                
-                <form onSubmit={handlePlateSearch} className="flex gap-3">
-                  <input
-                    type="text"
-                    placeholder="Enter License Plate Number (e.g. KA-03-MB-4921)..."
-                    value={plateQuery}
-                    onChange={(e) => setPlateQuery(e.target.value)}
-                    className="flex-1 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-mono font-bold uppercase focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="px-6 py-3.5 bg-slate-900 text-white font-bold rounded-2xl text-xs cursor-pointer"
-                  >
-                    Scan / Lookup Plate
-                  </button>
-                </form>
-
-                {searchedPlateInfo && (
-                  <div className="p-6 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-3 animate-fade-in">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-mono font-black text-2xl text-slate-900">{searchedPlateInfo.plate}</div>
-                        <div className="text-xs text-slate-600 mt-1">Owner: <strong>{searchedPlateInfo.owner}</strong> • {searchedPlateInfo.flat}</div>
-                      </div>
-                      <span className="bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full">
-                        {searchedPlateInfo.status}
-                      </span>
-                    </div>
-                    <div className="pt-2 border-t border-indigo-200/60 flex justify-between text-xs text-slate-700">
-                      <span>Allocated: <strong>{searchedPlateInfo.slot}</strong></span>
-                      <span>Vehicle: {searchedPlateInfo.type}</span>
-                    </div>
+              {/* Top Hero Banner */}
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Car className="w-8 h-8" />
                   </div>
-                )}
-              </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Vehicle & ANPR AI Management</h2>
+                    <p className="text-xs text-slate-500 mt-1">Automatic number plate recognition, FastTag RFID whitelisting, and parking violation citations</p>
+                  </div>
+                </div>
 
-              {/* Flagged Vehicles & Parking Violations */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <span className="font-black text-base text-slate-900 block">Flagged Vehicles & Parking Violations ({flaggedVehicles.length})</span>
-                <div className="space-y-3 text-xs">
-                  {flaggedVehicles.map((fv, idx) => (
-                    <div key={idx} className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex justify-between items-center">
-                      <div>
-                        <div className="font-mono font-bold text-sm text-slate-900">{fv.plate} ({fv.flat})</div>
-                        <div className="text-slate-600 mt-0.5">{fv.violation} • Logged at {fv.time}</div>
-                      </div>
-                      <span className="bg-rose-200 text-rose-900 font-bold px-3 py-1 rounded-full text-[10px]">
-                        {fv.severity} - {fv.status}
-                      </span>
-                    </div>
-                  ))}
+                {/* Sub-Tabs */}
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl text-xs font-bold gap-1 self-stretch sm:self-center">
+                  <button
+                    onClick={() => setAnprSubTab('scanner')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      anprSubTab === 'scanner' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📹 AI OCR Scanner
+                  </button>
+
+                  <button
+                    onClick={() => setAnprSubTab('directory')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      anprSubTab === 'directory' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📑 Resident Whitelist ({residentVehiclesList.length})
+                  </button>
+
+                  <button
+                    onClick={() => setAnprSubTab('violations')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      anprSubTab === 'violations' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🚨 Violations ({parkingViolationsList.length})
+                  </button>
+
+                  <button
+                    onClick={() => setAnprSubTab('bays')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      anprSubTab === 'bays' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🅿️ Visitor Bays (V-01..V-08)
+                  </button>
                 </div>
               </div>
+
+              {/* SUB-TAB 1: LIVE ANPR CAMERA SCANNER */}
+              {anprSubTab === 'scanner' && (
+                <div className="space-y-6 animate-fade-in">
+                  
+                  {/* Camera AI Stream Box */}
+                  <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-5">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
+                        <span className="font-bold text-xs uppercase tracking-widest text-emerald-400">ANPR AI Camera 1 • Gate 1 Main Barrier</span>
+                      </div>
+                      <span className="text-xs text-slate-400 font-mono">1080p 60FPS • Neural OCR v4.2</span>
+                    </div>
+
+                    {/* Camera Viewport Simulation */}
+                    <div className="h-44 bg-slate-950 rounded-2xl border border-slate-800 relative flex items-center justify-center overflow-hidden">
+                      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]" />
+                      
+                      {/* OCR Bounding Box */}
+                      <div className="border-2 border-emerald-400 px-6 py-3 rounded-xl bg-emerald-950/40 text-center relative z-10 animate-pulse">
+                        <span className="text-[10px] text-emerald-400 uppercase font-bold block">Vehicle Plate Detected</span>
+                        <span className="font-mono font-black text-2xl text-white tracking-widest">{plateQuery}</span>
+                      </div>
+                    </div>
+
+                    {/* Plate Lookup Form */}
+                    <form onSubmit={handlePlateSearch} className="flex gap-3">
+                      <input
+                        type="text"
+                        placeholder="Enter Plate Number (e.g. KA-03-MB-4921, KA-05-MA-1234)..."
+                        value={plateQuery}
+                        onChange={(e) => setPlateQuery(e.target.value)}
+                        className="flex-1 p-3.5 bg-slate-800 rounded-2xl border border-slate-700 text-white text-xs font-mono font-bold uppercase focus:outline-none focus:border-indigo-400"
+                      />
+                      <button
+                        type="submit"
+                        className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs cursor-pointer shadow-lg"
+                      >
+                        Simulate AI Scan
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Recognition Result Card */}
+                  {simulatedScanResult && (
+                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5 animate-fade-in">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono font-black text-3xl text-slate-900 tracking-wider">{simulatedScanResult.plate}</span>
+                            <span className={`px-3 py-1 rounded-full font-bold text-xs ${
+                              simulatedScanResult.status === 'Whitelisted Resident' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                            }`}>
+                              {simulatedScanResult.status}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-500 mt-1">Confidence Score: <strong className="text-emerald-600">{simulatedScanResult.confidence}</strong></div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Barrier Action</span>
+                          <span className="font-bold text-xs text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full inline-block mt-1">
+                            {simulatedScanResult.barrierAction}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">Registered Owner</span>
+                          <span className="font-bold text-slate-900">{simulatedScanResult.owner} ({simulatedScanResult.flat})</span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">Allocated Slot</span>
+                          <span className="font-bold text-slate-900">{simulatedScanResult.slot}</span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">FastTag RFID Tag ID</span>
+                          <span className="font-mono font-bold text-indigo-600">{simulatedScanResult.rfidTag}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+              {/* SUB-TAB 2: RESIDENT VEHICLES DIRECTORY */}
+              {anprSubTab === 'directory' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5 animate-fade-in">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h3 className="font-extrabold text-base text-slate-900">Resident Registered Vehicles & FastTag Whitelist</h3>
+                      <p className="text-xs text-slate-500">Authorized resident vehicles with automated ANPR gate barrier access</p>
+                    </div>
+
+                    <div className="w-full sm:w-72 relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search plate, owner, flat, slot..."
+                        value={vehicleSearchQuery}
+                        onChange={(e) => setVehicleSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                          <th className="py-3">License Plate</th>
+                          <th className="py-3">Vehicle Details</th>
+                          <th className="py-3">Owner & Unit</th>
+                          <th className="py-3">Parking Slot</th>
+                          <th className="py-3">FastTag RFID</th>
+                          <th className="py-3 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {residentVehiclesList
+                          .filter(v => v.plate.toLowerCase().includes(vehicleSearchQuery.toLowerCase()) || v.owner.toLowerCase().includes(vehicleSearchQuery.toLowerCase()) || v.flat.toLowerCase().includes(vehicleSearchQuery.toLowerCase()))
+                          .map(v => (
+                            <tr key={v.id} className="hover:bg-slate-50">
+                              <td className="py-3.5 font-mono font-black text-slate-900">{v.plate}</td>
+                              <td className="py-3.5 text-slate-700">{v.model} ({v.color})</td>
+                              <td className="py-3.5 font-bold text-indigo-600">{v.owner} • {v.flat}</td>
+                              <td className="py-3.5 font-bold text-slate-900">{v.slot}</td>
+                              <td className="py-3.5 font-mono text-slate-500">{v.rfidTag}</td>
+                              <td className="py-3.5 text-right">
+                                <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
+                                  {v.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* SUB-TAB 3: PARKING VIOLATIONS & CITATIONS */}
+              {anprSubTab === 'violations' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5 animate-fade-in">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-extrabold text-base text-slate-900">Active Parking Violations & Citations ({parkingViolationsList.length})</h3>
+                      <p className="text-xs text-slate-500">Track unauthorized parking, ramp blockages, and overstay violations</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {parkingViolationsList.map(vio => (
+                      <div key={vio.id} className="p-5 rounded-2xl bg-rose-50/70 border border-rose-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-base text-slate-900">{vio.plate}</span>
+                            <span className="font-bold text-xs text-slate-700">({vio.vehicleModel})</span>
+                            <span className="bg-rose-200 text-rose-900 font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                              {vio.severity}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-700 mt-1">
+                            Location: <strong>{vio.location}</strong> • Violation: <strong className="text-rose-800">{vio.violation}</strong>
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            Reported at {vio.time} • Associated: <strong>{vio.flat}</strong>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-400 uppercase font-bold block">Penalty Fine</span>
+                            <span className="font-bold text-sm text-slate-900">{vio.fineAmount}</span>
+                          </div>
+
+                          <button
+                            onClick={() => alert(`Citation notification dispatched to ${vio.flat} on resident app!`)}
+                            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs"
+                          >
+                            Send Resident Alert
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SUB-TAB 4: VISITOR PARKING BAY ALLOCATION TRACKER */}
+              {anprSubTab === 'bays' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5 animate-fade-in">
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900">Visitor Parking Bay Real-Time Allocation (Bays V-01 to V-08)</h3>
+                    <p className="text-xs text-slate-500">Track parking occupancy and overstay dwell timers for guest vehicles</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {visitorBays.map(bay => (
+                      <div
+                        key={bay.id}
+                        className={`p-5 rounded-3xl border flex flex-col justify-between space-y-3 transition-all ${
+                          bay.status === 'Overstay'
+                            ? 'bg-rose-50 border-rose-300 shadow-sm'
+                            : bay.status === 'Occupied'
+                            ? 'bg-indigo-50/60 border-indigo-200 shadow-xs'
+                            : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-black text-lg text-slate-900">{bay.id}</span>
+                          <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                            bay.status === 'Overstay'
+                              ? 'bg-rose-600 text-white animate-pulse'
+                              : bay.status === 'Occupied'
+                              ? 'bg-indigo-100 text-indigo-900'
+                              : 'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            {bay.status}
+                          </span>
+                        </div>
+
+                        {bay.status !== 'Available' ? (
+                          <div className="text-xs space-y-1">
+                            <div className="font-mono font-bold text-slate-900">{bay.plate}</div>
+                            <div className="text-slate-600 text-[11px]">{bay.visitor} • {bay.flat}</div>
+                            <div className="text-indigo-600 font-bold text-[10px]">Dwell: {bay.dwell}</div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-400 py-2">
+                            Available for Inbound Visitor
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             </div>
           )}
