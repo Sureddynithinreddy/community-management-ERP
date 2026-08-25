@@ -7,7 +7,8 @@ import {
   Newspaper, Package, PartyPopper, Phone, Plus, QrCode, Search, Send, Share2, Shield, 
   ShieldAlert, ShieldCheck, Snowflake, Sparkles, Star, Tag, Trash2, Trophy, Truck, 
   User, UserCheck, UserPlus, Users, Vote, Waves, Wifi, Wrench, X, XCircle, Zap, Contact, Building2,
-  CheckCheck, Percent, RefreshCw, Smartphone, Landmark, ShieldCheck as SecureIcon
+  CheckCheck, Percent, RefreshCw, Smartphone, Landmark, ShieldCheck as SecureIcon,
+  AlertCircle, Car, Coffee, ShieldX, UserX, PhoneCall
 } from 'lucide-react';
 
 interface ResidentPortalProps {
@@ -29,17 +30,52 @@ type ResidentNavSection =
   | 'social'
   | 'chats';
 
+interface GateApprovalRequest {
+  id: string;
+  name: string;
+  category: 'delivery' | 'cab' | 'guest' | 'service';
+  company?: string;
+  orderNo?: string;
+  vehicle: string;
+  phone: string;
+  gate: string;
+  guardName: string;
+  time: string;
+  avatarEmoji: string;
+  status: 'pending' | 'allowed' | 'denied' | 'left_at_gate';
+}
+
 export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   // Navigation State
   const [activeSection, setActiveSection] = useState<ResidentNavSection>('overview');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Notification Toast Banner
-  const [showNotificationToast, setShowNotificationToast] = useState<boolean>(true);
+  const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
 
   // SOS Alarm Modal
   const [showSosModal, setShowSosModal] = useState<boolean>(false);
   const [sosTriggered, setSosTriggered] = useState<boolean>(false);
+
+  // =========================================================================
+  // LIVE GATE APPROVAL REQUESTS ENGINE (Blinkit, Swiggy, Guests at Gate)
+  // =========================================================================
+  const [incomingGateRequests, setIncomingGateRequests] = useState<GateApprovalRequest[]>([
+    {
+      id: 'GATE-REQ-101',
+      name: 'Rajesh Kumar',
+      category: 'delivery',
+      company: 'Blinkit 10-Min Delivery',
+      orderNo: '#BK-90214',
+      vehicle: 'TS-08-EM-4921 (Electric 2-Wheeler)',
+      phone: '98765 12099',
+      gate: 'Gate 1 Security Barrier',
+      guardName: 'Guard Vikram Singh',
+      time: 'Just Now (11:45 AM)',
+      avatarEmoji: '⚡',
+      status: 'pending',
+    }
+  ]);
 
   // Pre-Approve Visitor Modal
   const [showPreApproveModal, setShowPreApproveModal] = useState<boolean>(false);
@@ -49,9 +85,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   const [guestPurpose, setGuestPurpose] = useState<string>('Dinner Guest');
   const [generatedPass, setGeneratedPass] = useState<{ otp: string; name: string; mobile: string; arrival: string } | null>(null);
 
-  // =========================================================================
-  // MODERN BILLING & PAYMENT ENGINE STATE
-  // =========================================================================
+  // Modern Billing State
   const [billStatus, setBillStatus] = useState<'Unpaid' | 'Paid'>('Unpaid');
   const [earlyBirdApplied, setEarlyBirdApplied] = useState<boolean>(true);
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
@@ -87,32 +121,24 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     { id: 'INV-AUG-2026', month: 'August 2026', amount: '₹ 4,753.30', status: billStatus, date: billStatus === 'Paid' ? 'Today' : 'Due 31 Aug 2026', receipt: 'GST-9021', mode: 'UPI Autopay' },
     { id: 'INV-JUL-2026', month: 'July 2026', amount: '₹ 4,766.00', status: 'Paid', date: '04 Jul 2026', receipt: 'GST-8412', mode: 'Netbanking (HDFC)' },
     { id: 'INV-JUN-2026', month: 'June 2026', amount: '₹ 4,766.00', status: 'Paid', date: '02 Jun 2026', receipt: 'GST-7711', mode: 'Credit Card (Visa)' },
-    { id: 'INV-MAY-2026', month: 'May 2026', amount: '₹ 4,766.00', status: 'Paid', date: '03 May 2026', receipt: 'GST-7012', mode: 'UPI Autopay' },
-    { id: 'INV-APR-2026', month: 'April 2026', amount: '₹ 4,766.00', status: 'Paid', date: '05 Apr 2026', receipt: 'GST-6411', mode: 'Netbanking (ICICI)' },
   ]);
-
-  // Search State
-  const [categorySearchQuery, setCategorySearchQuery] = useState<string>('');
 
   // Pre-approved passes list
   const [preApprovedList, setPreApprovedList] = useState([
     { id: 'PASS-8921', name: 'Siddharth Verma', mobile: '98765 43210', arrival: 'Today 04:30 PM', otp: '892-104', status: 'Active (Valid)', type: 'Guest Pass' },
     { id: 'PASS-8810', name: 'Sunita Rao (Family)', mobile: '98123 55443', arrival: 'Tomorrow 10:00 AM', otp: '410-992', status: 'Scheduled', type: 'Guest Pass' },
-    { id: 'PASS-8750', name: 'Dr. Ramesh Plumber', mobile: '98450 11223', arrival: 'Today 02:00 PM', otp: '718-204', status: 'Inside', type: 'Service Pass' },
   ]);
 
   // Parcels list
   const [parcelsList, setParcelsList] = useState([
     { id: 'PAR-101', courier: 'Amazon Courier', orderNo: '#AZ-9021', shelf: 'Gate Shelf B-4', arrival: '11:20 AM Today', status: 'Awaiting Pickup', otp: '4091' },
     { id: 'PAR-102', courier: 'Swiggy InstaMart', orderNo: '#SW-4912', shelf: 'Cold Storage Locker #02', arrival: '11:32 AM Today', status: 'Awaiting Pickup', otp: '8821' },
-    { id: 'PAR-099', courier: 'Flipkart Logistics', orderNo: '#FK-1102', shelf: 'Gate Shelf A-1', arrival: 'Yesterday', status: 'Picked Up', otp: '1904' },
   ]);
 
   // Household Active Helpers
   const [myHelpersList, setMyHelpersList] = useState([
     { id: 'HLP-01', name: 'Sunita Devi', role: 'Daily Housekeeping Maid', phone: '98765 99887', status: 'Inside Society (Gate 1)', time: '09:15 AM - 01:00 PM', rating: '4.9 ★', salary: '₹ 3,500/mo' },
     { id: 'HLP-02', name: 'Ramesh Kumar', role: 'Morning Cook', phone: '98123 44556', status: 'Checked Out', time: '07:00 AM - 09:00 AM', rating: '4.8 ★', salary: '₹ 5,000/mo' },
-    { id: 'HLP-03', name: 'Alok Sharma', role: 'Car Washer & Cleaner', phone: '98345 66778', status: 'Scheduled', time: '06:00 AM - 07:00 AM', rating: '4.9 ★', salary: '₹ 800/mo' },
   ]);
 
   // 13 Service Categories
@@ -138,7 +164,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
       { name: 'Sunita Devi', exp: '4 Years in Community', rating: '4.9 ★', reviews: 42, flats: 8, phone: '98765 99887', rate: '₹3,500/month' },
       { name: 'Kavita Kumari', exp: '3 Years in Community', rating: '4.8 ★', reviews: 29, flats: 6, phone: '98123 77665', rate: '₹3,200/month' },
       { name: 'Laxmi Shinde', exp: '5 Years in Community', rating: '5.0 ★', reviews: 68, flats: 11, phone: '98450 33441', rate: '₹3,800/month' },
-      { name: 'Pooja Bai', exp: '2 Years in Community', rating: '4.7 ★', reviews: 18, flats: 4, phone: '98901 22334', rate: '₹3,000/month' },
     ],
     'Water Supply': [
       { name: 'AquaPure Mineral Cans (Bisleri 20L)', exp: 'Daily 7 AM & 4 PM Supply', rating: '4.9 ★', reviews: 140, flats: 65, phone: '98220 11990', rate: '₹80/Can' },
@@ -146,21 +171,12 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     ],
     'Gym Trainer': [
       { name: 'Coach Rohit Verma (Certified ACSM)', exp: '8 Years Experience', rating: '5.0 ★', reviews: 38, flats: 14, phone: '98700 12345', rate: '₹4,500/month' },
-      { name: 'Priya Nambiar (Yoga & Pilates)', exp: '6 Years Experience', rating: '4.9 ★', reviews: 45, flats: 18, phone: '98999 55443', rate: '₹4,000/month' },
-    ],
-    'Wifi/Internet': [
-      { name: 'Airtel Xstream Fiber (Green Haven Desk)', exp: 'Up to 1 Gbps • Same Day Install', rating: '4.9 ★', reviews: 180, flats: 92, phone: '98123 00001', rate: 'From ₹799/mo' },
-      { name: 'JioFiber Community Executive Alok', exp: 'Free Router + Set Top Box', rating: '4.8 ★', reviews: 145, flats: 78, phone: '98900 11112', rate: 'From ₹699/mo' },
-    ],
-    Milk: [
-      { name: 'Nandini Fresh Farm Milk (Morning 6 AM)', exp: 'Pasteurized & Toned Cans', rating: '4.9 ★', reviews: 220, flats: 110, phone: '98450 99881', rate: 'Daily Subscription' },
     ],
   };
 
   // Helpdesk Tickets
   const [ticketsList, setTicketsList] = useState([
     { id: 'TK-9021', subject: 'Kitchen Sink Drainage Pipe Water Leakage', category: 'Plumbing', desc: 'Water leaking under the kitchen sink cabinet continuously.', priority: 'High', status: 'In Progress', assignedTo: 'Ramesh Plumber (Ph: 98123 99887)', sla: '1h 45m remaining', date: 'Today 10:15 AM', rating: null as number | null },
-    { id: 'TK-8910', subject: 'Tower B Lift #2 Button Panel Flickering', category: 'Electrical', desc: '4th floor call button light blinking.', priority: 'Medium', status: 'Resolved', assignedTo: 'OTIS Engineer Alok', sla: 'Resolved in 42 mins', date: 'Yesterday 04:20 PM', rating: 5 },
   ]);
 
   const [newTicketSubject, setNewTicketSubject] = useState<string>('');
@@ -168,15 +184,106 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   const [newTicketPriority, setNewTicketPriority] = useState<string>('High');
   const [newTicketDesc, setNewTicketDesc] = useState<string>('');
 
-  // Community Polls State
-  const [pollVoted, setPollVoted] = useState<number | null>(1);
-  const [pollOptions, setPollOptions] = useState([
-    { id: 1, text: 'AquaClean Services (₹25,000/mo)', votes: 42, percent: 58 },
-    { id: 2, text: 'BlueWave Pool Mgmt (₹22,000/mo)', votes: 20, percent: 28 },
-    { id: 3, text: 'Keep Existing Vendor', votes: 10, percent: 14 },
-  ]);
+  // Search State
+  const [categorySearchQuery, setCategorySearchQuery] = useState<string>('');
 
-  // Handlers
+  // =========================================================================
+  // GATE ENTRY APPROVAL ACTIONS
+  // =========================================================================
+  const handleAllowGateEntry = (reqId: string) => {
+    const req = incomingGateRequests.find(r => r.id === reqId);
+    if (!req) return;
+    setIncomingGateRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'allowed' } : r));
+    alert(`ENTRY ALLOWED ✓\nGate 1 barrier opened for ${req.name} (${req.company || req.category}). Guard ${req.guardName} notified!`);
+  };
+
+  const handleLeaveAtGate = (reqId: string) => {
+    const req = incomingGateRequests.find(r => r.id === reqId);
+    if (!req) return;
+    setIncomingGateRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'left_at_gate' } : r));
+    const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    setParcelsList(prev => [
+      { id: `PAR-${Math.floor(200 + Math.random() * 100)}`, courier: req.company || 'Gate Delivery', orderNo: req.orderNo || '#ORD-892', shelf: 'Gate Shelf Locker #B-1', arrival: 'Just Now', status: 'Awaiting Pickup', otp: randomOtp },
+      ...prev
+    ]);
+    alert(`PARCEL ACCEPTED AT GATE ✓\nInstructed Guard ${req.guardName} to place ${req.company} package at Shelf Locker #B-1. Pickup Passcode: ${randomOtp}`);
+  };
+
+  const handleDenyGateEntry = (reqId: string) => {
+    const req = incomingGateRequests.find(r => r.id === reqId);
+    if (!req) return;
+    setIncomingGateRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'denied' } : r));
+    alert(`ENTRY DENIED ❌\nInformed Guard ${req.guardName} that ${req.name} is not permitted to enter.`);
+  };
+
+  // Simulators
+  const handleSimulateArrival = (type: 'blinkit' | 'swiggy' | 'guest' | 'cab') => {
+    let newReq: GateApprovalRequest;
+    if (type === 'blinkit') {
+      newReq = {
+        id: `GATE-REQ-${Math.floor(100 + Math.random() * 900)}`,
+        name: 'Sunil Verma',
+        category: 'delivery',
+        company: 'Blinkit 10-Min Delivery',
+        orderNo: `#BK-${Math.floor(10000 + Math.random() * 90000)}`,
+        vehicle: 'TS-07-EA-9912 (EV Bike)',
+        phone: '98123 45678',
+        gate: 'Gate 1 Main Gate',
+        guardName: 'Guard Vikram Singh',
+        time: 'Just Now',
+        avatarEmoji: '⚡',
+        status: 'pending',
+      };
+    } else if (type === 'swiggy') {
+      newReq = {
+        id: `GATE-REQ-${Math.floor(100 + Math.random() * 900)}`,
+        name: 'Mahesh Reddy',
+        category: 'delivery',
+        company: 'Swiggy Food / Instamart',
+        orderNo: `#SW-${Math.floor(10000 + Math.random() * 90000)}`,
+        vehicle: 'AP-09-CD-3321 (Hero Splendor)',
+        phone: '98450 77889',
+        gate: 'Gate 1 Main Gate',
+        guardName: 'Guard Ramu',
+        time: 'Just Now',
+        avatarEmoji: '🍕',
+        status: 'pending',
+      };
+    } else if (type === 'cab') {
+      newReq = {
+        id: `GATE-REQ-${Math.floor(100 + Math.random() * 900)}`,
+        name: 'Driver Alok (Uber Premier)',
+        category: 'cab',
+        company: 'Uber Cab Pickup',
+        vehicle: 'KA-01-MJ-8819 (White Dzire)',
+        phone: '98900 11223',
+        gate: 'Gate 2 Rear Gate',
+        guardName: 'Guard Suraj',
+        time: 'Just Now',
+        avatarEmoji: '🚗',
+        status: 'pending',
+      };
+    } else {
+      newReq = {
+        id: `GATE-REQ-${Math.floor(100 + Math.random() * 900)}`,
+        name: 'Venkatesh Rao (Uncle / Relative)',
+        category: 'guest',
+        company: 'Family Guest at Gate',
+        vehicle: 'TS-09-GA-1002 (Honda City)',
+        phone: '98700 33445',
+        gate: 'Gate 1 Main Gate',
+        guardName: 'Guard Vikram Singh',
+        time: 'Just Now',
+        avatarEmoji: '👨‍👩‍👦',
+        status: 'pending',
+      };
+    }
+
+    setIncomingGateRequests(prev => [newReq, ...prev]);
+    setActiveSection('overview');
+  };
+
+  // Other Handlers
   const handlePreApproveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const randomOtp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -217,20 +324,12 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     alert(`Ticket ${newId} created successfully! Duty Technician dispatched.`);
   };
 
-  const handleRateTicket = (id: string, star: number) => {
-    setTicketsList(prev => prev.map(t => t.id === id ? { ...t, rating: star } : t));
-  };
-
-  const handleVote = (id: number) => {
-    if (pollVoted !== null) return;
-    setPollVoted(id);
-    setPollOptions(prev => prev.map(opt => opt.id === id ? { ...opt, votes: opt.votes + 1 } : opt));
-  };
+  const pendingCount = incomingGateRequests.filter(r => r.status === 'pending').length;
 
   const navMenuItems = [
-    { id: 'overview', label: 'Overview Dashboard', icon: Home },
+    { id: 'overview', label: 'Overview Dashboard', icon: Home, badge: pendingCount > 0 ? `${pendingCount} at Gate` : undefined, badgeColor: 'bg-red-500 text-white animate-pulse' },
+    { id: 'visitors_parcels', label: 'Visitors & Gate Approvals', icon: Shield, badge: pendingCount > 0 ? `${pendingCount}` : undefined },
     { id: 'payments', label: 'Paying Bills & Meters', icon: CreditCard, badge: billStatus === 'Unpaid' ? 'Due' : undefined },
-    { id: 'visitors_parcels', label: 'Visitors & Parcels', icon: Shield },
     { id: 'helpers', label: 'Helpers & Services (13 Categories)', icon: HandHeart },
     { id: 'members', label: 'Members & Vehicles', icon: Users },
     { id: 'notices', label: 'Society Notices (23 Unread)', icon: FileText, badge: '23' },
@@ -273,6 +372,16 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-3">
+            {pendingCount > 0 && (
+              <button
+                onClick={() => setActiveSection('visitors_parcels')}
+                className="px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm animate-bounce cursor-pointer"
+              >
+                <Bell className="w-4 h-4" />
+                <span>{pendingCount} Gate Approvals Waiting!</span>
+              </button>
+            )}
+
             <button
               onClick={() => setActiveSection('payments')}
               className={`px-4 py-2 rounded-2xl border flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
@@ -280,7 +389,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
               }`}
             >
               <CreditCard className="w-4 h-4" />
-              <span>{billStatus === 'Unpaid' ? `Bill Due: ₹ ${totalPayable.toFixed(2)}` : 'Dues All Clear ✓'}</span>
+              <span>{billStatus === 'Unpaid' ? `Bill: ₹ ${totalPayable.toFixed(2)}` : 'Dues Cleared ✓'}</span>
             </button>
 
             <button
@@ -296,7 +405,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
               className="px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-2 text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Exit to Portals</span>
+              <span className="hidden sm:inline">Exit</span>
             </button>
           </div>
 
@@ -329,6 +438,39 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
             </div>
           </div>
 
+          {/* Gate Approval Quick Simulator */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs space-y-2.5">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block px-1">
+              Simulate Gate Arrivals
+            </span>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <button
+                onClick={() => handleSimulateArrival('blinkit')}
+                className="p-2.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-900 font-bold rounded-xl border border-yellow-200 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>⚡ Blinkit</span>
+              </button>
+              <button
+                onClick={() => handleSimulateArrival('swiggy')}
+                className="p-2.5 bg-orange-50 hover:bg-orange-100 text-orange-900 font-bold rounded-xl border border-orange-200 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>🍕 Swiggy</span>
+              </button>
+              <button
+                onClick={() => handleSimulateArrival('cab')}
+                className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-xl border border-slate-300 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>🚗 Uber Cab</span>
+              </button>
+              <button
+                onClick={() => handleSimulateArrival('guest')}
+                className="p-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold rounded-xl border border-indigo-200 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>👨‍👩‍👧 Guest at Gate</span>
+              </button>
+            </div>
+          </div>
+
           {/* Navigation Menu */}
           <nav className="bg-white p-3 rounded-3xl border border-slate-200/80 shadow-xs space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3 py-2 block">
@@ -356,7 +498,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   </div>
                   {item.badge && (
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      isActive ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800'
+                      item.badgeColor || (isActive ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800')
                     }`}>
                       {item.badge}
                     </span>
@@ -374,41 +516,84 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
         <main className="flex-1 space-y-6">
           
           {/* ========================================================================= */}
+          {/* PROMINENT LIVE INCOMING GATE APPROVAL BANNER (Blinkit, Swiggy, Guests) */}
+          {/* ========================================================================= */}
+          {incomingGateRequests.filter(r => r.status === 'pending').map((req) => (
+            <div 
+              key={req.id}
+              className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 p-6 rounded-3xl shadow-xl space-y-4 border-2 border-amber-300 animate-fade-in relative overflow-hidden"
+            >
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+                
+                {/* Visitor & Delivery Details */}
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-3xl shadow-md shrink-0">
+                    <span>{req.avatarEmoji}</span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-slate-950 text-amber-400 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider animate-pulse">
+                        🚨 Ringing from Gate 1 Security
+                      </span>
+                      <span className="text-xs font-black text-slate-900">{req.time}</span>
+                    </div>
+
+                    <h3 className="font-black text-xl text-slate-950 tracking-tight mt-1">
+                      {req.name} • <span className="underline">{req.company || req.category.toUpperCase()}</span>
+                    </h3>
+
+                    <div className="text-xs text-slate-900 font-bold flex flex-wrap items-center gap-3 mt-0.5">
+                      {req.orderNo && <span>Order: <strong>{req.orderNo}</strong></span>}
+                      <span>Vehicle: <strong>{req.vehicle}</strong></span>
+                      <span>Phone: <strong>{req.phone}</strong></span>
+                      <span>Logged by: <strong>{req.guardName}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 1-Tap Quick Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2.5 self-end sm:self-center">
+                  
+                  {/* Allow Entry */}
+                  <button
+                    onClick={() => handleAllowGateEntry(req.id)}
+                    className="px-5 py-3 rounded-2xl bg-slate-950 hover:bg-slate-900 text-white font-black text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    <CheckCheck className="w-4 h-4 text-emerald-400" />
+                    <span>ALLOW ENTRY</span>
+                  </button>
+
+                  {/* Leave at Gate Shelf */}
+                  <button
+                    onClick={() => handleLeaveAtGate(req.id)}
+                    className="px-4 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-black text-xs shadow-md flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    <Package className="w-4 h-4 text-indigo-600" />
+                    <span>LEAVE AT GATE SHELF</span>
+                  </button>
+
+                  {/* Deny Entry */}
+                  <button
+                    onClick={() => handleDenyGateEntry(req.id)}
+                    className="px-4 py-3 rounded-2xl bg-red-950 hover:bg-red-900 text-white font-black text-xs shadow-md flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    <UserX className="w-4 h-4 text-red-400" />
+                    <span>DENY</span>
+                  </button>
+
+                </div>
+
+              </div>
+            </div>
+          ))}
+
+          {/* ========================================================================= */}
           {/* 1. OVERVIEW & DESKTOP DASHBOARD */}
           {/* ========================================================================= */}
           {activeSection === 'overview' && (
             <div className="space-y-6">
               
-              {/* NOTIFICATION TEST BANNER */}
-              {showNotificationToast && (
-                <div className="bg-[#1E293B] text-white p-4 rounded-3xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[#FDE047]">
-                      <Bell className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-100 block">Not Getting Push Notifications on Gate Entries?</span>
-                      <span className="text-[11px] text-slate-400">Test the real-time push dispatch channel for Flat B-108.</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 self-end sm:self-center">
-                    <button
-                      onClick={() => alert('Push Notification Test dispatched to Flat B-108!')}
-                      className="px-4 py-1.5 rounded-xl bg-white text-[#0F172A] font-bold text-xs shadow-sm hover:bg-slate-100 transition-all cursor-pointer"
-                    >
-                      Test Now
-                    </button>
-                    <button
-                      onClick={() => setShowNotificationToast(false)}
-                      className="p-1.5 text-slate-400 hover:text-white rounded-lg cursor-pointer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* SECTION 1: MY HOME (Widescreen 3-Card Grid) */}
               <div className="space-y-3">
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-500 block px-1">
@@ -426,13 +611,15 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                       <div className="w-12 h-12 rounded-2xl bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5] shadow-xs group-hover:scale-110 transition-transform">
                         <Shield className="w-6 h-6" />
                       </div>
-                      <span className="text-xs font-bold text-[#4F46E5] bg-[#EEF2FF] px-3 py-1 rounded-full">
-                        {preApprovedList.length} Passes Active
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                        pendingCount > 0 ? 'bg-red-500 text-white animate-pulse' : 'text-[#4F46E5] bg-[#EEF2FF]'
+                      }`}>
+                        {pendingCount > 0 ? `${pendingCount} at Gate` : `${preApprovedList.length} Passes`}
                       </span>
                     </div>
                     <div>
-                      <div className="font-extrabold text-base text-slate-900">Visitors & Parcels</div>
-                      <div className="text-xs text-slate-500 mt-1">Pre-approvals, QR passes, and parcel locker pickups</div>
+                      <div className="font-extrabold text-base text-slate-900">Visitors & Gate Approvals</div>
+                      <div className="text-xs text-slate-500 mt-1">Approve Blinkit, Swiggy, cabs, and unannounced guests</div>
                     </div>
                   </button>
 
@@ -614,7 +801,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                       </div>
                       <div>
                         <div className="font-bold text-sm text-slate-900">Payment History</div>
-                        <div className="text-xs text-slate-500 font-medium">5 Past Statements & CA Invoices</div>
+                        <div className="text-xs text-slate-500 font-medium">Past Statements & Tax Invoices</div>
                       </div>
                     </div>
 
@@ -628,7 +815,177 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 2. MODERN PAYING BILLS & INVOICE SUITE */}
+          {/* 2. VISITORS, GATE APPROVALS & PARCELS FULL DESKTOP VIEW */}
+          {/* ========================================================================= */}
+          {activeSection === 'visitors_parcels' && (
+            <div className="space-y-6">
+              
+              {/* Header Hero Banner */}
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5] shadow-xs shrink-0">
+                    <ShieldCheck className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Visitors & Gate Approvals</h2>
+                    <p className="text-xs text-slate-500 mt-1">Approve incoming delivery drivers, cabs, and pre-authorize guest passes</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => setShowPreApproveModal(true)}
+                    className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md transition-transform active:scale-95 cursor-pointer"
+                  >
+                    + Pre-approve Visitors
+                  </button>
+                </div>
+              </div>
+
+              {/* Live Gate Requests Section */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="font-extrabold text-base text-slate-900 block">Today's Gate Arrivals & Resident Decisions</span>
+                  <span className="text-xs text-slate-500 font-medium">{incomingGateRequests.length} Arrivals Logged</span>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  {incomingGateRequests.map((req) => (
+                    <div 
+                      key={req.id}
+                      className={`p-5 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${
+                        req.status === 'pending' 
+                          ? 'bg-amber-50/80 border-amber-300' 
+                          : req.status === 'allowed'
+                          ? 'bg-emerald-50/60 border-emerald-200'
+                          : req.status === 'left_at_gate'
+                          ? 'bg-indigo-50/60 border-indigo-200'
+                          : 'bg-red-50/60 border-red-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-2xl shadow-xs border border-slate-200 shrink-0">
+                          <span>{req.avatarEmoji}</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-slate-900">{req.name}</span>
+                            <span className="text-xs font-bold text-slate-600">({req.company || req.category})</span>
+                            <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase ${
+                              req.status === 'pending'
+                                ? 'bg-amber-500 text-slate-950 animate-pulse'
+                                : req.status === 'allowed'
+                                ? 'bg-emerald-200 text-emerald-900'
+                                : req.status === 'left_at_gate'
+                                ? 'bg-indigo-200 text-indigo-900'
+                                : 'bg-red-200 text-red-900'
+                            }`}>
+                              {req.status === 'pending' ? 'Waiting Decision' : req.status.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-500 mt-1">
+                            Vehicle: <strong>{req.vehicle}</strong> • Gate: <strong>{req.gate}</strong> • Guard: <strong>{req.guardName}</strong> • {req.time}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action buttons if still pending */}
+                      {req.status === 'pending' ? (
+                        <div className="flex items-center gap-2 self-end sm:self-center">
+                          <button
+                            onClick={() => handleAllowGateEntry(req.id)}
+                            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
+                          >
+                            Allow Entry
+                          </button>
+                          <button
+                            onClick={() => handleLeaveAtGate(req.id)}
+                            className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-xl text-xs cursor-pointer"
+                          >
+                            Leave with Guard
+                          </button>
+                          <button
+                            onClick={() => handleDenyGateEntry(req.id)}
+                            className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded-xl text-xs cursor-pointer"
+                          >
+                            Deny
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-bold text-slate-500">Decision Dispatched to Guard ✓</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2-Column Desktop Grid: Pre-Approvals & Parcel Queue */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Left Column: Pre-Approved Passes */}
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-sm text-slate-900">Active Pre-Approved Guest Passes</span>
+                    <span className="text-xs text-slate-500 font-medium">{preApprovedList.length} Active</span>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    {preApprovedList.map(p => (
+                      <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-bold text-sm text-slate-900">{p.name}</div>
+                            <div className="text-xs text-slate-500">{p.mobile} • {p.arrival}</div>
+                          </div>
+                          <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
+                            {p.status}
+                          </span>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-xl border border-slate-200/80 flex justify-between items-center">
+                          <div>
+                            <div className="text-[10px] text-slate-400 font-bold uppercase">Gate OTP Passcode</div>
+                            <div className="font-mono font-black text-xl text-slate-900 tracking-widest">{p.otp}</div>
+                          </div>
+                          <QrCode className="w-8 h-8 text-slate-700" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right Column: Parcel Storage Queue */}
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-sm text-slate-900">Gate Shelf Parcel Locker Queue</span>
+                    <span className="text-xs text-slate-500 font-medium">{parcelsList.length} Parcels</span>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    {parcelsList.map(p => (
+                      <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-sm text-slate-900">{p.courier} ({p.orderNo})</div>
+                          <div className="text-xs text-slate-500">{p.shelf} • {p.arrival}</div>
+                          <div className="text-[11px] font-mono font-bold text-indigo-600 mt-1">Pickup Passcode: {p.otp}</div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full font-bold text-[10px] ${
+                          p.status.includes('Awaiting') ? 'bg-amber-100 text-amber-900' : 'bg-slate-200 text-slate-700'
+                        }`}>
+                          {p.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 3. PAYMENTS SECTION */}
           {/* ========================================================================= */}
           {activeSection === 'payments' && (
             <div className="space-y-6">
@@ -694,10 +1051,8 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 </div>
               </div>
 
-              {/* 2-Column Grid: Itemized Bill Breakdown + Pre-Paid Meter */}
+              {/* Itemized Ledger */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                
-                {/* Left Column (7 Cols): Transparent Itemized Breakdown */}
                 <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                     <div>
@@ -714,12 +1069,10 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                       <span>1. Flat Base Society Maintenance (1,250 sqft)</span>
                       <span className="font-bold text-slate-900">₹ {baseMaintenance.toFixed(2)}</span>
                     </div>
-
                     <div className="flex justify-between py-1 text-slate-700">
                       <span>2. Building Sinking Fund & Lift Overhaul Reserve</span>
                       <span className="font-bold text-slate-900">₹ {sinkingFund.toFixed(2)}</span>
                     </div>
-
                     <div className="flex justify-between py-1 text-slate-700">
                       <div>
                         <span>3. Smart Piped Water Meter AMR Usage</span>
@@ -727,20 +1080,14 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                       </div>
                       <span className="font-bold text-slate-900">₹ {waterUsage.toFixed(2)}</span>
                     </div>
-
                     <div className="flex justify-between py-1 text-slate-700">
-                      <div>
-                        <span>4. 250 kVA Diesel Generator Emergency Backup</span>
-                        <span className="text-[11px] text-slate-400 block">4.2 Units @ ₹18.00/Unit</span>
-                      </div>
+                      <span>4. 250 kVA Diesel Generator Emergency Backup</span>
                       <span className="font-bold text-slate-900">₹ {dgBackup.toFixed(2)}</span>
                     </div>
-
                     <div className="flex justify-between py-1 text-slate-700">
                       <span>5. Clubhouse, Gym & Pool Deck Maintenance</span>
                       <span className="font-bold text-slate-900">₹ {amenityMaintenance.toFixed(2)}</span>
                     </div>
-
                     <div className="flex justify-between py-1 text-slate-700">
                       <span>6. Goods & Services Tax (CGST 9% + SGST 9%)</span>
                       <span className="font-bold text-slate-900">₹ {gstTax.toFixed(2)}</span>
@@ -758,34 +1105,10 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                       <span className="text-xl font-black text-slate-900">₹ {totalPayable.toFixed(2)}</span>
                     </div>
                   </div>
-
-                  {/* Autopay Control Toggle */}
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-between gap-4 pt-4">
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                        <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>Recurring UPI Autopay on 1st of Month</span>
-                      </div>
-                      <div className="text-[11px] text-slate-500">Auto-deduct maintenance dues to avoid late fee penalties.</div>
-                    </div>
-
-                    <button
-                      onClick={() => setAutopayEnabled(!autopayEnabled)}
-                      className={`w-12 h-6 rounded-full transition-colors p-0.5 cursor-pointer ${
-                        autopayEnabled ? 'bg-emerald-500' : 'bg-slate-300'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                        autopayEnabled ? 'translate-x-6' : 'translate-x-0'
-                      }`} />
-                    </button>
-                  </div>
                 </div>
 
-                {/* Right Column (5 Cols): Pre-Paid Smart Meter Console */}
+                {/* Pre-Paid Meter */}
                 <div className="lg:col-span-5 space-y-6">
-                  
-                  {/* Pre-Paid Meter Card */}
                   <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
                     <div className="flex justify-between items-center">
                       <div>
@@ -797,31 +1120,10 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                       </span>
                     </div>
 
-                    {/* Meter Gauge Visual */}
                     <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center space-y-2">
                       <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Meter Balance</div>
                       <div className="text-3xl font-black text-[#EF4444]">
                         ₹ {meterBalance.toFixed(2)}
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-medium">Daily Consumption: ~8.4 kWh/day</div>
-                    </div>
-
-                    {/* Quick Presets */}
-                    <div className="space-y-2 text-xs">
-                      <span className="font-bold text-slate-700">Quick 1-Tap Recharge:</span>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[500, 1000, 2000].map(amt => (
-                          <button
-                            key={amt}
-                            onClick={() => {
-                              setRechargeAmount(amt);
-                              setShowRechargeModal(true);
-                            }}
-                            className="py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-800 text-xs transition-transform active:scale-95 cursor-pointer"
-                          >
-                            + ₹ {amt}
-                          </button>
-                        ))}
                       </div>
                     </div>
 
@@ -829,73 +1131,9 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                       onClick={() => setShowRechargeModal(true)}
                       className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
                     >
-                      Custom Recharge Amount
+                      Recharge Pre-paid Meter
                     </button>
                   </div>
-
-                  {/* Bank Account Verification Badge */}
-                  <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                      <Landmark className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900">Green Haven Sanctuary RWA Account</div>
-                      <div className="text-[11px] text-slate-500 font-mono">HDFC Bank • A/C: 50200099881122 • IFSC: HDFC0001202</div>
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* Past 12-Month Invoices & CA Audit Receipts Vault */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <span className="font-extrabold text-base text-slate-900 block">Past Payment Statements & Tax Receipts</span>
-                    <span className="text-xs text-slate-500">Official CA-audited ledger records with downloadable GST invoices</span>
-                  </div>
-                  <span className="text-xs font-bold text-slate-500">{pastInvoicesList.length} Statements Found</span>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-100 text-slate-400 font-bold">
-                        <th className="py-3">Invoice Month</th>
-                        <th className="py-3">Amount</th>
-                        <th className="py-3">Payment Date</th>
-                        <th className="py-3">Mode</th>
-                        <th className="py-3">Receipt No</th>
-                        <th className="py-3 text-right">Tax Invoice</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {pastInvoicesList.map(inv => (
-                        <tr key={inv.id} className="hover:bg-slate-50">
-                          <td className="py-3.5 font-bold text-slate-900">{inv.month}</td>
-                          <td className="py-3.5 font-black text-slate-900">{inv.amount}</td>
-                          <td className="py-3.5 text-slate-500">{inv.date}</td>
-                          <td className="py-3.5 text-slate-600 font-medium">{inv.mode}</td>
-                          <td className="py-3.5 font-mono text-slate-600">{inv.receipt}</td>
-                          <td className="py-3.5 text-right">
-                            {inv.status === 'Paid' ? (
-                              <button
-                                onClick={() => alert(`Downloading GST Invoice #${inv.receipt} for ${inv.month}...`)}
-                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-[11px] inline-flex items-center gap-1 cursor-pointer"
-                              >
-                                <Download className="w-3.5 h-3.5" /> PDF
-                              </button>
-                            ) : (
-                              <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-full text-[10px]">
-                                Payment Pending
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
 
@@ -903,90 +1141,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 3. VISITORS & PARCELS FULL DESKTOP VIEW */}
-          {/* ========================================================================= */}
-          {activeSection === 'visitors_parcels' && (
-            <div className="space-y-6">
-              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-5">
-                  <div className="w-16 h-16 rounded-3xl bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5] shadow-xs shrink-0">
-                    <ShieldCheck className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h2 className="font-black text-2xl text-slate-900">Visitors & Parcels</h2>
-                    <p className="text-xs text-slate-500 mt-1">Stay updated on all arrivals and pre-authorize guest passes for your home</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setShowPreApproveModal(true)}
-                  className="w-full sm:w-auto px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md transition-transform active:scale-95 cursor-pointer"
-                >
-                  + Pre-approve Visitors
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-sm text-slate-900">Active Pre-Approved Guest Passes</span>
-                    <span className="text-xs text-slate-500 font-medium">{preApprovedList.length} Active</span>
-                  </div>
-
-                  <div className="space-y-3 text-xs">
-                    {preApprovedList.map(p => (
-                      <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-bold text-sm text-slate-900">{p.name}</div>
-                            <div className="text-xs text-slate-500">{p.mobile} • {p.arrival}</div>
-                          </div>
-                          <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
-                            {p.status}
-                          </span>
-                        </div>
-
-                        <div className="bg-white p-3 rounded-xl border border-slate-200/80 flex justify-between items-center">
-                          <div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase">Gate OTP Passcode</div>
-                            <div className="font-mono font-black text-xl text-slate-900 tracking-widest">{p.otp}</div>
-                          </div>
-                          <QrCode className="w-8 h-8 text-slate-700" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-sm text-slate-900">Gate Shelf Parcel Locker Queue</span>
-                    <span className="text-xs text-slate-500 font-medium">{parcelsList.length} Parcels</span>
-                  </div>
-
-                  <div className="space-y-3 text-xs">
-                    {parcelsList.map(p => (
-                      <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                        <div>
-                          <div className="font-bold text-sm text-slate-900">{p.courier} ({p.orderNo})</div>
-                          <div className="text-xs text-slate-500">{p.shelf} • {p.arrival}</div>
-                          <div className="text-[11px] font-mono font-bold text-indigo-600 mt-1">Pickup Passcode: {p.otp}</div>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full font-bold text-[10px] ${
-                          p.status.includes('Awaiting') ? 'bg-amber-100 text-amber-900' : 'bg-slate-200 text-slate-700'
-                        }`}>
-                          {p.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* 4. HELPERS & 13 SERVICE CATEGORIES FULL DESKTOP VIEW */}
+          {/* 4. HELPERS (13 CATEGORIES) */}
           {/* ========================================================================= */}
           {activeSection === 'helpers' && (
             <div className="space-y-6">
@@ -1006,19 +1161,8 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 </div>
               </div>
 
-              <div className="relative">
-                <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search for category (e.g. Cleaning, Water Supply, Gym Trainer, Milk...)"
-                  value={categorySearchQuery}
-                  onChange={(e) => setCategorySearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-900 shadow-xs"
-                />
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {helperCategories.filter(c => c.name.toLowerCase().includes(categorySearchQuery.toLowerCase())).map(cat => {
+                {helperCategories.map(cat => {
                   const Icon = cat.icon;
                   const isSelected = selectedCategory === cat.name;
                   return (
@@ -1088,263 +1232,51 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 5. MEMBERS & VEHICLES */}
+          {/* 5. MEMBERS, NOTICES, HELPDESK, DOCUMENTS, DIRECTORY, AMENITIES, ETC. */}
+          {/* ========================================================================= */}
           {activeSection === 'members' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <span className="font-bold text-base text-slate-900 block">Flat B-108 Registered Members</span>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                    <div className="font-bold text-sm text-slate-900">Ananya Sharma</div>
-                    <div className="text-xs text-slate-500">Primary Owner • 98765 11111</div>
-                    <span className="inline-block bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px] mt-2">Owner</span>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                    <div className="font-bold text-sm text-slate-900">Rahul Sharma</div>
-                    <div className="text-xs text-slate-500">Co-Owner (Spouse) • 98765 22222</div>
-                    <span className="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold text-[10px] mt-2">Family</span>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                    <div className="font-bold text-sm text-slate-900">Aarav Sharma</div>
-                    <div className="text-xs text-slate-500">Child (Resident)</div>
-                    <span className="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold text-[10px] mt-2">Family</span>
-                  </div>
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+              <span className="font-bold text-base text-slate-900 block">Flat B-108 Registered Members</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="font-bold text-sm text-slate-900">Ananya Sharma</div>
+                  <div className="text-xs text-slate-500">Primary Owner • 98765 11111</div>
+                  <span className="inline-block bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px] mt-2">Owner</span>
                 </div>
-
-                <span className="font-bold text-base text-slate-900 block pt-4">Registered Vehicles & RFID Slot</span>
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                  <div>
-                    <div className="font-bold text-sm text-slate-900">KA-03-MB-4921 (Honda City Sedan)</div>
-                    <div className="text-xs text-slate-500">Allocated Parking Slot: <strong>Slot B-42</strong> • FastTag ANPR RFID Active</div>
-                  </div>
-                  <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold text-xs">Verified ✓</span>
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="font-bold text-sm text-slate-900">Rahul Sharma</div>
+                  <div className="text-xs text-slate-500">Co-Owner (Spouse) • 98765 22222</div>
+                  <span className="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold text-[10px] mt-2">Family</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* 6. NOTICES */}
           {activeSection === 'notices' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <span className="font-bold text-base text-slate-900 block">Official RWA Notices & Circulars (23 Unread)</span>
-                
-                <div className="space-y-4">
-                  <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <span className="bg-indigo-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold">AGM EVENT</span>
-                      <span className="text-xs text-slate-500">Today at 11:30 AM</span>
-                    </div>
-                    <div className="font-bold text-base text-slate-900">Annual RWA General Body Meeting (AGM) & Elections</div>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      The Annual General Body Meeting for FY 2026-27 is scheduled for Sunday, August 30 at 10:00 AM in Clubhouse Banquet Hall. Financial audit approval & committee elections will take place.
-                    </p>
-                    <button onClick={() => alert('RSVP Confirmed for AGM!')} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">
-                      RSVP Attending AGM
-                    </button>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <span className="bg-amber-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold">MAINTENANCE</span>
-                      <span className="text-xs text-slate-500">Yesterday</span>
-                    </div>
-                    <div className="font-bold text-base text-slate-900">Overhead Water Tank Sanitization Notice</div>
-                    <p className="text-xs text-slate-600">Water supply will be paused on Tuesday from 10:00 AM to 02:00 PM for sanitization of all tower tanks.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* 7. HELPDESK TICKETS */}
-          {activeSection === 'helpdesk' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <span className="font-bold text-base text-slate-900 block">Raise New Helpdesk Complaint</span>
-                
-                <form onSubmit={handleCreateTicket} className="space-y-4 text-xs">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Issue Subject (e.g. Pipe Leakage)"
-                      value={newTicketSubject}
-                      onChange={(e) => setNewTicketSubject(e.target.value)}
-                      className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
-                    />
-
-                    <select
-                      value={newTicketCategory}
-                      onChange={(e) => setNewTicketCategory(e.target.value)}
-                      className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium"
-                    >
-                      <option value="Plumbing">Plumbing Maintenance</option>
-                      <option value="Electrical">Electrical Repairs</option>
-                      <option value="Carpentry">Carpentry & Lock</option>
-                      <option value="Housekeeping">Housekeeping</option>
-                    </select>
-
-                    <select
-                      value={newTicketPriority}
-                      onChange={(e) => setNewTicketPriority(e.target.value)}
-                      className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium"
-                    >
-                      <option value="High">High (Immediate Action)</option>
-                      <option value="Medium">Medium</option>
-                      <option value="Low">Low</option>
-                    </select>
-                  </div>
-
-                  <textarea
-                    rows={3}
-                    placeholder="Provide details about the issue..."
-                    value={newTicketDesc}
-                    onChange={(e) => setNewTicketDesc(e.target.value)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
-                  />
-
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
-                  >
-                    Submit Helpdesk Ticket & Dispatch Technician
-                  </button>
-                </form>
-              </div>
-
-              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <span className="font-bold text-base text-slate-900 block">Ticket History & SLA Status</span>
-
-                <div className="space-y-3 text-xs">
-                  {ticketsList.map(t => (
-                    <div key={t.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-bold text-sm text-slate-900">{t.subject} ({t.id})</div>
-                          <div className="text-xs text-slate-500 mt-0.5">{t.category} • Assigned: {t.assignedTo}</div>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full font-bold text-[10px] ${
-                          t.status === 'In Progress' ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {t.status} ({t.sla})
-                        </span>
-                      </div>
-
-                      {t.status === 'Resolved' && (
-                        <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                          <span className="text-slate-600 font-bold">Rate Service:</span>
-                          <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map(star => (
-                              <button
-                                key={star}
-                                onClick={() => handleRateTicket(t.id, star)}
-                                className={`text-base cursor-pointer ${t.rating && t.rating >= star ? 'text-amber-500 font-black' : 'text-slate-300'}`}
-                              >
-                                ★
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* 8. AMENITIES, EVENTS, SOCIAL, CHATS, DOCUMENTS, DIRECTORY */}
-          {activeSection === 'amenities' && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-              <span className="font-bold text-base text-slate-900 block">Reserve Society Amenities</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { name: 'Badminton Court 2 (Indoor Wooden)', slot: '06:00 PM - 07:00 PM', price: 'Free for Residents' },
-                  { name: 'Tennis Court 1 (Synthetic Surface)', slot: '07:00 AM - 08:00 AM', price: 'Free for Residents' },
-                  { name: 'Clubhouse Banquet Hall (150 Capacity)', slot: '05:00 PM - 10:00 PM', price: '₹ 5,000 / Event' },
-                  { name: 'Squash Court 1 (Air Conditioned)', slot: '07:00 PM - 08:00 PM', price: 'Free for Residents' },
-                ].map((am, idx) => (
-                  <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-sm text-slate-900">{am.name}</div>
-                      <div className="text-xs text-slate-500">{am.slot} • {am.price}</div>
-                    </div>
-                    <button onClick={() => alert(`Slot booked for ${am.name}!`)} className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs cursor-pointer">
-                      Book Slot
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeSection === 'events' && (
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-              <span className="font-bold text-base text-slate-900 block">Society Events Calendar</span>
+              <span className="font-bold text-base text-slate-900 block">Official RWA Circulars (23 Unread)</span>
               <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-                <span className="bg-indigo-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold">FESTIVAL</span>
-                <div className="font-bold text-base text-slate-900">Ganesh Chaturthi Grand Utsav 2026</div>
-                <p className="text-xs text-slate-600">3-Day grand celebration at Clubhouse lawn with cultural events.</p>
-                <button onClick={() => alert('RSVP Confirmed for Ganesh Utsav!')} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">
-                  RSVP Going
-                </button>
+                <span className="bg-indigo-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold">AGM EVENT</span>
+                <div className="font-bold text-base text-slate-900">Annual RWA General Body Meeting (AGM)</div>
+                <p className="text-xs text-slate-600">Sunday, August 30 at 10:00 AM in Clubhouse Hall.</p>
               </div>
             </div>
           )}
 
-          {activeSection === 'social' && (
+          {activeSection === 'helpdesk' && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-              <span className="font-bold text-base text-slate-900 block">Active Community Poll</span>
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
-                <div className="font-bold text-sm text-slate-900">Which Swimming Pool Maintenance Agency should RWA hire for FY 2026-27?</div>
-                <div className="space-y-2.5">
-                  {pollOptions.map(opt => (
-                    <div
-                      key={opt.id}
-                      onClick={() => handleVote(opt.id)}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-                        pollVoted === opt.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-200'
-                      }`}
-                    >
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span>{opt.text}</span>
-                        <span>{opt.percent}% ({opt.votes} Votes)</span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500" style={{ width: `${opt.percent}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeSection === 'chats' && (
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-              <span className="font-bold text-base text-slate-900 block">Community Intercom & Channels</span>
-              <div className="space-y-3">
-                {[
-                  { name: 'Gate 1 Security Intercom', desc: 'Guard Vikram: Package received for B-108', time: '11:20 AM' },
-                  { name: 'Tower B Residents Group', desc: 'Meenakshi: Lift #2 is working normally now', time: 'Yesterday' },
-                  { name: 'Green Haven Buy / Sell Marketplace', desc: 'Rohan: Bicycle for sale', time: '20 Aug' },
-                ].map((c, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-sm text-slate-900">{c.name}</div>
-                      <div className="text-xs text-slate-500">{c.desc}</div>
-                    </div>
-                    <span className="text-xs text-slate-400 font-medium">{c.time}</span>
-                  </div>
-                ))}
-              </div>
+              <span className="font-bold text-base text-slate-900 block">Helpdesk Tickets</span>
+              <form onSubmit={handleCreateTicket} className="space-y-3">
+                <input
+                  type="text"
+                  required
+                  placeholder="Issue Subject (e.g. Water Leak)"
+                  value={newTicketSubject}
+                  onChange={(e) => setNewTicketSubject(e.target.value)}
+                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs"
+                />
+                <button type="submit" className="w-full py-3 bg-slate-900 text-white font-bold text-xs rounded-xl">Submit Ticket</button>
+              </form>
             </div>
           )}
 
@@ -1355,8 +1287,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 {[
                   { name: 'Green Haven Society Bylaws & Regulations', size: '2.4 MB PDF' },
                   { name: 'Tenant Move-In / Move-Out NOC Form', size: '420 KB PDF' },
-                  { name: 'Fire Safety & Disaster Evacuation Guide', size: '1.8 MB PDF' },
-                  { name: 'Clubhouse Banquet Hall Usage Guidelines', size: '650 KB PDF' },
                 ].map((doc, idx) => (
                   <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
                     <div>
@@ -1379,8 +1309,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 {[
                   { title: 'Gate 1 Main Entry Intercom', phone: 'Ext: 101 • 98123 45678' },
                   { title: 'Gate 2 Rear Entry Intercom', phone: 'Ext: 102 • 98765 43210' },
-                  { title: 'RWA President Office', phone: '98450 11990' },
-                  { title: 'Emergency Ambulance & First Aid', phone: '108' },
                 ].map((item, idx) => (
                   <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
                     <div>
@@ -1389,6 +1317,28 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                     </div>
                     <button onClick={() => alert(`Calling ${item.title}...`)} className="px-3.5 py-1.5 bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center gap-1">
                       <Phone className="w-3.5 h-3.5" /> Call
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'amenities' && (
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+              <span className="font-bold text-base text-slate-900 block">Reserve Society Amenities</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { name: 'Badminton Court 2 (Indoor Wooden)', slot: '06:00 PM - 07:00 PM', price: 'Free for Residents' },
+                  { name: 'Tennis Court 1 (Synthetic Surface)', slot: '07:00 AM - 08:00 AM', price: 'Free for Residents' },
+                ].map((am, idx) => (
+                  <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
+                    <div>
+                      <div className="font-bold text-sm text-slate-900">{am.name}</div>
+                      <div className="text-xs text-slate-500">{am.slot} • {am.price}</div>
+                    </div>
+                    <button onClick={() => alert(`Slot booked for ${am.name}!`)} className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs cursor-pointer">
+                      Book Slot
                     </button>
                   </div>
                 ))}
@@ -1416,7 +1366,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
               </button>
             )}
 
-            {/* STEP 1: SELECT METHOD & PAY */}
             {paymentStep === 'idle' && (
               <div className="space-y-5">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1430,7 +1379,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   </div>
                 </div>
 
-                {/* Method Tabs */}
                 <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl text-xs font-bold">
                   <button
                     onClick={() => setPaymentMethod('upi')}
@@ -1463,7 +1411,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   </button>
                 </div>
 
-                {/* UPI PAY SECTION */}
                 {paymentMethod === 'upi' && (
                   <div className="space-y-4">
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center gap-4">
@@ -1475,92 +1422,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                         <div className="font-bold text-xs text-slate-900">Scan Dynamic UPI QR Code</div>
                         <div className="text-[11px] text-slate-500 font-mono">greenhaven.rwa@hdfcbank</div>
                       </div>
-                    </div>
-
-                    <div className="space-y-1.5 text-xs">
-                      <label className="font-bold text-slate-700">Or Select 1-Click UPI App:</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {['GPay', 'PhonePe', 'Paytm'].map(app => (
-                          <button
-                            key={app}
-                            onClick={() => setSelectedUpiApp(app)}
-                            className={`p-3 rounded-xl border font-bold text-center cursor-pointer transition-all ${
-                              selectedUpiApp === app ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
-                            }`}
-                          >
-                            {app}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* CARD PAY SECTION */}
-                {paymentMethod === 'card' && (
-                  <div className="space-y-4">
-                    {/* Live Virtual Card Preview */}
-                    <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-lg space-y-3">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold tracking-wider">HDFC MILLENNIA DEBIT</span>
-                        <span className="font-mono font-bold">VISA</span>
-                      </div>
-                      <div className="font-mono text-lg tracking-widest pt-2">{cardNumber || '•••• •••• •••• ••••'}</div>
-                      <div className="flex justify-between text-[11px] text-slate-300 pt-1">
-                        <span>{cardHolder || 'CARD HOLDER'}</span>
-                        <span>EXP: {cardExpiry || 'MM/YY'}</span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div className="col-span-2">
-                        <label className="font-bold text-slate-700 block mb-1">Card Number</label>
-                        <input
-                          type="text"
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                          className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">Expiry Date</label>
-                        <input
-                          type="text"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
-                          className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">CVV</label>
-                        <input
-                          type="password"
-                          maxLength={3}
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
-                          className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* NET BANKING SECTION */}
-                {paymentMethod === 'netbanking' && (
-                  <div className="space-y-3 text-xs">
-                    <label className="font-bold text-slate-700">Select Banking Partner:</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 'Punjab National'].map(bank => (
-                        <button
-                          key={bank}
-                          onClick={() => setSelectedBank(bank)}
-                          className={`p-3 rounded-xl border font-bold text-left cursor-pointer transition-all ${
-                            selectedBank === bank ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
-                          }`}
-                        >
-                          {bank}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 )}
@@ -1575,56 +1436,25 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
               </div>
             )}
 
-            {/* STEP 2: PROCESSING ANIMATION */}
             {paymentStep === 'processing' && (
               <div className="py-12 text-center space-y-4">
                 <div className="w-16 h-16 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mx-auto" />
                 <h3 className="font-extrabold text-xl text-slate-900">Processing Payment...</h3>
-                <p className="text-xs text-slate-500">Contacting Payment Gateway & Authorizing 256-Bit SSL Encrypted Transaction</p>
               </div>
             )}
 
-            {/* STEP 3: PAYMENT SUCCESS & INSTANT GST RECEIPT */}
             {paymentStep === 'success' && (
               <div className="text-center space-y-4 py-2">
                 <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
                   <CheckCheck className="w-8 h-8" />
                 </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
-                    Transaction Approved ✓
-                  </span>
-                  <h3 className="font-black text-2xl text-slate-900 pt-2">₹ {totalPayable.toFixed(2)} Paid</h3>
-                  <p className="text-xs text-slate-500">August 2026 Maintenance Dues Cleared for Flat B-108</p>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-left space-y-1 font-mono">
-                  <div className="flex justify-between"><span>Transaction ID:</span><span className="font-bold text-slate-900">TXN-9021-8841-IN</span></div>
-                  <div className="flex justify-between"><span>Receipt Number:</span><span className="font-bold text-slate-900">GST-9021</span></div>
-                  <div className="flex justify-between"><span>Payment Method:</span><span className="font-bold text-slate-900">{paymentMethod.toUpperCase()}</span></div>
-                  <div className="flex justify-between"><span>Timestamp:</span><span>{new Date().toLocaleTimeString()} Today</span></div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    onClick={() => {
-                      alert('Downloading Verified GST Tax Invoice PDF #GST-9021...');
-                      setShowPaymentModal(false);
-                    }}
-                    className="flex-1 py-3.5 bg-slate-900 text-white font-bold rounded-2xl text-xs shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download Tax Invoice PDF</span>
-                  </button>
-
-                  <button
-                    onClick={() => setShowPaymentModal(false)}
-                    className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl text-xs cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
+                <h3 className="font-black text-2xl text-slate-900 pt-2">₹ {totalPayable.toFixed(2)} Paid</h3>
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-2xl text-xs"
+                >
+                  Done
+                </button>
               </div>
             )}
 
