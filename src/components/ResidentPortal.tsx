@@ -83,6 +83,9 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   // SOS Alarm Modal
   const [showSosModal, setShowSosModal] = useState<boolean>(false);
 
+  // Mobile Menu Drawer State
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+
   // =========================================================================
   // 1. LIVE GATE APPROVAL REQUESTS ENGINE
   // =========================================================================
@@ -542,48 +545,58 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     <div className="min-h-screen bg-[#F8F9FA] text-slate-800 font-sans antialiased flex flex-col selection:bg-[#0F172A] selection:text-white">
       
       {/* ========================================================================= */}
-      {/* TOP DESKTOP HEADER BAR */}
       {/* ========================================================================= */}
-      <header className="bg-white border-b border-slate-200 px-6 sm:px-10 py-4 sticky top-0 z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      {/* TOP DESKTOP & MOBILE HEADER BAR */}
+      {/* ========================================================================= */}
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-10 py-3.5 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           
           {/* Brand & Flat Identifier (Clickable to open profile) */}
           <button 
-            onClick={() => setActiveSection('profile')}
-            className="flex items-center gap-4 text-left hover:opacity-90 transition-opacity cursor-pointer group"
+            onClick={() => {
+              setActiveSection('profile');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-3 text-left hover:opacity-90 transition-opacity cursor-pointer group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#6366F1] to-[#818CF8] p-0.5 shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full rounded-2xl bg-[#525CEB] flex items-center justify-center text-white font-bold text-xl">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-[#6366F1] to-[#818CF8] p-0.5 shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-full h-full rounded-2xl bg-[#525CEB] flex items-center justify-center text-white font-bold text-lg sm:text-xl">
                 <span>👨‍💼</span>
               </div>
             </div>
 
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-black text-2xl text-slate-900 tracking-tight">Flat B-108</span>
-                <span className="bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-bold">2BHK • Tower B</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight">Flat B-108</span>
+                <span className="bg-slate-100 text-slate-700 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-bold">2BHK • Tower B</span>
               </div>
-              <div className="text-xs text-slate-500 font-medium">
-                ASBL Springs, Pocharam • <span className="text-indigo-600 font-bold underline">View Profile</span>
+              <div className="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[160px] sm:max-w-none">
+                ASBL Springs • <span className="text-indigo-600 font-bold underline">Ananya Sharma</span>
               </div>
             </div>
           </button>
 
-          {/* Quick Actions */}
-          <div className="flex items-center gap-3">
+          {/* Quick Actions & Mobile Hamburger */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {pendingGateCount > 0 && (
               <button
-                onClick={() => setActiveSection('visitors_parcels')}
-                className="px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm animate-bounce cursor-pointer"
+                onClick={() => {
+                  setActiveSection('visitors_parcels');
+                  setMobileMenuOpen(false);
+                }}
+                className="hidden sm:flex px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs items-center gap-2 shadow-sm animate-bounce cursor-pointer"
               >
                 <Bell className="w-4 h-4" />
-                <span>{pendingGateCount} Gate Approvals Waiting!</span>
+                <span>{pendingGateCount} Gate Approvals!</span>
               </button>
             )}
 
             <button
-              onClick={() => setActiveSection('payments')}
-              className={`px-4 py-2 rounded-2xl border flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+              onClick={() => {
+                setActiveSection('payments');
+                setMobileMenuOpen(false);
+              }}
+              className={`hidden sm:flex px-4 py-2 rounded-2xl border items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
                 billStatus === 'Unpaid' ? 'bg-amber-50 text-amber-900 border-amber-300' : 'bg-emerald-50 text-emerald-900 border-emerald-300'
               }`}
             >
@@ -593,31 +606,100 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
             <button
               onClick={() => setShowSosModal(true)}
-              className="px-5 py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-2 text-xs font-black shadow-sm transition-transform active:scale-95 cursor-pointer"
+              className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-1.5 sm:gap-2 text-xs font-black shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <Flame className="w-4 h-4 text-[#DC2626] animate-pulse" />
-              <span>🚨 SOS PANIC ALARM</span>
+              <span className="hidden sm:inline">🚨 SOS PANIC</span>
+              <span className="sm:hidden font-black">SOS</span>
+            </button>
+
+            {/* Mobile Hamburger Drawer Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-2xl bg-slate-900 text-white font-bold flex items-center justify-center cursor-pointer shadow-sm"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
             <button
               onClick={onExit}
-              className="px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-2 text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
+              className="hidden sm:flex px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white items-center gap-2 text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Exit</span>
+              <span>Exit</span>
             </button>
           </div>
 
         </div>
+
+        {/* Mobile Collapsible Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 pt-4 border-t border-slate-200 max-h-[75vh] overflow-y-auto space-y-2 animate-fade-in pb-4">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-2">
+              Resident Workspaces
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: 'overview', label: 'Dashboard Hub', icon: Home },
+                { id: 'visitors_parcels', label: 'Visitors & Parcels', icon: Package, badge: pendingGateCount > 0 ? `${pendingGateCount}` : undefined },
+                { id: 'payments', label: 'Pay Dues (₹ 4,766)', icon: CreditCard },
+                { id: 'helpdesk', label: 'Raise Complaint', icon: Wrench },
+                { id: 'helpers', label: 'Daily Staff (13)', icon: HandHeart },
+                { id: 'members', label: 'FastTag & Parking', icon: Car },
+                { id: 'amenities', label: 'Book Amenities', icon: Calendar },
+                { id: 'notices', label: 'Notice Board', icon: Megaphone },
+                { id: 'social', label: 'Community Polls', icon: Vote },
+                { id: 'chats', label: 'Resident Assistant', icon: MessageSquare },
+                { id: 'documents', label: 'Bylaws & Vault', icon: Folder },
+                { id: 'directory', label: 'Lost & Found', icon: LifeBuoy },
+                { id: 'profile', label: 'My Resident Profile', icon: User },
+              ].map(tab => {
+                const TabIcon = tab.icon;
+                const isActive = activeSection === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveSection(tab.id as ResidentNavSection);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                      isActive ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <TabIcon className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{tab.label}</span>
+                    </div>
+                    {tab.badge && (
+                      <span className="bg-amber-500 text-slate-950 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={onExit}
+              className="w-full p-3 mt-3 rounded-2xl bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs flex items-center justify-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Exit Resident Portal to Gateway</span>
+            </button>
+          </div>
+        )}
       </header>
 
       {/* ========================================================================= */}
       {/* DESKTOP SIDEBAR + EXPANSIVE MAIN WORKSPACE */}
       {/* ========================================================================= */}
-      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col md:flex-row gap-6 p-6 sm:p-8">
+      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col md:flex-row gap-6 p-4 sm:p-6 md:p-8">
         
         {/* DESKTOP LEFT SIDEBAR NAVIGATION */}
-        <aside className="w-full md:w-72 shrink-0 space-y-4">
+        <aside className="hidden md:block w-full md:w-72 shrink-0 space-y-4">
           
           {/* Resident Profile Card (Clickable to open profile) */}
           <button
