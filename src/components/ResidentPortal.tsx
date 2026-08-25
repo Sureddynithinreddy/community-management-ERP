@@ -8,7 +8,8 @@ import {
   ShieldAlert, ShieldCheck, Snowflake, Sparkles, Star, Tag, Trash2, Trophy, Truck, 
   User, UserCheck, UserPlus, Users, Vote, Waves, Wifi, Wrench, X, XCircle, Zap, Contact, Building2,
   CheckCheck, Percent, RefreshCw, Smartphone, Landmark, ShieldCheck as SecureIcon,
-  AlertCircle, Car, Coffee, ShieldX, UserX, PhoneCall, AlertTriangle, ThumbsUp, Hammer
+  AlertCircle, Car, Coffee, ShieldX, UserX, PhoneCall, AlertTriangle, ThumbsUp, Hammer,
+  Settings, KeyRound, BadgeCheck, FileCheck
 } from 'lucide-react';
 
 interface ResidentPortalProps {
@@ -28,7 +29,8 @@ type ResidentNavSection =
   | 'amenities'
   | 'events'
   | 'social'
-  | 'chats';
+  | 'chats'
+  | 'profile';
 
 interface GateApprovalRequest {
   id: string;
@@ -322,6 +324,31 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     { id: 3, text: 'Keep Existing Vendor', votes: 10, percent: 14 },
   ]);
 
+  // =========================================================================
+  // 6. RESIDENT PROFILE & PREFERENCES STATE
+  // =========================================================================
+  const [residentProfile, setResidentProfile] = useState({
+    name: 'Ananya Sharma',
+    role: 'Owner (Primary Registered)',
+    flatNo: 'Flat B-108',
+    tower: 'Tower B',
+    floor: '1st Floor',
+    unitType: '2BHK (1,250 sq.ft)',
+    society: 'ASBL Springs, Pocharam',
+    phone: '+91 98765 11111',
+    email: 'ananya.sharma@example.com',
+    emergencyContact: 'Dr. Ramesh Sharma (Father) • +91 98450 11990',
+    aadhaarKyc: 'XXXX-XXXX-8902 (Verified ✓)',
+    possessionDate: '15 March 2024',
+    regDocNo: 'ASBL-2024-B108-REG',
+    allocatedParking: 'Basement Level 1 - Slot B-42',
+    rfidTag: 'RFID-ANPR-8921-ACTIVE',
+    vehicleModel: 'Honda City Sedan (KA-03-MB-4921)',
+    gateIvrCall: true,
+    directoryPrivacy: false,
+    whatsappNotifications: true
+  });
+
   // Handlers
   const handleAllowGateEntry = (reqId: string) => {
     const req = incomingGateRequests.find(r => r.id === reqId);
@@ -496,6 +523,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
   const navMenuItems = [
     { id: 'overview', label: 'Overview Dashboard', icon: Home, badge: pendingGateCount > 0 ? `${pendingGateCount} at Gate` : undefined, badgeColor: 'bg-red-500 text-white animate-pulse' },
+    { id: 'profile', label: 'My Resident Profile', icon: User, badge: 'Verified ✓', badgeColor: 'bg-emerald-100 text-emerald-800' },
     { id: 'visitors_parcels', label: 'Visitors & Gate Approvals', icon: Shield, badge: pendingGateCount > 0 ? `${pendingGateCount}` : undefined },
     { id: 'payments', label: 'Paying Bills & Meters', icon: CreditCard, badge: billStatus === 'Unpaid' ? 'Due' : undefined },
     { id: 'helpdesk', label: 'Raise Complaints & Helpdesk', icon: Headphones, badge: activeTicketsCount > 0 ? `${activeTicketsCount} Active` : undefined, badgeColor: 'bg-indigo-600 text-white' },
@@ -519,9 +547,12 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
       <header className="bg-white border-b border-slate-200 px-6 sm:px-10 py-4 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
-          {/* Brand & Flat Identifier */}
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#6366F1] to-[#818CF8] p-0.5 shadow-sm flex items-center justify-center shrink-0">
+          {/* Brand & Flat Identifier (Clickable to open profile) */}
+          <button 
+            onClick={() => setActiveSection('profile')}
+            className="flex items-center gap-4 text-left hover:opacity-90 transition-opacity cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#6366F1] to-[#818CF8] p-0.5 shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <div className="w-full h-full rounded-2xl bg-[#525CEB] flex items-center justify-center text-white font-bold text-xl">
                 <span>👨‍💼</span>
               </div>
@@ -533,10 +564,10 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 <span className="bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-bold">2BHK • Tower B</span>
               </div>
               <div className="text-xs text-slate-500 font-medium">
-                ASBL Springs, Pocharam • Resident Portal
+                ASBL Springs, Pocharam • <span className="text-indigo-600 font-bold underline">View Profile</span>
               </div>
             </div>
-          </div>
+          </button>
 
           {/* Quick Actions */}
           <div className="flex items-center gap-3">
@@ -588,10 +619,13 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
         {/* DESKTOP LEFT SIDEBAR NAVIGATION */}
         <aside className="w-full md:w-72 shrink-0 space-y-4">
           
-          {/* Resident Profile Card */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+          {/* Resident Profile Card (Clickable to open profile) */}
+          <button
+            onClick={() => setActiveSection('profile')}
+            className="w-full bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3 text-left transition-all hover:scale-[1.01] cursor-pointer group"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-sm shadow-sm group-hover:bg-indigo-600 transition-colors">
                 AS
               </div>
               <div>
@@ -602,9 +636,9 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
             <div className="pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-600">
               <span>Family: <strong>3 Members</strong></span>
-              <span>Vehicle: <strong>KA-03-MB-4921</strong></span>
+              <span className="text-indigo-600 font-bold">Edit Profile →</span>
             </div>
-          </div>
+          </button>
 
           {/* Gate Approval Quick Simulator */}
           <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs space-y-2.5">
@@ -704,8 +738,206 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
         {/* ========================================================================= */}
         <main className="flex-1 space-y-6">
           
+          {/* ========================================================================= */}
+          {/* NEW: 0. RESIDENT PROFILE SECTION (FLAT B-108) */}
+          {/* ========================================================================= */}
+          {activeSection === 'profile' && (
+            <div className="space-y-6 animate-fade-in">
+              
+              {/* Profile Hero Header Banner */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                <div className="flex items-center gap-5 relative z-10">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 to-purple-500 p-1 shadow-lg shrink-0 flex items-center justify-center">
+                    <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-4xl">
+                      👩‍💼
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className="font-black text-2xl text-white">{residentProfile.name}</h2>
+                      <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <BadgeCheck className="w-3.5 h-3.5" /> Aadhaar Verified
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-slate-300 font-medium mt-1">
+                      {residentProfile.role} • {residentProfile.flatNo} ({residentProfile.unitType}) • {residentProfile.society}
+                    </div>
+
+                    <div className="text-xs text-slate-400 font-mono mt-0.5">
+                      Possession: {residentProfile.possessionDate} • Reg: {residentProfile.regDocNo}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => alert('Profile and KYC details updated successfully!')}
+                  className="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-md transition-transform active:scale-95 cursor-pointer relative z-10"
+                >
+                  Save Profile Changes
+                </button>
+              </div>
+
+              {/* 2-Column Grid: Personal & Contact Info + Parking & Vehicles */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Left Card: Verified Contact & Ownership Details */}
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <span className="font-extrabold text-base text-slate-900 block">Personal & Verified Contact Info</span>
+                    <span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold">KYC Active ✓</span>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">Full Legal Name</label>
+                      <input
+                        type="text"
+                        value={residentProfile.name}
+                        onChange={(e) => setResidentProfile({ ...residentProfile, name: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-medium"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">Primary Mobile (Verified)</label>
+                        <input
+                          type="text"
+                          value={residentProfile.phone}
+                          onChange={(e) => setResidentProfile({ ...residentProfile, phone: e.target.value })}
+                          className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-mono font-medium"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">Registered Email</label>
+                        <input
+                          type="email"
+                          value={residentProfile.email}
+                          onChange={(e) => setResidentProfile({ ...residentProfile, email: e.target.value })}
+                          className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">Emergency Contact Person</label>
+                      <input
+                        type="text"
+                        value={residentProfile.emergencyContact}
+                        onChange={(e) => setResidentProfile({ ...residentProfile, emergencyContact: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-medium"
+                      />
+                    </div>
+
+                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex justify-between items-center text-[11px]">
+                      <div>
+                        <span className="text-slate-500 block">Aadhaar KYC Number</span>
+                        <span className="font-mono font-bold text-slate-900">{residentProfile.aadhaarKyc}</span>
+                      </div>
+                      <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">Verified</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Card: Vehicles, Parking & RFID */}
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <span className="font-extrabold text-base text-slate-900 block">Allocated Parking & FastTag RFID</span>
+                    <span className="text-xs text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full font-bold">Slot B-42</span>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-sm text-slate-900">{residentProfile.vehicleModel}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">Sedan • Allocated: {residentProfile.allocatedParking}</div>
+                        </div>
+                        <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">ANPR Active</span>
+                      </div>
+                      <div className="pt-2 border-t border-slate-200/60 flex justify-between text-[11px] font-mono">
+                        <span className="text-slate-500">FastTag Tag ID:</span>
+                        <span className="font-bold text-slate-800">{residentProfile.rfidTag}</span>
+                      </div>
+                    </div>
+
+                    {/* Household Family Members */}
+                    <div className="space-y-2 pt-1">
+                      <span className="font-bold text-slate-700 block">Registered Family Members (3)</span>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                          <div className="font-bold text-slate-900">Rahul Sharma</div>
+                          <div className="text-[10px] text-slate-500">Co-Owner (Spouse)</div>
+                        </div>
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                          <div className="font-bold text-slate-900">Aarav Sharma</div>
+                          <div className="text-[10px] text-slate-500">Child (Resident)</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Notification & Security Preferences Section */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                <span className="font-extrabold text-base text-slate-900 block">Gate Security & Notification Preferences</span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-3">
+                    <div>
+                      <div className="font-bold text-slate-900">Gate IVR Phone Calls</div>
+                      <div className="text-[11px] text-slate-500">Receive automated voice call for gate arrivals</div>
+                    </div>
+                    <button
+                      onClick={() => setResidentProfile({ ...residentProfile, gateIvrCall: !residentProfile.gateIvrCall })}
+                      className={`w-10 h-6 rounded-full transition-colors p-0.5 cursor-pointer shrink-0 ${residentProfile.gateIvrCall ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white transition-transform ${residentProfile.gateIvrCall ? 'translate-x-4' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-3">
+                    <div>
+                      <div className="font-bold text-slate-900">Directory Phone Masking</div>
+                      <div className="text-[11px] text-slate-500">Hide personal number in society directory</div>
+                    </div>
+                    <button
+                      onClick={() => setResidentProfile({ ...residentProfile, directoryPrivacy: !residentProfile.directoryPrivacy })}
+                      className={`w-10 h-6 rounded-full transition-colors p-0.5 cursor-pointer shrink-0 ${residentProfile.directoryPrivacy ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white transition-transform ${residentProfile.directoryPrivacy ? 'translate-x-4' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-3">
+                    <div>
+                      <div className="font-bold text-slate-900">WhatsApp Notification Pass</div>
+                      <div className="text-[11px] text-slate-500">Send gate QR codes & bills on WhatsApp</div>
+                    </div>
+                    <button
+                      onClick={() => setResidentProfile({ ...residentProfile, whatsappNotifications: !residentProfile.whatsappNotifications })}
+                      className={`w-10 h-6 rounded-full transition-colors p-0.5 cursor-pointer shrink-0 ${residentProfile.whatsappNotifications ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white transition-transform ${residentProfile.whatsappNotifications ? 'translate-x-4' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
           {/* PROMINENT LIVE INCOMING GATE APPROVAL BANNER */}
-          {incomingGateRequests.filter(r => r.status === 'pending').map((req) => (
+          {/* ========================================================================= */}
+          {activeSection !== 'profile' && incomingGateRequests.filter(r => r.status === 'pending').map((req) => (
             <div 
               key={req.id}
               className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 p-6 rounded-3xl shadow-xl space-y-4 border-2 border-amber-300 animate-fade-in relative overflow-hidden"
@@ -1202,7 +1434,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
               {/* 2-Column Grid: Itemized Bill Breakdown + Pre-Paid Meter */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                {/* Left Column (7 Cols): Transparent Itemized Breakdown */}
+                {/* Left Column: Transparent Itemized Breakdown */}
                 <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                     <div>
@@ -1287,7 +1519,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   </div>
                 </div>
 
-                {/* Right Column (5 Cols): Pre-Paid Smart Meter Console */}
+                {/* Right Column: Pre-Paid Smart Meter Console */}
                 <div className="lg:col-span-5 space-y-6">
                   
                   <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -1818,7 +2050,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 6. MEMBERS & VEHICLES */}
-          {/* ========================================================================= */}
           {activeSection === 'members' && (
             <div className="space-y-6">
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -1858,7 +2089,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 7. NOTICES */}
-          {/* ========================================================================= */}
           {activeSection === 'notices' && (
             <div className="space-y-6">
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -1894,7 +2124,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 8. DOCUMENTS */}
-          {/* ========================================================================= */}
           {activeSection === 'documents' && (
             <div className="space-y-6">
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
