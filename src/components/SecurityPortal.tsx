@@ -7,7 +7,8 @@ import {
   TrendingUp, BarChart3, Radio, FileText, CheckCheck, RefreshCw, KeyRound,
   Lock, Eye, Shield, Users, Building2, MapPin, Truck, AlertOctagon, UserX,
   BadgeCheck, Hammer, Sparkle, Printer, Share2, ArrowUpRight, ShieldQuestion,
-  Snowflake, Scan, Compass, ShieldBan, Tag
+  Snowflake, Scan, Compass, ShieldBan, Tag, Siren, Volume2, VolumeX, ShieldQuestion as ShieldQ,
+  PhoneForwarded, Send
 } from 'lucide-react';
 import { SecurityAnalytics } from './SecurityAnalytics';
 
@@ -18,6 +19,7 @@ interface SecurityPortalProps {
 type SecurityNavSection = 
   | 'dashboard'
   | 'visitors'
+  | 'residents'
   | 'parcels'
   | 'anpr'
   | 'staff'
@@ -66,6 +68,23 @@ interface ParcelEntry {
   collectedTime?: string;
 }
 
+interface ResidentDossier {
+  flat: string;
+  tower: string;
+  floor: string;
+  unitType: string;
+  owner: string;
+  phone: string;
+  intercom: string;
+  email: string;
+  aadhaarKyc: string;
+  possessionDate: string;
+  familyMembers: Array<{ name: string; relation: string; phone?: string }>;
+  vehicles: Array<{ plate: string; model: string; slot: string; rfid: string }>;
+  helpers: Array<{ name: string; role: string; time: string; phone: string }>;
+  autoApproveRules: string[];
+}
+
 interface ResidentVehicle {
   id: string;
   plate: string;
@@ -104,6 +123,18 @@ interface StaffEntry {
   rating: string;
 }
 
+interface SosIncident {
+  id: string;
+  flat: string;
+  resident: string;
+  tower: string;
+  triggerTime: string;
+  status: 'Active Siren' | 'Guard Dispatched' | 'Resolved';
+  dispatchedOfficer?: string;
+  responseTime?: string;
+  notes?: string;
+}
+
 export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // Navigation State
   const [activeSection, setActiveSection] = useState<SecurityNavSection>('dashboard');
@@ -128,17 +159,118 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // Printable Visitor Badge Modal
   const [badgeVisitor, setBadgeVisitor] = useState<VisitorEntry | null>(null);
 
-  // Resident Lookup Map
-  const residentDatabase: Record<string, { owner: string; phone: string; type: string; autoApprove: string }> = {
-    'Flat B-108': { owner: 'Ananya Sharma', phone: '+91 98765 11111', type: 'Primary Owner (Tower B)', autoApprove: 'Deliveries & Cabs Auto-Approved' },
-    'Flat A-402': { owner: 'Rajesh Mehta', phone: '+91 98765 12345', type: 'Primary Owner (Tower A)', autoApprove: 'Manual Verification Required' },
-    'Flat C-301': { owner: 'Suresh Menon', phone: '+91 98901 22334', type: 'Tenant (Tower C)', autoApprove: 'Deliveries Auto-Approved' },
-    'Flat A-104': { owner: 'Pooja Hegde', phone: '+91 98123 99999', type: 'Owner (Tower A)', autoApprove: 'Pre-Approved Guests Only' },
-    'Flat B-204': { owner: 'Rohan Deshmukh', phone: '+91 98990 11223', type: 'Owner (Tower B)', autoApprove: 'Manual Verification' }
+  // =========================================================================
+  // 1. RESIDENT DIRECTORY & VERIFICATION DATABASE
+  // =========================================================================
+  const [residentSearchQuery, setResidentSearchQuery] = useState<string>('Flat B-108');
+  const [selectedTowerFilter, setSelectedTowerFilter] = useState<'ALL' | 'Tower A' | 'Tower B' | 'Tower C'>('ALL');
+
+  const fullResidentDatabase: Record<string, ResidentDossier> = {
+    'Flat B-108': {
+      flat: 'Flat B-108',
+      tower: 'Tower B',
+      floor: '1st Floor',
+      unitType: '2BHK (1,250 sq.ft)',
+      owner: 'Ananya Sharma',
+      phone: '+91 98765 11111',
+      intercom: 'Ext: 108',
+      email: 'ananya.sharma@example.com',
+      aadhaarKyc: 'XXXX-XXXX-8902 (Verified ✓)',
+      possessionDate: '15 March 2024',
+      familyMembers: [
+        { name: 'Rahul Sharma', relation: 'Spouse / Co-Owner', phone: '+91 98765 22222' },
+        { name: 'Aarav Sharma', relation: 'Child / Resident' }
+      ],
+      vehicles: [
+        { plate: 'KA-03-MB-4921', model: 'Honda City Sedan (White)', slot: 'Basement 1 - Slot B-42', rfid: 'RFID-ANPR-8921-ACTIVE' },
+        { plate: 'TS-07-EX-8899', model: 'Ather 450X EV (Grey)', slot: '2W Bay B-14', rfid: 'RFID-2W-8899-ACTIVE' }
+      ],
+      helpers: [
+        { name: 'Sunita Devi', role: 'Daily Housekeeping Maid', time: '09:15 AM - 01:00 PM', phone: '98765 99887' },
+        { name: 'Ramesh Kumar', role: 'Morning Cook', time: '07:00 AM - 09:00 AM', phone: '98123 44556' }
+      ],
+      autoApproveRules: [
+        '⚡ Blinkit / Swiggy Deliveries Auto-Approved',
+        '🚗 Uber / Ola Cabs Auto-Approved',
+        '🔔 Automated IVR Voice Call on Gate Arrivals Active'
+      ]
+    },
+    'Flat A-402': {
+      flat: 'Flat A-402',
+      tower: 'Tower A',
+      floor: '4th Floor',
+      unitType: '3BHK (1,850 sq.ft)',
+      owner: 'Rajesh Mehta',
+      phone: '+91 98765 12345',
+      intercom: 'Ext: 402',
+      email: 'rajesh.mehta@example.com',
+      aadhaarKyc: 'XXXX-XXXX-4412 (Verified ✓)',
+      possessionDate: '10 January 2024',
+      familyMembers: [
+        { name: 'Kavita Mehta', relation: 'Spouse', phone: '+91 98765 33441' },
+        { name: 'Rohan Mehta', relation: 'Son' }
+      ],
+      vehicles: [
+        { plate: 'KA-05-MA-1234', model: 'Hyundai Creta SUV (Silver)', slot: 'Basement 1 - Slot A-12', rfid: 'RFID-ANPR-4412-ACTIVE' }
+      ],
+      helpers: [
+        { name: 'Sunita Devi', role: 'Daily Maid', time: '08:00 AM - 09:15 AM', phone: '98765 99887' }
+      ],
+      autoApproveRules: [
+        '⚠️ Manual Guard Phone Call Verification Required for All Visitors'
+      ]
+    },
+    'Flat C-301': {
+      flat: 'Flat C-301',
+      tower: 'Tower C',
+      floor: '3rd Floor',
+      unitType: '3BHK (1,850 sq.ft)',
+      owner: 'Suresh Menon',
+      phone: '+91 98901 22334',
+      intercom: 'Ext: 301',
+      email: 'suresh.menon@example.com',
+      aadhaarKyc: 'XXXX-XXXX-9901 (Verified ✓)',
+      possessionDate: '01 June 2024',
+      familyMembers: [
+        { name: 'Deepa Menon', relation: 'Spouse', phone: '+91 98901 55667' }
+      ],
+      vehicles: [
+        { plate: 'TS-09-GA-1002', model: 'Maruti Brezza (Red)', slot: 'Basement 2 - Slot C-08', rfid: 'RFID-ANPR-3319-ACTIVE' }
+      ],
+      helpers: [
+        { name: 'Pooja Bai', role: 'Daily Cleaner', time: '09:45 AM - 11:00 AM', phone: '98901 22334' }
+      ],
+      autoApproveRules: [
+        '⚡ Food Deliveries (Swiggy / Zomato) Auto-Approved'
+      ]
+    }
   };
 
+  const selectedDossier: ResidentDossier = fullResidentDatabase[residentSearchQuery] || fullResidentDatabase['Flat B-108'];
+
   // =========================================================================
-  // 1. VISITOR REGISTER STATE (6 Active Entries)
+  // 2. EMERGENCY SOS CONSOLE & LIVE SIREN DISPATCH
+  // =========================================================================
+  const [sosActiveSiren, setSosActiveSiren] = useState<boolean>(true);
+  const [activeSosIncident, setActiveSosIncident] = useState<SosIncident>({
+    id: 'SOS-901',
+    flat: 'Flat B-108',
+    resident: 'Ananya Sharma',
+    tower: 'Tower B (1st Floor)',
+    triggerTime: '11:46 AM (Just Now)',
+    status: 'Active Siren',
+    dispatchedOfficer: 'Guard Suresh (Patrol Unit 1)',
+    responseTime: '1 min 15s in progress',
+    notes: 'Resident triggered mobile panic button. Intercom ringing.'
+  });
+
+  const [sosHistoryList, setSosHistoryList] = useState<SosIncident[]>([
+    { id: 'SOS-892', flat: 'Flat A-402', resident: 'Rajesh Mehta', tower: 'Tower A', triggerTime: '19 Aug 2026 09:12 PM', status: 'Resolved', dispatchedOfficer: 'Guard Vikram Singh', responseTime: '1m 40s Response', notes: 'Accidental test trigger by resident child. Verified all clear.' },
+    { id: 'SOS-880', flat: 'Flat C-301', resident: 'Suresh Menon', tower: 'Tower C', triggerTime: '14 Aug 2026 02:30 AM', status: 'Resolved', dispatchedOfficer: 'Guard Ramu', responseTime: '2m 10s Response', notes: 'Medical panic alarm. Ambulance 108 summoned and escorted to Tower C.' },
+  ]);
+
+  // =========================================================================
+  // 3. VISITOR REGISTER STATE (6 Active Entries)
   // =========================================================================
   const [vName, setVName] = useState<string>('Rajesh Kumar');
   const [vPhone, setVPhone] = useState<string>('98765 12099');
@@ -163,7 +295,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   const [exitSearchQuery, setExitSearchQuery] = useState<string>('');
 
   // =========================================================================
-  // 2. PARCEL & DELIVERY LOCKER STATE
+  // 4. PARCEL & DELIVERY LOCKER STATE
   // =========================================================================
   const [delCompany, setDelCompany] = useState<string>('Amazon Courier');
   const [delFlat, setDelFlat] = useState<string>('Flat B-108');
@@ -200,10 +332,9 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   ];
 
   // =========================================================================
-  // 3. VEHICLE, ANPR & PARKING MANAGEMENT STATE
+  // 5. VEHICLE, ANPR & PARKING MANAGEMENT STATE
   // =========================================================================
   const [plateQuery, setPlateQuery] = useState<string>('KA-03-MB-4921');
-  const [cameraStreamActive, setCameraStreamActive] = useState<boolean>(true);
   const [simulatedScanResult, setSimulatedScanResult] = useState<{
     plate: string;
     confidence: string;
@@ -253,7 +384,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   ]);
 
   // =========================================================================
-  // 4. DAILY STAFF & HELPERS ATTENDANCE (6 Active Staff)
+  // 6. DAILY STAFF & HELPERS ATTENDANCE (6 Active Staff)
   // =========================================================================
   const [staffList, setStaffList] = useState<StaffEntry[]>([
     { id: 'STF-01', name: 'Sunita Devi', role: 'Daily Housekeeping Maid', phone: '98765 99887', assignedFlats: 'Flat B-108, Flat A-402', status: 'Inside Society', entryTime: '09:15 AM', aadhaarVerified: true, rating: '4.9 ★' },
@@ -265,7 +396,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   ]);
 
   // =========================================================================
-  // 5. INCIDENTS & OCCURRENCE BOOK
+  // 7. INCIDENTS & OCCURRENCE BOOK
   // =========================================================================
   const [incidentsList, setIncidentsList] = useState([
     { id: 'INC-8921', category: 'Parking Dispute', flat: 'Flat B-102', desc: 'Visitor car parked blocking basement ramp', loggedBy: 'Guard Vikram Singh', status: 'Under Investigation', time: '10:45 AM', priority: 'High' },
@@ -274,7 +405,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   ]);
 
   // =========================================================================
-  // 6. GUARD PATROL CHECKPOINTS
+  // 8. GUARD PATROL CHECKPOINTS
   // =========================================================================
   const [patrolPoints, setPatrolPoints] = useState([
     { id: 1, name: 'Checkpoint 1: Main Gate Outer Perimeter', scanned: true, time: '11:00 AM', location: 'Gate 1 Outer Wall' },
@@ -285,7 +416,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   ]);
 
   // =========================================================================
-  // 7. LOST & FOUND REGISTER
+  // 9. LOST & FOUND REGISTER
   // =========================================================================
   const [lostFoundList, setLostFoundList] = useState([
     { id: 'LF-101', item: 'Hyundai Car Smart Key Ring', loc: 'Swimming Pool Deck', date: 'Today 09:30 AM', status: 'Unclaimed', photo: 'KEY-101.jpg' },
@@ -294,9 +425,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
     { id: 'LF-091', item: 'Ray-Ban Aviator Sunglasses', loc: 'Tennis Court 1', date: '14 Aug 2026', status: 'Unclaimed', photo: 'SUNGLASS-91.jpg' },
   ]);
 
-  // Emergency SOS Dispatch State
-  const [emergencyAlertActive, setEmergencyAlertActive] = useState<boolean>(false);
-
   // Handlers
   const handleCheckInVisitor = (e: React.FormEvent) => {
     e.preventDefault();
@@ -304,7 +432,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
     const newId = `VIS-${Math.floor(900 + Math.random() * 100)}`;
     const badgeNumber = `BDG-${Math.floor(100 + Math.random() * 900)}`;
-    const residentInfo = residentDatabase[vFlat] || { owner: 'Resident', phone: 'Ext: 101' };
+    const residentInfo = fullResidentDatabase[vFlat] || { owner: 'Resident', phone: 'Ext: 101' };
 
     const newEntry: VisitorEntry = {
       id: newId,
@@ -349,7 +477,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
     const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const newId = `PAR-${Math.floor(100 + Math.random() * 100)}`;
-    const residentInfo = residentDatabase[delFlat] || { owner: 'Resident', phone: delPhone };
+    const residentInfo = fullResidentDatabase[delFlat] || { owner: 'Resident', phone: delPhone };
 
     const newParcel: ParcelEntry = {
       id: newId,
@@ -463,6 +591,27 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
     }
   };
 
+  const handleDispatchPatrolToSos = () => {
+    setActiveSosIncident(prev => ({
+      ...prev,
+      status: 'Guard Dispatched',
+      dispatchedOfficer: 'Guard Suresh (Patrol Unit 1) - En Route',
+      responseTime: 'Guard Arriving in 45s'
+    }));
+    alert(`EMERGENCY PATROL DISPATCHED ✓\nGuard Suresh assigned to Flat B-108 (Tower B 1st Floor). Radio dispatch alerted!`);
+  };
+
+  const handleResetSosSiren = () => {
+    setSosActiveSiren(false);
+    setActiveSosIncident(prev => ({
+      ...prev,
+      status: 'Resolved',
+      notes: 'Siren cleared & verified with resident Ananya Sharma. All safe.'
+    }));
+    setSosHistoryList(prev => [activeSosIncident, ...prev]);
+    alert(`SOS SIREN RESET ✓\nEmergency alarm cleared. Resident verified safe.`);
+  };
+
   const insideCount = visitorRegister.filter(v => v.status === 'Inside').length;
   const awaitingParcelsCount = deliveryParcels.filter(p => p.status === 'Awaiting Pickup').length;
   const staffInsideCount = staffList.filter(s => s.status === 'Inside Society').length;
@@ -470,10 +619,11 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   const navMenuItems = [
     { id: 'dashboard', label: 'Security Command Dashboard', icon: LayoutDashboard },
     { id: 'visitors', label: 'Check-In / Out Visitors', icon: ShieldCheck, badge: `${insideCount} Inside`, badgeColor: 'bg-emerald-100 text-emerald-800 font-bold' },
+    { id: 'residents', label: 'Resident Directory & KYC', icon: Users, badge: 'Verified ✓', badgeColor: 'bg-indigo-100 text-indigo-800 font-bold' },
     { id: 'parcels', label: 'Gate Shelf Parcel Lockers', icon: Package, badge: `${awaitingParcelsCount} Awaiting`, badgeColor: 'bg-amber-100 text-amber-900 font-bold' },
     { id: 'anpr', label: 'ANPR AI Plate & Parking', icon: Car, badge: `${parkingViolationsList.length} Flagged`, badgeColor: 'bg-rose-100 text-rose-800 font-bold' },
     { id: 'staff', label: 'Daily Staff & Attendance', icon: Users, badge: `${staffInsideCount} Active`, badgeColor: 'bg-blue-100 text-blue-800 font-bold' },
-    { id: 'sos', label: 'Emergency SOS Alarm Console', icon: Flame, badge: emergencyAlertActive ? '🚨 SIREN' : undefined, badgeColor: 'bg-red-600 text-white animate-pulse' },
+    { id: 'sos', label: 'Emergency SOS Alarm Console', icon: Flame, badge: sosActiveSiren ? '🚨 SIREN ACTIVE' : undefined, badgeColor: 'bg-red-600 text-white animate-pulse' },
     { id: 'incidents', label: 'Incident Occurrence Book', icon: FileText },
     { id: 'patrol', label: 'Guard QR Patrol Checkpoints', icon: MapPin },
     { id: 'lostfound', label: 'Lost & Found Register', icon: Search },
@@ -551,7 +701,10 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
             {/* SOS Trigger */}
             <button
-              onClick={() => setShowSosModal(true)}
+              onClick={() => {
+                setActiveSection('sos');
+                setSosActiveSiren(true);
+              }}
               className="px-5 py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-2 text-xs font-black shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <Flame className="w-4 h-4 text-[#DC2626] animate-pulse" />
@@ -615,13 +768,12 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
             <button
               onClick={() => {
-                setActiveSection('parcels');
-                setParcelSubTab('log');
+                setActiveSection('residents');
               }}
               className="w-full p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl flex items-center justify-center gap-2 border border-slate-200 transition-transform active:scale-95 cursor-pointer"
             >
-              <Package className="w-4 h-4 text-indigo-600" />
-              <span>+ Store Gate Parcel</span>
+              <Search className="w-4 h-4 text-indigo-600" />
+              <span>Verify Resident Flat</span>
             </button>
           </div>
 
@@ -1082,18 +1234,16 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                           <option value="Flat B-108">Flat B-108 (Ananya Sharma - Tower B)</option>
                           <option value="Flat A-402">Flat A-402 (Rajesh Mehta - Tower A)</option>
                           <option value="Flat C-301">Flat C-301 (Suresh Menon - Tower C)</option>
-                          <option value="Flat A-104">Flat A-104 (Pooja Hegde - Tower A)</option>
-                          <option value="Flat B-204">Flat B-204 (Rohan Deshmukh - Tower B)</option>
                         </select>
                       </div>
 
                       <div className="p-3.5 bg-indigo-50/60 border border-indigo-200 rounded-2xl space-y-1">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-slate-900">{residentDatabase[vFlat]?.owner}</span>
+                          <span className="font-bold text-slate-900">{fullResidentDatabase[vFlat]?.owner}</span>
                           <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">Resident Info</span>
                         </div>
-                        <div className="text-[11px] text-slate-600">{residentDatabase[vFlat]?.phone} • {residentDatabase[vFlat]?.type}</div>
-                        <div className="text-[10px] font-bold text-emerald-700 mt-1">{residentDatabase[vFlat]?.autoApprove}</div>
+                        <div className="text-[11px] text-slate-600">{fullResidentDatabase[vFlat]?.phone} • {fullResidentDatabase[vFlat]?.tower}</div>
+                        <div className="text-[10px] font-bold text-emerald-700 mt-1">{fullResidentDatabase[vFlat]?.autoApproveRules[0]}</div>
                       </div>
                     </div>
 
@@ -1229,7 +1379,340 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 3. UPGRADED: GATE SHELF PARCEL & DELIVERY MANAGEMENT */}
+          {/* 3. NEW UPGRADE: RESIDENT DIRECTORY & KYC VERIFICATION */}
+          {/* ========================================================================= */}
+          {activeSection === 'residents' && (
+            <div className="space-y-6 animate-fade-in">
+              
+              {/* Top Banner */}
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Users className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Resident Directory & KYC Verification</h2>
+                    <p className="text-xs text-slate-500 mt-1">Instant resident identity check, vehicle FastTag whitelist, registered helpers, and intercom dialer</p>
+                  </div>
+                </div>
+
+                {/* Tower Filter Buttons */}
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl text-xs font-bold gap-1">
+                  {(['ALL', 'Tower A', 'Tower B', 'Tower C'] as const).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setSelectedTowerFilter(t)}
+                      className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                        selectedTowerFilter === t ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Resident Search Bar */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex gap-3">
+                  <div className="flex-1 relative">
+                    <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Enter Flat No (e.g. Flat B-108, Flat A-402) or Owner Name..."
+                      value={residentSearchQuery}
+                      onChange={(e) => setResidentSearchQuery(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-slate-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="text-slate-400 font-bold">Quick Select:</span>
+                  {Object.keys(fullResidentDatabase).map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setResidentSearchQuery(f)}
+                      className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer transition-all ${
+                        residentSearchQuery === f ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      {f} ({fullResidentDatabase[f].owner})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Comprehensive Resident Dossier Card */}
+              {selectedDossier && (
+                <div className="space-y-6">
+                  
+                  {/* Hero Dossier Header */}
+                  <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                      <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 to-purple-500 p-1 shrink-0 flex items-center justify-center">
+                        <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-4xl">
+                          👩‍💼
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <h3 className="font-black text-2xl text-white">{selectedDossier.owner}</h3>
+                          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                            <BadgeCheck className="w-3.5 h-3.5" /> Aadhaar Verified
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-300 mt-1">
+                          {selectedDossier.flat} • {selectedDossier.tower} ({selectedDossier.floor}) • {selectedDossier.unitType}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                          KYC ID: {selectedDossier.aadhaarKyc} • Possession: {selectedDossier.possessionDate}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2.5 self-end sm:self-center">
+                      <button
+                        onClick={() => alert(`Ringing intercom ${selectedDossier.intercom} for ${selectedDossier.owner}...`)}
+                        className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-md flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Phone className="w-4 h-4 fill-slate-950" />
+                        <span>Ring Intercom ({selectedDossier.intercom})</span>
+                      </button>
+
+                      <button
+                        onClick={() => alert(`Dialing mobile ${selectedDossier.phone}...`)}
+                        className="px-4 py-3 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-md flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Phone className="w-4 h-4 text-indigo-600" />
+                        <span>Call Mobile</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3-Column Grid: Family Members + Vehicles + Helpers */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    {/* Family Members */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <span className="font-extrabold text-sm text-slate-900 block">Registered Family Members</span>
+                        <span className="text-xs text-indigo-600 font-bold">{selectedDossier.familyMembers.length + 1} Total</span>
+                      </div>
+
+                      <div className="space-y-3 text-xs">
+                        <div className="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200">
+                          <div className="font-bold text-slate-900">{selectedDossier.owner}</div>
+                          <div className="text-[11px] text-slate-500">Primary Registered Owner • {selectedDossier.phone}</div>
+                        </div>
+
+                        {selectedDossier.familyMembers.map((m, idx) => (
+                          <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                            <div className="font-bold text-slate-900">{m.name}</div>
+                            <div className="text-[11px] text-slate-500">{m.relation} {m.phone ? `• ${m.phone}` : ''}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Registered Vehicles */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <span className="font-extrabold text-sm text-slate-900 block">Allocated Parking & FastTag</span>
+                        <span className="text-xs text-emerald-600 font-bold">{selectedDossier.vehicles.length} Vehicles</span>
+                      </div>
+
+                      <div className="space-y-3 text-xs">
+                        {selectedDossier.vehicles.map((v, idx) => (
+                          <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <div className="flex justify-between items-start">
+                              <span className="font-mono font-black text-sm text-slate-900">{v.plate}</span>
+                              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">Active</span>
+                            </div>
+                            <div className="text-[11px] text-slate-600">{v.model}</div>
+                            <div className="text-[11px] text-indigo-700 font-bold">{v.slot}</div>
+                            <div className="text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-200/60">RFID: {v.rfid}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Authorized Helpers */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <span className="font-extrabold text-sm text-slate-900 block">Authorized Daily Helpers</span>
+                        <span className="text-xs text-slate-500 font-bold">{selectedDossier.helpers.length} Helpers</span>
+                      </div>
+
+                      <div className="space-y-3 text-xs">
+                        {selectedDossier.helpers.map((h, idx) => (
+                          <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                            <div className="flex justify-between items-start">
+                              <span className="font-bold text-slate-900">{h.name}</span>
+                              <span className="text-[10px] bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-bold">{h.role}</span>
+                            </div>
+                            <div className="text-[11px] text-slate-500">{h.time} • {h.phone}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Security & Gate Auto-Approval Rules Strip */}
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+                    <span className="font-extrabold text-sm text-slate-900 block">Resident Gate Auto-Approval Rules</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      {selectedDossier.autoApproveRules.map((rule, idx) => (
+                        <div key={idx} className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-emerald-950 font-bold flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>{rule}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 4. UPGRADED: EMERGENCY SOS & PANIC ALARM CONSOLE */}
+          {/* ========================================================================= */}
+          {activeSection === 'sos' && (
+            <div className="space-y-6 animate-fade-in">
+              
+              {/* Pulsing Active Emergency Siren Hero Banner */}
+              {sosActiveSiren ? (
+                <div className="bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white p-8 rounded-3xl shadow-2xl space-y-6 border-4 border-red-300 relative overflow-hidden animate-pulse">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 relative z-10">
+                    <div className="flex items-center gap-5">
+                      <div className="w-20 h-20 rounded-3xl bg-white text-red-600 flex items-center justify-center text-4xl shadow-xl shrink-0 animate-bounce">
+                        <Flame className="w-12 h-12" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <span className="bg-black text-amber-300 text-[10px] font-black uppercase px-3 py-1 rounded-full tracking-widest animate-ping">
+                            🚨 CRITICAL EMERGENCY PANIC SIREN ACTIVE
+                          </span>
+                          <span className="text-xs font-mono font-bold text-white">{activeSosIncident.triggerTime}</span>
+                        </div>
+                        <h2 className="font-black text-3xl text-white tracking-tight mt-1">
+                          {activeSosIncident.flat} ({activeSosIncident.resident}) • {activeSosIncident.tower}
+                        </h2>
+                        <p className="text-xs text-white/90 font-bold mt-1">
+                          {activeSosIncident.notes}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 self-end sm:self-center">
+                      <button
+                        onClick={handleDispatchPatrolToSos}
+                        className="px-6 py-4 bg-white hover:bg-slate-100 text-red-950 font-black rounded-2xl text-xs shadow-2xl flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <ShieldAlert className="w-5 h-5 text-red-600" />
+                        <span>DISPATCH PATROL TO FLAT B-108</span>
+                      </button>
+
+                      <button
+                        onClick={handleResetSosSiren}
+                        className="px-5 py-4 bg-red-950 hover:bg-red-900 text-white font-bold rounded-2xl text-xs shadow-lg transition-transform active:scale-95 cursor-pointer"
+                      >
+                        Reset & Clear Siren
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-red-400/60 flex flex-wrap justify-between items-center text-xs text-white/90">
+                    <span>Officer Dispatched: <strong>{activeSosIncident.dispatchedOfficer}</strong></span>
+                    <span>Response Timer: <strong>{activeSosIncident.responseTime}</strong></span>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-5">
+                    <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <ShieldCheck className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h2 className="font-black text-2xl text-slate-900">Emergency SOS Command & Dispatch</h2>
+                      <p className="text-xs text-slate-500 mt-1">All gate posts and towers normal. No active panic sirens in society.</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSosActiveSiren(true)}
+                    className="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer flex items-center gap-2"
+                  >
+                    <Flame className="w-4 h-4" />
+                    <span>Test Emergency Siren</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Emergency Speed-Dial Hotlines */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-extrabold text-base text-slate-900 block">24/7 External Emergency Hotlines</span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                  {[
+                    { label: '🚑 Ambulance', phone: '108 / 112', bg: 'bg-red-50 text-red-900 border-red-200' },
+                    { label: '🚒 Fire Service', phone: '101', bg: 'bg-orange-50 text-orange-900 border-orange-200' },
+                    { label: '👮 Police Station', phone: '100 / 040-27891100', bg: 'bg-blue-50 text-blue-900 border-blue-200' },
+                    { label: '🏥 Hospital ER', phone: '040-44556677', bg: 'bg-indigo-50 text-indigo-900 border-indigo-200' },
+                    { label: '⚡ 33kV Substation', phone: '98123 44556', bg: 'bg-amber-50 text-amber-900 border-amber-200' },
+                    { label: '🚰 Water Valve', phone: '98765 99887', bg: 'bg-cyan-50 text-cyan-900 border-cyan-200' },
+                  ].map((hotline, idx) => (
+                    <div key={idx} className={`p-4 rounded-2xl border flex flex-col justify-between space-y-2 ${hotline.bg}`}>
+                      <span className="font-bold text-xs">{hotline.label}</span>
+                      <span className="font-mono font-black text-sm">{hotline.phone}</span>
+                      <button
+                        onClick={() => alert(`Dialing ${hotline.label} (${hotline.phone})...`)}
+                        className="py-1.5 bg-white/80 hover:bg-white text-slate-900 font-bold rounded-xl text-[10px] text-center shadow-xs cursor-pointer"
+                      >
+                        Speed Dial
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Historical Emergency SOS Incident Ledger */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-extrabold text-base text-slate-900 block">Emergency Panic Incident History & Audit Logs</span>
+                
+                <div className="space-y-3 text-xs">
+                  {sosHistoryList.map(sos => (
+                    <div key={sos.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-slate-500">{sos.id}</span>
+                          <span className="font-bold text-sm text-slate-900">{sos.flat} ({sos.resident})</span>
+                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                            {sos.status}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 font-mono">{sos.triggerTime}</span>
+                      </div>
+                      <p className="text-slate-600">{sos.notes}</p>
+                      <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200/60 flex justify-between">
+                        <span>Officer: <strong>{sos.dispatchedOfficer}</strong></span>
+                        <span className="text-indigo-600 font-bold">{sos.responseTime}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 5. GATE SHELF PARCEL LOCKERS */}
           {/* ========================================================================= */}
           {activeSection === 'parcels' && (
             <div className="space-y-6">
@@ -1449,8 +1932,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                           <option value="Flat B-108">Flat B-108 (Ananya Sharma - Tower B)</option>
                           <option value="Flat A-402">Flat A-402 (Rajesh Mehta - Tower A)</option>
                           <option value="Flat C-301">Flat C-301 (Suresh Menon - Tower C)</option>
-                          <option value="Flat A-104">Flat A-104 (Pooja Hegde - Tower A)</option>
-                          <option value="Flat B-204">Flat B-204 (Rohan Deshmukh - Tower B)</option>
                         </select>
                       </div>
 
@@ -1595,7 +2076,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 4. UPGRADED: VEHICLE, ANPR & PARKING MANAGEMENT */}
+          {/* 6. VEHICLE, ANPR & PARKING MANAGEMENT */}
+          {/* ========================================================================= */}
           {activeSection === 'anpr' && (
             <div className="space-y-6">
               
@@ -1898,7 +2380,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 5. DAILY STAFF ATTENDANCE */}
+          {/* 7. DAILY STAFF ATTENDANCE */}
+          {/* ========================================================================= */}
           {activeSection === 'staff' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -1950,43 +2433,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 6. EMERGENCY SOS CONSOLE */}
-          {activeSection === 'sos' && (
-            <div className="space-y-6">
-              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
-                    <Flame className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h2 className="font-black text-2xl text-slate-900">Emergency SOS Command & Dispatch</h2>
-                    <p className="text-xs text-slate-500">Instant siren alerts triggered by residents or security patrols</p>
-                  </div>
-                </div>
-
-                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-                  <span className="font-bold text-sm text-slate-900 block">Emergency Response Hotline</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="p-4 bg-white rounded-xl border border-slate-200">
-                      <span className="text-slate-500 block">Ambulance Service</span>
-                      <span className="font-mono font-bold text-lg text-red-600">108 / 112</span>
-                    </div>
-                    <div className="p-4 bg-white rounded-xl border border-slate-200">
-                      <span className="text-slate-500 block">Local Fire Station</span>
-                      <span className="font-mono font-bold text-lg text-slate-900">101</span>
-                    </div>
-                    <div className="p-4 bg-white rounded-xl border border-slate-200">
-                      <span className="text-slate-500 block">Pocharam Police Station</span>
-                      <span className="font-mono font-bold text-lg text-slate-900">040-27891100</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* 8. INCIDENT OCCURRENCE BOOK */}
           {/* ========================================================================= */}
-          {/* 7. INCIDENT OCCURRENCE BOOK */}
           {activeSection === 'incidents' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -2015,7 +2463,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 8. GUARD QR PATROL CHECKPOINTS */}
+          {/* 9. GUARD QR PATROL CHECKPOINTS */}
+          {/* ========================================================================= */}
           {activeSection === 'patrol' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -2047,7 +2496,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 9. LOST & FOUND REGISTER */}
+          {/* 10. LOST & FOUND REGISTER */}
+          {/* ========================================================================= */}
           {activeSection === 'lostfound' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -2072,7 +2522,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 10. SECURITY ANALYTICS */}
+          {/* 11. SECURITY ANALYTICS */}
+          {/* ========================================================================= */}
           {activeSection === 'analytics' && (
             <div className="space-y-6">
               <SecurityAnalytics />
@@ -2302,8 +2753,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
             <div className="space-y-3 pt-2">
               <button
                 onClick={() => {
-                  setEmergencyAlertActive(true);
-                  alert('SECURITY EMERGENCY BROADCAST ACTIVE! All patrol guards notified.');
+                  setSosActiveSiren(true);
+                  setActiveSection('sos');
                   setShowSosModal(false);
                 }}
                 className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl text-xs shadow-lg cursor-pointer"
