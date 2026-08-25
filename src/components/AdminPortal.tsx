@@ -1,20 +1,36 @@
 import React, { useState } from 'react';
-import { AdminPageId } from '../types/portalTypes';
-import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { 
   LayoutDashboard, ShieldCheck, Users, FileText, TrendingUp, UserCheck, 
   AlertTriangle, Flame, Calendar, Wrench, Megaphone, Receipt, Shield, 
   Settings, Building2, ArrowLeft, CheckCircle2, Download, Plus, Search,
-  Clock, DollarSign, Check, ChevronRight, Sparkles, Filter, Phone, Mail, MapPin, Eye, Zap, ShieldAlert, X, Trash2, Send, AlertCircle, Key, Lock, QrCode, Menu
+  Clock, DollarSign, Check, ChevronRight, Sparkles, Filter, Phone, Mail, MapPin, Eye, Zap, ShieldAlert, X, Trash2, Send, AlertCircle, Key, Lock, QrCode, Menu, LogOut,
+  BarChart3, RefreshCw, BadgeCheck, Bell, Smartphone, ArrowUpRight, CheckSquare,
+  HelpCircle, CreditCard, PieChart, Activity
 } from 'lucide-react';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
 
 interface AdminPortalProps {
   onExit: () => void;
 }
 
+export type AdminPageId = 
+  | 'dashboard'
+  | 'manage_guards'
+  | 'manage_residents'
+  | 'billing_fees'
+  | 'notices'
+  | 'amenity_mgmt'
+  | 'maintenance_mgmt'
+  | 'visitor_mgmt'
+  | 'incident_mgmt'
+  | 'emergency_mgmt'
+  | 'staff_vendor'
+  | 'audit_logs'
+  | 'community_config'
+  | 'analytics';
+
 export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
   const [activePage, setActivePage] = useState<AdminPageId>('dashboard');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   // --- FULL EXHAUSTIVE DATASET FOR ADMIN PORTAL ---
 
@@ -37,11 +53,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
   // 2. Manage Residents (12 Flats Directory)
   const [resSearch, setResSearch] = useState<string>('');
   const [residentsDirectory] = useState([
-    { flat: 'Flat A-402', name: 'Ananya Sharma', phone: '98765 11111', type: 'Owner', bhk: '2BHK (1250 sqft)', members: 3, vehicle: 'KA-03-MB-4921 (Honda City)', parking: 'Slot B-42', dues: '₹ 4,766 (Due)' },
-    { flat: 'Flat B-102', name: 'Rohan Mehta', phone: '98765 22222', type: 'Tenant', bhk: '3BHK (1650 sqft)', members: 2, vehicle: 'MH-12-PQ-9988 (Creta)', parking: 'Slot B-12', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat C-301', name: 'Sunita Rao', phone: '98765 33333', type: 'Owner', bhk: '3BHK (1700 sqft)', members: 4, vehicle: 'KA-05-AB-1234 (Baleno)', parking: 'Slot C-08', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat A-104', name: 'Kabir Verma', phone: '98765 44444', type: 'Owner', bhk: '1BHK (850 sqft)', members: 1, vehicle: 'KA-01-XY-5678 (Ather EV)', parking: 'Slot A-14', dues: '₹ 3,200 (Due)' },
-    { flat: 'Flat B-204', name: 'Priya Sundaram', phone: '98765 55555', type: 'Tenant', bhk: '2BHK (1300 sqft)', members: 3, vehicle: 'KA-04-MN-9012 (Swift)', parking: 'Slot B-24', dues: '₹ 0 (Paid)' },
+    { flat: 'Flat B-108', name: 'Ananya Sharma', phone: '98765 11111', type: 'Primary Owner', bhk: '2BHK (1250 sqft)', members: 3, vehicle: 'KA-03-MB-4921 (Honda City)', parking: 'Slot B-42', dues: '₹ 4,766 (Due)' },
+    { flat: 'Flat A-402', name: 'Rajesh Mehta', phone: '98765 12345', type: 'Owner', bhk: '3BHK (1850 sqft)', members: 3, vehicle: 'KA-05-MA-1234 (Creta)', parking: 'Slot A-12', dues: '₹ 0 (Paid)' },
+    { flat: 'Flat C-301', name: 'Suresh Menon', phone: '98901 22334', type: 'Tenant', bhk: '3BHK (1700 sqft)', members: 4, vehicle: 'TS-09-GA-1002 (Brezza)', parking: 'Slot C-08', dues: '₹ 0 (Paid)' },
+    { flat: 'Flat A-104', name: 'Pooja Hegde', phone: '98123 99999', type: 'Owner', bhk: '1BHK (850 sqft)', members: 1, vehicle: 'KA-01-PH-7711 (Seltos)', parking: 'Slot A-04', dues: '₹ 3,200 (Due)' },
+    { flat: 'Flat B-204', name: 'Rohan Deshmukh', phone: '98990 11223', type: 'Owner', bhk: '2BHK (1300 sqft)', members: 3, vehicle: 'KA-04-MN-9012 (Swift)', parking: 'Slot B-24', dues: '₹ 0 (Paid)' },
     { flat: 'Flat C-502', name: 'Dr. Alok Nath', phone: '98765 66666', type: 'Owner', bhk: 'Penthouse (2800 sqft)', members: 5, vehicle: 'KA-01-AL-0001 (BMW 3)', parking: 'Slot C-01 & C-02', dues: '₹ 0 (Paid)' },
     { flat: 'Flat A-201', name: 'Vikramaditya Roy', phone: '98765 77777', type: 'Owner', bhk: '3BHK (1750 sqft)', members: 4, vehicle: 'KA-03-VR-8888 (Harrier)', parking: 'Slot A-21', dues: '₹ 5,200 (Due)' },
     { flat: 'Flat B-405', name: 'Neha Kapoor', phone: '98765 88888', type: 'Tenant', bhk: '2BHK (1200 sqft)', members: 2, vehicle: 'KA-05-NK-4321 (i20)', parking: 'Slot B-45', dues: '₹ 0 (Paid)' },
@@ -53,28 +69,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
   // 3. Visitor Management Logs
   const [adminVisitorLogs] = useState([
-    { id: 'VIS-901', name: 'Rajesh Mehta', flat: 'Flat A-402', gate: 'Gate 1 Main', type: 'Guest', entry: '11:35 AM', exit: '--', status: 'Inside' },
-    { id: 'VIS-900', name: 'Ramesh Kumar (Amazon)', flat: 'Flat B-102', gate: 'Gate 1 Main', type: 'Delivery', entry: '11:20 AM', exit: '11:28 AM', status: 'Departed' },
-    { id: 'VIS-899', name: 'Plumber Ramesh', flat: 'Flat B-102', gate: 'Gate 2 Rear', type: 'Service', entry: '08:30 AM', exit: '10:45 AM', status: 'Departed' },
-    { id: 'VIS-898', name: 'Sunita Devi (Maid)', flat: 'Flat A-402, B-102', gate: 'Gate 1 Main', type: 'Daily Help', entry: '09:15 AM', exit: '--', status: 'Inside' },
-    { id: 'VIS-897', name: 'Rahul Sharma (Swiggy)', flat: 'Flat C-301', gate: 'Gate 1 Main', type: 'Delivery', entry: '12:05 PM', exit: '12:12 PM', status: 'Departed' },
-    { id: 'VIS-896', name: 'Pooja Hegde', flat: 'Flat A-104', gate: 'Gate 1 Main', type: 'Guest Pass', entry: '01:30 PM', exit: '--', status: 'Inside' },
+    { id: 'VIS-901', name: 'Rajesh Kumar (Blinkit)', flat: 'Flat B-108', gate: 'Gate 1 Main', type: 'Delivery', entry: '11:45 AM', exit: '--', status: 'Inside' },
+    { id: 'VIS-900', name: 'Sunita Devi (Maid)', flat: 'Flat B-108, A-402', gate: 'Gate 1 Main', type: 'Daily Staff', entry: '09:15 AM', exit: '--', status: 'Inside' },
+    { id: 'VIS-899', name: 'Siddharth Verma', flat: 'Flat B-108', gate: 'Gate 1 Main', type: 'Guest Pass', entry: '10:30 AM', exit: '--', status: 'Inside' },
+    { id: 'VIS-898', name: 'Ramesh Plumber', flat: 'Flat B-108', gate: 'Gate 1 Main', type: 'Service Tech', entry: '10:15 AM', exit: '--', status: 'Inside' },
+    { id: 'VIS-897', name: 'Rahul Sharma (Swiggy)', flat: 'Flat C-301', gate: 'Gate 1 Main', type: 'Delivery', entry: '11:05 AM', exit: '11:15 AM', status: 'Departed' },
+    { id: 'VIS-896', name: 'Driver Alok (Uber)', flat: 'Flat A-104', gate: 'Gate 2 Rear', type: 'Cab', entry: '11:20 AM', exit: '11:32 AM', status: 'Departed' },
   ]);
 
   // 4. Incident Management
   const [incidentsList, setIncidentsList] = useState([
-    { id: 'INC-8921', category: 'Parking Dispute', flat: 'Flat B-102', desc: 'Visitor car parked blocking basement ramp', loggedBy: 'Guard Vikram', severity: 'High', status: 'Under Investigation', time: '10:45 AM' },
-    { id: 'INC-8810', category: 'Noise Disturbance', flat: 'Flat C-401', desc: 'Loud music past 11 PM', loggedBy: 'Guard Suresh', severity: 'Medium', status: 'Resolved', time: 'Yesterday' },
+    { id: 'INC-8921', category: 'Parking Dispute', flat: 'Flat B-102', desc: 'Visitor car parked blocking basement ramp', loggedBy: 'Guard Vikram Singh', severity: 'High', status: 'Under Investigation', time: '10:45 AM' },
+    { id: 'INC-8810', category: 'Noise Disturbance', flat: 'Flat C-401', desc: 'Loud music past 11 PM reported by neighbors', loggedBy: 'Guard Suresh', severity: 'Medium', status: 'Resolved', time: 'Yesterday' },
     { id: 'INC-8742', category: 'Pool Rules Violation', flat: 'Flat A-201', desc: 'Glass bottles brought to swimming pool deck', loggedBy: 'Guard Dinesh', severity: 'High', status: 'Resolved', time: '19 Aug 2026' },
   ]);
 
   // 5. Emergency Management
   const [broadcastActive, setBroadcastActive] = useState<boolean>(false);
-  const [drillType, setDrillType] = useState<string>('Fire Drill');
+  const [drillType, setDrillType] = useState<string>('Fire Evacuation Drill');
 
   // 6. Amenity Management
   const [amenityApprovals, setAmenityApprovals] = useState([
-    { id: 'AP-201', resident: 'Sunita Rao (Flat C-301)', amenity: 'Clubhouse Banquet Hall', date: '15 Sept 2026', event: 'Birthday Party (100 Guests)', status: 'Pending Approval' },
+    { id: 'AP-201', resident: 'Ananya Sharma (Flat B-108)', amenity: 'Clubhouse Banquet Hall', date: '15 Sept 2026', event: 'Family Reception (100 Guests)', status: 'Pending Approval' },
     { id: 'AP-198', resident: 'Dr. Alok Nath (Flat C-502)', amenity: 'Tennis Court 1 Special Event', date: '01 Sept 2026', event: 'Society Tennis Tournament', status: 'Approved' },
     { id: 'AP-192', resident: 'Vikramaditya Roy (Flat A-201)', amenity: 'Clubhouse Banquet Hall', date: '28 Aug 2026', event: 'Family Get-Together', status: 'Approved' },
   ]);
@@ -100,17 +116,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
   ]);
 
   // 9. Billing Engine
-  const [selectedTargetFlat, setSelectedTargetFlat] = useState<string>('Flat A-402 (Ananya Sharma)');
+  const [selectedTargetFlat, setSelectedTargetFlat] = useState<string>('Flat B-108 (Ananya Sharma)');
   const [customBillAmount, setCustomBillAmount] = useState<string>('4766');
   const [billNote, setBillNote] = useState<string>('August 2026 Monthly Maintenance Dues');
   const [billingFilter, setBillingFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
 
   const [flatsBillingStatus, setFlatsBillingStatus] = useState([
-    { flat: 'Flat A-402', resident: 'Ananya Sharma', phone: '98765 11111', bhk: '2BHK', amount: '₹ 4,766', status: 'Unpaid', dueDate: '31 Aug 2026', receiptNo: '--', mode: '--' },
-    { flat: 'Flat B-102', resident: 'Rohan Mehta', phone: '98765 22222', bhk: '3BHK', amount: '₹ 5,800', status: 'Paid', dueDate: '31 Aug 2026', receiptNo: 'GST-9012', mode: 'UPI Autopay (05 Aug)' },
-    { flat: 'Flat C-301', resident: 'Sunita Rao', phone: '98765 33333', bhk: '3BHK', amount: '₹ 5,950', status: 'Paid', dueDate: '31 Aug 2026', receiptNo: 'GST-8812', mode: 'Netbanking (04 Aug)' },
-    { flat: 'Flat A-104', resident: 'Kabir Verma', phone: '98765 44444', bhk: '1BHK', amount: '₹ 3,200', status: 'Unpaid', dueDate: '31 Aug 2026', receiptNo: '--', mode: '--' },
-    { flat: 'Flat B-204', resident: 'Priya Sundaram', phone: '98765 55555', bhk: '2BHK', amount: '₹ 4,900', status: 'Paid', dueDate: '31 Aug 2026', receiptNo: 'GST-7711', mode: 'Credit Card (02 Aug)' },
+    { flat: 'Flat B-108', resident: 'Ananya Sharma', phone: '98765 11111', bhk: '2BHK', amount: '₹ 4,766', status: 'Unpaid', dueDate: '31 Aug 2026', receiptNo: '--', mode: '--' },
+    { flat: 'Flat A-402', resident: 'Rajesh Mehta', phone: '98765 12345', bhk: '3BHK', amount: '₹ 5,800', status: 'Paid', dueDate: '31 Aug 2026', receiptNo: 'GST-9012', mode: 'UPI Autopay (05 Aug)' },
+    { flat: 'Flat C-301', resident: 'Suresh Menon', phone: '98901 22334', bhk: '3BHK', amount: '₹ 5,950', status: 'Paid', dueDate: '31 Aug 2026', receiptNo: 'GST-8812', mode: 'Netbanking (04 Aug)' },
+    { flat: 'Flat A-104', resident: 'Pooja Hegde', phone: '98123 99999', bhk: '1BHK', amount: '₹ 3,200', status: 'Unpaid', dueDate: '31 Aug 2026', receiptNo: '--', mode: '--' },
+    { flat: 'Flat B-204', resident: 'Rohan Deshmukh', phone: '98990 11223', bhk: '2BHK', amount: '₹ 4,900', status: 'Paid', dueDate: '31 Aug 2026', receiptNo: 'GST-7711', mode: 'Credit Card (02 Aug)' },
   ]);
 
   // 10. Staff & Vendor Credentials Console
@@ -134,10 +150,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     { name: 'AquaClean Swimming Pool Services', scope: 'Daily Chemical Balancing & Pool Cleaning', cost: '₹ 25,000 / month', status: 'Active (Valid till Mar 2027)' },
   ]);
 
-  // Audit Logs
+  // 11. Audit Logs
   const [auditLogsList] = useState([
     { id: 'LOG-8812', user: 'Ramesh Chandra (Treasurer)', action: 'Updated maintenance billing formula to ₹3.50/sq.ft + 18% GST', timestamp: 'Today 11:30 AM', ip: '192.168.1.45' },
-    { id: 'LOG-8811', user: 'Vikram Singh (Guard)', action: 'Logged Amazon courier entry pass for Flat A-402', timestamp: 'Today 11:20 AM', ip: '192.168.1.102' },
+    { id: 'LOG-8811', user: 'Vikram Singh (Guard)', action: 'Logged Blinkit delivery entry pass for Flat B-108', timestamp: 'Today 11:20 AM', ip: '192.168.1.102' },
     { id: 'LOG-8810', user: 'Ananya Sharma (Resident)', action: 'Paid monthly bill via UPI (₹4,766) - Receipt #GST-9021', timestamp: 'Today 11:05 AM', ip: '10.0.4.12' },
   ]);
 
@@ -195,599 +211,1074 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     setAmenityApprovals(prev => prev.map(a => a.id === id ? { ...a, status: decision } : a));
   };
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard & Analytics', icon: LayoutDashboard },
-    { id: 'manage_guards', label: 'Manage Guards', icon: ShieldCheck },
-    { id: 'manage_residents', label: 'Manage Residents', icon: Users },
-    { id: 'view_reports', label: 'View Reports', icon: FileText },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'visitor_mgmt', label: 'Visitor Management', icon: UserCheck },
-    { id: 'incident_mgmt', label: 'Incident Management', icon: AlertTriangle },
-    { id: 'emergency_mgmt', label: 'Emergency Management', icon: Flame },
-    { id: 'amenity_mgmt', label: 'Amenity Management', icon: Calendar },
-    { id: 'maintenance_mgmt', label: 'Maintenance Management', icon: Wrench },
-    { id: 'notices', label: 'Notice / Announcements', icon: Megaphone },
-    { id: 'billing_fees', label: 'Billing / Maintenance Fees', icon: Receipt },
-    { id: 'audit_logs', label: 'Audit Logs', icon: Shield },
-    { id: 'community_config', label: 'Community Config', icon: Settings },
+  const unpaidCount = flatsBillingStatus.filter(f => f.status === 'Unpaid').length;
+  const pendingAmenityCount = amenityApprovals.filter(a => a.status === 'Pending Approval').length;
+  const activeGuardsCount = guardsList.filter(g => g.status.includes('Active')).length;
+
+  const navMenuItems = [
+    { id: 'dashboard', label: 'Executive Command Dashboard', icon: LayoutDashboard },
+    { id: 'manage_guards', label: 'Manage Guards & Rosters', icon: ShieldCheck, badge: `${activeGuardsCount} On Shift`, badgeColor: 'bg-emerald-100 text-emerald-800' },
+    { id: 'manage_residents', label: 'Residents & Flats Directory', icon: Users, badge: `${residentsDirectory.length} Flats`, badgeColor: 'bg-slate-100 text-slate-700' },
+    { id: 'billing_fees', label: 'Billing & Maintenance Fees', icon: Receipt, badge: `${unpaidCount} Overdue`, badgeColor: 'bg-amber-100 text-amber-900 font-bold' },
+    { id: 'notices', label: 'Notice Board & Circulars', icon: Megaphone, badge: `${publishedNotices.length} Live`, badgeColor: 'bg-indigo-100 text-indigo-800' },
+    { id: 'amenity_mgmt', label: 'Amenity & Hall Bookings', icon: Calendar, badge: `${pendingAmenityCount} Pending`, badgeColor: 'bg-rose-100 text-rose-800 font-bold' },
+    { id: 'maintenance_mgmt', label: 'Maintenance & AMC Assets', icon: Wrench },
+    { id: 'visitor_mgmt', label: 'Gate Visitor Management', icon: UserCheck },
+    { id: 'incident_mgmt', label: 'Incident Investigation Desk', icon: AlertTriangle, badge: `${incidentsList.filter(i => i.status !== 'Resolved').length} Open`, badgeColor: 'bg-rose-100 text-rose-800' },
+    { id: 'emergency_mgmt', label: 'Emergency Protocols & Drills', icon: Flame },
     { id: 'staff_vendor', label: 'Staff & Vendor Credentials', icon: Building2 },
+    { id: 'audit_logs', label: 'Audit Trail & Access Logs', icon: Shield },
+    { id: 'community_config', label: 'Community Bylaw & Formula', icon: Settings },
+    { id: 'analytics', label: 'Society Analytics Suite', icon: TrendingUp },
   ];
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#F6F3EC]">
+    <div className="min-h-screen bg-[#F8F9FA] text-slate-800 font-sans antialiased flex flex-col selection:bg-[#0F172A] selection:text-white">
       
-      {/* MOBILE TOP BAR WITH HAMBURGER TOGGLE */}
-      <div className="md:hidden bg-[#1C352C] text-white p-4 flex items-center justify-between sticky top-0 z-30 shadow-md">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-[#F6F3EC] flex items-center justify-center">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#1C352C]" />
-          </div>
-          <div>
-            <div className="serif-title text-base text-[#F6F3EC]">Green Haven</div>
-            <div className="text-[9px] font-bold text-[#9DBEB2] uppercase tracking-widest">Admin Committee</div>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-xl bg-[#12241D] text-[#9DBEB2] border border-[#2A4C3F]"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* SIDEBAR (Responsive Mobile Drawer + Desktop Sidebar) */}
-      <aside className={`modern-sidebar w-full md:w-72 md:min-w-[280px] text-white p-6 shrink-0 flex flex-col justify-between md:min-h-screen z-20 transition-all ${
-        mobileMenuOpen ? 'block' : 'hidden md:flex'
-      }`}>
-        <div className="space-y-6">
-          <div className="hidden md:flex items-center gap-3 pb-5 border-b border-[#2A4C3F]">
-            <div className="w-10 h-10 rounded-full bg-[#F6F3EC] flex items-center justify-center shadow-lg">
-              <div className="w-4 h-4 rounded-full bg-[#1C352C]" />
+      {/* ========================================================================= */}
+      {/* TOP DESKTOP HEADER BAR */}
+      {/* ========================================================================= */}
+      <header className="bg-white border-b border-slate-200 px-6 sm:px-10 py-4 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          
+          {/* Brand & Admin Station Identifier */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-900 p-0.5 shadow-sm flex items-center justify-center shrink-0">
+              <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-xl">
+                <span>🏛️</span>
+              </div>
             </div>
+
             <div>
-              <div className="serif-title text-xl text-[#F6F3EC] tracking-wide">Green Haven</div>
-              <div className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#9DBEB2]">
-                Admin ERP Committee
+              <div className="flex items-center gap-2">
+                <span className="font-black text-2xl text-slate-900 tracking-tight">RWA Management Committee</span>
+                <span className="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-0.5 rounded-full font-bold">Admin Console</span>
+              </div>
+              <div className="text-xs text-slate-500 font-medium">
+                ASBL Springs, Pocharam • Society Operations & Governance ERP
               </div>
             </div>
           </div>
 
-          <div className="bg-[#12241D] p-4 rounded-2xl border border-[#2A4C3F] flex items-center gap-3.5 shadow-inner">
-            <div className="w-10 h-10 rounded-xl bg-[#627636] text-white font-bold text-sm flex items-center justify-center shadow-md">
-              RC
+          {/* Quick Actions & Exit */}
+          <div className="flex items-center gap-3">
+            
+            {/* Quick Broadcast Notice Button */}
+            <button
+              onClick={() => {
+                setActivePage('notices');
+              }}
+              className="hidden sm:flex px-4 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-bold text-xs items-center gap-1.5 cursor-pointer"
+            >
+              <Megaphone className="w-4 h-4 text-indigo-600" />
+              <span>+ Broadcast Notice</span>
+            </button>
+
+            {/* Quick Generate Bill Button */}
+            <button
+              onClick={() => {
+                setActivePage('billing_fees');
+              }}
+              className="hidden sm:flex px-4 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-xs items-center gap-1.5 cursor-pointer"
+            >
+              <Receipt className="w-4 h-4 text-emerald-600" />
+              <span>Generate Dues</span>
+            </button>
+
+            <button
+              onClick={onExit}
+              className="px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-2 text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Exit to Gateway</span>
+            </button>
+          </div>
+
+        </div>
+      </header>
+
+      {/* ========================================================================= */}
+      {/* DESKTOP SIDEBAR + EXPANSIVE MAIN WORKSPACE */}
+      {/* ========================================================================= */}
+      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col md:flex-row gap-6 p-6 sm:p-8">
+        
+        {/* DESKTOP LEFT SIDEBAR NAVIGATION */}
+        <aside className="w-full md:w-72 shrink-0 space-y-4">
+          
+          {/* Admin Leadership Card */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+                RC
+              </div>
+              <div>
+                <div className="font-bold text-sm text-slate-900">Ramesh Chandra</div>
+                <div className="text-xs text-slate-500 font-medium">RWA President & Treasurer</div>
+              </div>
             </div>
-            <div>
-              <div className="font-bold text-white text-xs">Ramesh Chandra</div>
-              <div className="text-[11px] text-[#9DBEB2]">RWA Treasurer • Officer</div>
+
+            <div className="pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-600">
+              <span>Term: <strong>2025 - 2027</strong></span>
+              <span className="text-emerald-600 font-bold">Authorized ✓</span>
             </div>
           </div>
 
-          <nav className="space-y-1.5 max-h-[55vh] overflow-y-auto pr-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#9DBEB2] px-2 block mb-2">
-              Management Function Pages
+          {/* Quick Admin Actions */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs space-y-2 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block px-1">
+              Quick Admin Actions
             </span>
-            {navItems.map((item) => {
+
+            <button
+              onClick={() => {
+                setActivePage('notices');
+              }}
+              className="w-full p-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95 cursor-pointer"
+            >
+              <Megaphone className="w-4 h-4" />
+              <span>+ Post Community Notice</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActivePage('billing_fees');
+              }}
+              className="w-full p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl flex items-center justify-center gap-2 border border-slate-200 transition-transform active:scale-95 cursor-pointer"
+            >
+              <Receipt className="w-4 h-4 text-indigo-600" />
+              <span>+ Issue Monthly Invoices</span>
+            </button>
+          </div>
+
+          {/* Society Financial & Occupancy Telemetry Box */}
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-sm space-y-3 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 block">
+              Society Financial Health
+            </span>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="bg-white/10 p-3 rounded-2xl">
+                <span className="text-[10px] text-slate-300 block">Dues Collected</span>
+                <span className="text-lg font-black text-emerald-300">₹ 14.8 L</span>
+              </div>
+              <div className="bg-white/10 p-3 rounded-2xl">
+                <span className="text-[10px] text-slate-300 block">Occupancy</span>
+                <span className="text-lg font-black text-white">96.4%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Menu */}
+          <nav className="bg-white p-3 rounded-3xl border border-slate-200/80 shadow-xs space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3 py-2 block">
+              Admin Workspaces
+            </span>
+            {navMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    setActivePage(item.id as AdminPageId);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
-                    isActive
-                      ? 'bg-[#627636] text-white shadow-lg font-bold'
-                      : 'text-[#E4EFEA] hover:bg-[#2A4C3F]/50 hover:text-white'
+                  onClick={() => setActivePage(item.id as AdminPageId)}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-bold transition-all text-left cursor-pointer ${
+                    isActive 
+                      ? 'bg-slate-900 text-white shadow-md' 
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#9DBEB2]'}`} />
-                  <span className="truncate">{item.label}</span>
+                  <div className="flex items-center gap-3 truncate">
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      item.badgeColor || (isActive ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700')
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
           </nav>
-        </div>
 
-        <div className="pt-6 border-t border-[#2A4C3F] space-y-3 mt-6">
-          <button
-            onClick={onExit}
-            className="w-full py-3 bg-[#627636] hover:bg-[#52632B] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>EXIT TO ALL PORTALS</span>
-          </button>
-        </div>
-      </aside>
+        </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-4 sm:p-8 space-y-6 overflow-y-auto max-w-6xl w-full">
-        
-        {/* PAGE 1 & 5: Dashboard & Analytics */}
-        {(activePage === 'dashboard' || activePage === 'analytics') && (
-          <AnalyticsDashboard />
-        )}
-
-        {/* PAGE 2: Manage Guards */}
-        {activePage === 'manage_guards' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Manage Security Guards & Shift Roster</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">Add New Security Guard Account</span>
-              <form onSubmit={handleAddGuard} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-bold text-[#172D25] block mb-1">Guard Full Name</label>
-                    <input type="text" required value={guardName} onChange={(e) => setGuardName(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
+        {/* ========================================================================= */}
+        {/* EXPANSIVE MAIN DESKTOP CONTENT AREA */}
+        {/* ========================================================================= */}
+        <main className="flex-1 space-y-6">
+          
+          {/* ========================================================================= */}
+          {/* 1. EXECUTIVE COMMAND DASHBOARD */}
+          {/* ========================================================================= */}
+          {activePage === 'dashboard' && (
+            <div className="space-y-6 animate-fade-in">
+              
+              {/* Top Hero Banner */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                <div className="flex items-center gap-5 relative z-10">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner shrink-0">
+                    <Building2 className="w-8 h-8" />
                   </div>
                   <div>
-                    <label className="font-bold text-[#172D25] block mb-1">Phone Number</label>
-                    <input type="text" required value={guardPhone} onChange={(e) => setGuardPhone(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-black text-2xl text-white">Society Executive Command & Governance</h2>
+                      <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                        FY 2026-27 Active
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-1">Real-time financial audits, security rosters, resident accounts, AMC contracts, and facilities governance</p>
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-3.5 bg-[#627636] hover:bg-[#52632B] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg">
-                  ADD GUARD TO SECURITY ROSTER
-                </button>
-              </form>
-            </div>
+                <div className="flex flex-wrap items-center gap-3 relative z-10">
+                  <button
+                    onClick={() => setActivePage('billing_fees')}
+                    className="px-5 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    <Receipt className="w-4 h-4 fill-slate-950" />
+                    <span>Manage Billing & Dues</span>
+                  </button>
 
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">Security Roster Directory ({guardsList.length} Guards)</span>
-              <div className="space-y-3 text-xs">
-                {guardsList.map((g) => (
-                  <div key={g.id} className="bg-[#F6F3EC] p-4 rounded-2xl border border-[#DED8C8] flex justify-between items-center">
+                  <button
+                    onClick={() => setActivePage('notices')}
+                    className="px-5 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    <Megaphone className="w-4 h-4 text-indigo-600" />
+                    <span>Broadcast Notice</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4 Stat Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <DollarSign className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-500">August Collections</div>
+                    <div className="text-2xl font-black text-slate-900">₹ 14.8 Lakhs</div>
+                    <div className="text-[10px] text-emerald-600 font-bold">92% Compliance</div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-500">Registered Residents</div>
+                    <div className="text-2xl font-black text-slate-900">250 Flats (740 Res)</div>
+                    <div className="text-[10px] text-indigo-600 font-bold">Aadhaar KYC 98%</div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-500">Security Personnel</div>
+                    <div className="text-2xl font-black text-slate-900">8 Guards on Roster</div>
+                    <div className="text-[10px] text-emerald-600 font-bold">3 on Active Shift</div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <Wrench className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-500">AMC Equipment</div>
+                    <div className="text-2xl font-black text-slate-900">6 Critical Assets</div>
+                    <div className="text-[10px] text-purple-600 font-bold">100% Operational</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Jump Grid: Residents, Guards, Dues */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Recent Billing & Maintenance Status */}
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div>
-                      <div className="font-bold text-[#172D25] text-sm">{g.name} ({g.id})</div>
-                      <div className="text-slate-600">{g.station} • {g.shift} • Phone: {g.phone}</div>
+                      <span className="font-extrabold text-sm text-slate-900 block">August 2026 Maintenance Ledger</span>
+                      <span className="text-xs text-slate-500">Recent flat payment activities</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="bg-[#627636] text-white px-2 py-0.5 rounded font-bold text-[10px]">{g.Aadhaar}</span>
-                      <span className="text-amber-800 font-bold">{g.rating}</span>
+                    <button
+                      onClick={() => setActivePage('billing_fees')}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+                    >
+                      View All Dues →
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5 text-xs">
+                    {flatsBillingStatus.map(f => (
+                      <div key={f.flat} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-slate-900">{f.flat} ({f.resident})</div>
+                          <div className="text-[11px] text-slate-500">{f.bhk} • Mode: {f.mode}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-slate-900">{f.amount}</div>
+                          <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                            f.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {f.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Security & AMC Equipment Health */}
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <div>
+                      <span className="font-extrabold text-sm text-slate-900 block">Critical Society Infrastructure</span>
+                      <span className="text-xs text-slate-500">Real-time AMC status</span>
+                    </div>
+                    <button
+                      onClick={() => setActivePage('maintenance_mgmt')}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+                    >
+                      View All Assets →
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5 text-xs">
+                    {assetsList.slice(0, 4).map((a, idx) => (
+                      <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-slate-900">{a.name}</div>
+                          <div className="text-[11px] text-slate-500">Vendor: {a.vendor} • Next: {a.nextService}</div>
+                        </div>
+                        <div className="text-right">
+                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            {a.health} Health
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 2. MANAGE GUARDS & ROSTERS */}
+          {/* ========================================================================= */}
+          {activePage === 'manage_guards' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Security Guard Roster & Shift Allocations</h2>
+                    <p className="text-xs text-slate-500 mt-1">Manage 24/7 guard shifts, post assignments, biometric Aadhaar verifications, and ratings</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => alert('New Guard registration form opened below.')}
+                  className="px-5 py-3 bg-slate-900 text-white font-bold rounded-2xl text-xs flex items-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Security Guard</span>
+                </button>
+              </div>
+
+              {/* Add Guard Form */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-extrabold text-base text-slate-900 block">Register & Assign Guard to Gate Station</span>
+                <form onSubmit={handleAddGuard} className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Guard Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={guardName}
+                      onChange={(e) => setGuardName(e.target.value)}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Mobile Number</label>
+                    <input
+                      type="tel"
+                      required
+                      value={guardPhone}
+                      onChange={(e) => setGuardPhone(e.target.value)}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Assigned Station</label>
+                    <select
+                      value={guardStation}
+                      onChange={(e) => setGuardStation(e.target.value)}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-bold"
+                    >
+                      <option value="Gate 1 Main Entry">Gate 1 Main Entry</option>
+                      <option value="Gate 2 Rear Entry">Gate 2 Rear Entry</option>
+                      <option value="Night Patrol Rover">Night Patrol Rover</option>
+                      <option value="Clubhouse Guard">Clubhouse Guard</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Shift Schedule</label>
+                    <select
+                      value={guardShift}
+                      onChange={(e) => setGuardShift(e.target.value)}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-bold"
+                    >
+                      <option value="Shift A (06:00 AM - 02:00 PM)">Shift A (06:00 AM - 02:00 PM)</option>
+                      <option value="Shift B (02:00 PM - 10:00 PM)">Shift B (02:00 PM - 10:00 PM)</option>
+                      <option value="Shift C (10:00 PM - 06:00 AM)">Shift C (10:00 PM - 06:00 AM)</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-4">
+                    <button
+                      type="submit"
+                      className="py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md"
+                    >
+                      Save Guard Assignment & Deploy
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Guards List */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                {guardsList.map(g => (
+                  <div key={g.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+                    <div className="flex justify-between items-start">
+                      <span className="font-mono font-bold text-slate-400">{g.id}</span>
+                      <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                        g.status.includes('Active') ? 'bg-emerald-100 text-emerald-800 animate-pulse' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {g.status}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="font-black text-sm text-slate-900">{g.name}</div>
+                      <div className="text-[11px] text-slate-500 font-mono">{g.phone}</div>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                      <div className="font-bold text-slate-800">{g.station}</div>
+                      <div className="text-[11px] text-slate-500">{g.shift}</div>
+                      <div className="text-[10px] text-emerald-700 font-bold pt-1">{g.Aadhaar}</div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* PAGE 3: Manage Residents */}
-        {activePage === 'manage_residents' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Manage Residents Master Directory</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <span className="text-xs font-bold text-[#627636] uppercase tracking-wider">
-                  250 Flat Master Registry Database ({residentsDirectory.length} Directory View)
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search by flat or name..."
-                  value={resSearch}
-                  onChange={(e) => setResSearch(e.target.value)}
-                  className="p-2.5 bg-[#F6F3EC] text-xs rounded-xl border border-[#DED8C8] w-full sm:w-64"
-                />
+          {/* ========================================================================= */}
+          {/* 3. MANAGE RESIDENTS & FLATS DIRECTORY */}
+          {/* ========================================================================= */}
+          {activePage === 'manage_residents' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Users className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Society Resident & Flat Ownership Directory</h2>
+                    <p className="text-xs text-slate-500 mt-1">Complete unit directory, registered owners, vehicle whitelist, parking slots, and dues status</p>
+                  </div>
+                </div>
+
+                <div className="w-full sm:w-72 relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search flat, name, vehicle..."
+                    value={resSearch}
+                    onChange={(e) => setResSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
+                  />
+                </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#DED8C8] text-slate-500 font-bold">
-                      <th className="py-2">Flat No</th>
-                      <th className="py-2">Resident Name</th>
-                      <th className="py-2">Phone</th>
-                      <th className="py-2">Type</th>
-                      <th className="py-2">Unit Size</th>
-                      <th className="py-2">Vehicle Plate</th>
-                      <th className="py-2 text-right">Dues Status</th>
+                    <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                      <th className="py-3">Flat & Tower</th>
+                      <th className="py-3">Primary Owner / Tenant</th>
+                      <th className="py-3">Configuration</th>
+                      <th className="py-3">Registered Vehicle</th>
+                      <th className="py-3">Allocated Parking</th>
+                      <th className="py-3 text-right">Maintenance Dues</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#DED8C8]">
-                    {residentsDirectory.filter(r => 
-                      r.flat.toLowerCase().includes(resSearch.toLowerCase()) || 
-                      r.name.toLowerCase().includes(resSearch.toLowerCase())
-                    ).map((res) => (
-                      <tr key={res.flat} className="text-slate-800">
-                        <td className="py-3 font-bold font-mono text-[#172D25]">{res.flat}</td>
-                        <td className="py-3 font-bold">{res.name}</td>
-                        <td className="py-3 text-slate-500 font-mono">{res.phone}</td>
-                        <td className="py-3">{res.type}</td>
-                        <td className="py-3">{res.bhk}</td>
-                        <td className="py-3 font-mono">{res.vehicle}</td>
-                        <td className="py-3 text-right font-bold text-[#627636]">{res.dues}</td>
-                      </tr>
-                    ))}
+                  <tbody className="divide-y divide-slate-100">
+                    {residentsDirectory
+                      .filter(r => r.flat.toLowerCase().includes(resSearch.toLowerCase()) || r.name.toLowerCase().includes(resSearch.toLowerCase()) || r.vehicle.toLowerCase().includes(resSearch.toLowerCase()))
+                      .map(r => (
+                        <tr key={r.flat} className="hover:bg-slate-50">
+                          <td className="py-3.5 font-bold text-slate-900">{r.flat}</td>
+                          <td className="py-3.5">
+                            <div className="font-bold text-slate-900">{r.name}</div>
+                            <div className="text-[11px] text-slate-500">{r.phone} • {r.type}</div>
+                          </td>
+                          <td className="py-3.5 text-slate-600">{r.bhk}</td>
+                          <td className="py-3.5 font-mono text-slate-700">{r.vehicle}</td>
+                          <td className="py-3.5 font-bold text-indigo-700">{r.parking}</td>
+                          <td className="py-3.5 text-right">
+                            <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                              r.dues.includes('Paid') ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                            }`}>
+                              {r.dues}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* PAGE 4: View Reports */}
-        {activePage === 'view_reports' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Financial & Audit Reports</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">
-                CA Audit Ledgers & Financial Statements
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="bg-[#F6F3EC] p-5 rounded-2xl border border-[#DED8C8] space-y-2">
-                  <FileText className="w-6 h-6 text-[#627636]" />
-                  <div className="font-bold text-[#172D25] text-sm">FY 2025-26 Annual Audit Balance Sheet</div>
-                  <p className="text-slate-600">CA-Verified Income & Expense Ledger Statement</p>
-                  <button onClick={() => alert('Downloading CA_Audit_BalanceSheet_2025.pdf...')} className="px-4 py-2 bg-[#627636] text-white font-bold rounded-xl shadow flex items-center gap-1">
-                    <Download className="w-3.5 h-3.5" /> Download PDF
-                  </button>
+          {/* ========================================================================= */}
+          {/* 4. BILLING & MAINTENANCE FEES ENGINE */}
+          {activePage === 'billing_fees' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Receipt className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Maintenance Billing & Financial Ledger</h2>
+                    <p className="text-xs text-slate-500 mt-1">Issue automated invoices, track UPI/Netbanking payments, generate GST receipts, and dispatch reminders</p>
+                  </div>
                 </div>
 
-                <div className="bg-[#F6F3EC] p-5 rounded-2xl border border-[#DED8C8] space-y-2">
-                  <FileText className="w-6 h-6 text-[#1C352C]" />
-                  <div className="font-bold text-[#172D25] text-sm">August 2026 GST Return Filing</div>
-                  <p className="text-slate-600">GST Registration #29AAAAA0000A1Z5 Statement</p>
-                  <button onClick={() => alert('Downloading GST_Return_Aug2026.pdf...')} className="px-4 py-2 bg-[#1C352C] text-white font-bold rounded-xl shadow flex items-center gap-1">
-                    <Download className="w-3.5 h-3.5" /> Download GST File
-                  </button>
-                </div>
+                <button
+                  onClick={() => alert('Bulk Monthly Maintenance invoices generated for all 250 flats!')}
+                  className="px-5 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl text-xs shadow-md cursor-pointer"
+                >
+                  ⚡ Generate Bulk Society Invoices
+                </button>
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* PAGE 6: Visitor Management */}
-        {activePage === 'visitor_mgmt' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Visitor Analytics & Gate Register Log</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">Today Gate Visitors Log ({adminVisitorLogs.length} Recent Logged)</span>
-              <div className="overflow-x-auto text-xs">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-[#DED8C8] text-slate-500 font-bold">
-                      <th className="py-2">Visitor ID</th>
-                      <th className="py-2">Visitor Name & Type</th>
-                      <th className="py-2">Host Flat</th>
-                      <th className="py-2">Gate Station</th>
-                      <th className="py-2">Check In</th>
-                      <th className="py-2 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#DED8C8]">
-                    {adminVisitorLogs.map((v) => (
-                      <tr key={v.id} className="text-slate-800">
-                        <td className="py-3 font-mono font-bold">{v.id}</td>
-                        <td className="py-3 font-bold">{v.name} ({v.type})</td>
-                        <td className="py-3 font-bold">{v.flat}</td>
-                        <td className="py-3">{v.gate}</td>
-                        <td className="py-3">{v.entry}</td>
-                        <td className="py-3 text-right">
-                          <span className={`px-2.5 py-0.5 rounded font-bold text-[10px] ${v.status === 'Inside' ? 'bg-[#627636] text-white' : 'bg-[#1C352C] text-white'}`}>
-                            {v.status}
-                          </span>
-                        </td>
+              {/* Issue Custom Bill Card */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-extrabold text-base text-slate-900 block">Issue Individual Maintenance or Repair Bill</span>
+                <form onSubmit={handleIssueCustomBill} className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Target Flat & Resident</label>
+                    <select
+                      value={selectedTargetFlat}
+                      onChange={(e) => setSelectedTargetFlat(e.target.value)}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-bold"
+                    >
+                      <option value="Flat B-108 (Ananya Sharma)">Flat B-108 (Ananya Sharma)</option>
+                      <option value="Flat A-402 (Rajesh Mehta)">Flat A-402 (Rajesh Mehta)</option>
+                      <option value="Flat C-301 (Suresh Menon)">Flat C-301 (Suresh Menon)</option>
+                      <option value="Flat A-104 (Pooja Hegde)">Flat A-104 (Pooja Hegde)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Amount (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      value={customBillAmount}
+                      onChange={(e) => setCustomBillAmount(e.target.value)}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-mono font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Bill Description</label>
+                    <input
+                      type="text"
+                      value={billNote}
+                      onChange={(e) => setBillNote(e.target.value)}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-3">
+                    <button
+                      type="submit"
+                      className="py-3 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md"
+                    >
+                      Dispatch Bill & Notify Resident App
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Billing Status Table */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-4 text-xs">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setBillingFilter('all')}
+                      className={`px-3.5 py-1.5 rounded-xl font-bold cursor-pointer ${billingFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}
+                    >
+                      All Records
+                    </button>
+                    <button
+                      onClick={() => setBillingFilter('unpaid')}
+                      className={`px-3.5 py-1.5 rounded-xl font-bold cursor-pointer ${billingFilter === 'unpaid' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}
+                    >
+                      Overdue ({unpaidCount})
+                    </button>
+                    <button
+                      onClick={() => setBillingFilter('paid')}
+                      className={`px-3.5 py-1.5 rounded-xl font-bold cursor-pointer ${billingFilter === 'paid' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}
+                    >
+                      Paid ({flatsBillingStatus.length - unpaidCount})
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                        <th className="py-3">Flat & Resident</th>
+                        <th className="py-3">Amount</th>
+                        <th className="py-3">Due Date</th>
+                        <th className="py-3">Payment Mode</th>
+                        <th className="py-3">Status</th>
+                        <th className="py-3 text-right">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {flatsBillingStatus
+                        .filter(f => billingFilter === 'all' || (billingFilter === 'unpaid' ? f.status === 'Unpaid' : f.status === 'Paid'))
+                        .map(f => (
+                          <tr key={f.flat} className="hover:bg-slate-50">
+                            <td className="py-3.5 font-bold text-slate-900">
+                              <div>{f.flat} ({f.resident})</div>
+                              <div className="text-[11px] text-slate-400 font-mono">{f.phone}</div>
+                            </td>
+                            <td className="py-3.5 font-black text-slate-900">{f.amount}</td>
+                            <td className="py-3.5 text-slate-500">{f.dueDate}</td>
+                            <td className="py-3.5 text-slate-600">{f.mode}</td>
+                            <td className="py-3.5">
+                              <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                f.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                              }`}>
+                                {f.status}
+                              </span>
+                            </td>
+                            <td className="py-3.5 text-right">
+                              {f.status === 'Unpaid' ? (
+                                <button
+                                  onClick={() => handleSendPaymentReminder(f.flat, f.resident)}
+                                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-[11px] cursor-pointer"
+                                >
+                                  Send Reminder
+                                </button>
+                              ) : (
+                                <span className="text-emerald-700 font-bold text-[11px]">GST Receipt #{f.receiptNo}</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* PAGE 7: Incident Management */}
-        {activePage === 'incident_mgmt' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Incident Management Console</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">Security & RWA Incident Log ({incidentsList.length} Cases)</span>
-              <div className="space-y-3 text-xs">
-                {incidentsList.map((inc) => (
-                  <div key={inc.id} className="bg-[#F6F3EC] p-4 rounded-2xl border border-[#DED8C8] flex justify-between items-center">
+          {/* ========================================================================= */}
+          {/* 5. NOTICES & ANNOUNCEMENTS */}
+          {activePage === 'notices' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Megaphone className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Official Society Notice Board & Circulars</h2>
+                    <p className="text-xs text-slate-500 mt-1">Broadcast official announcements directly to all 250 resident mobile apps with instant push alerts</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Compose Notice Card */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-extrabold text-base text-slate-900 block">Compose & Broadcast Circular</span>
+                <form onSubmit={handlePostNotice} className="space-y-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <div className="font-bold text-[#172D25] text-sm">{inc.id} - {inc.category} ({inc.flat})</div>
-                      <div className="text-slate-600">{inc.desc} • Logged by {inc.loggedBy} ({inc.time})</div>
+                      <label className="font-bold text-slate-700 block mb-1">Notice Headline</label>
+                      <input
+                        type="text"
+                        required
+                        value={noticeTitle}
+                        onChange={(e) => setNoticeTitle(e.target.value)}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-bold"
+                      />
                     </div>
-                    {inc.status === 'Under Investigation' ? (
-                      <button onClick={() => handleResolveIncident(inc.id)} className="px-4 py-2 bg-[#627636] text-white font-bold rounded-xl shadow">
-                        Mark Resolved
-                      </button>
-                    ) : (
-                      <span className="bg-[#1C352C] text-white px-3 py-1 rounded-full font-bold">✓ Resolved</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* PAGE 8: Emergency Management */}
-        {activePage === 'emergency_mgmt' && (
-          <div className="space-y-6 max-w-xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Emergency Management Broadcast</div>
-            
-            <div className="modern-card p-5 sm:p-8 border-red-300 space-y-4 text-xs">
-              <span className="text-xs font-bold text-red-700 uppercase tracking-wider block">RWA Emergency Siren Console</span>
-              
-              <div className="space-y-2">
-                <label className="font-bold text-[#172D25]">Select Drill Type:</label>
-                <select value={drillType} onChange={(e) => setDrillType(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]">
-                  <option value="Fire Drill">Fire Alarm Drill</option>
-                  <option value="Gas Leakage Alert">Piped Gas Leakage Alert</option>
-                  <option value="Security Intrusion">Security Intrusion Lockdown</option>
-                </select>
-              </div>
-
-              <button
-                onClick={() => {
-                  setBroadcastActive(true);
-                  alert(`HIGH PRIORITY ${drillType.toUpperCase()} SIREN BROADCAST SENT!`);
-                }}
-                className="w-full py-4 bg-red-700 hover:bg-red-800 text-white serif-title text-xs tracking-wider rounded-xl shadow-lg"
-              >
-                BROADCAST {drillType.toUpperCase()} SIREN TO ALL 250 FLATS
-              </button>
-              
-              {broadcastActive && (
-                <div className="bg-red-100 border border-red-400 p-4 rounded-xl text-center font-bold text-red-900 animate-pulse">
-                  🚨 High Priority Emergency Broadcast ({drillType}) Active across Resident Apps & Gate Desks!
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 9: Amenity Management */}
-        {activePage === 'amenity_mgmt' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Amenity Approvals</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">Resident Banquet & Event Approvals</span>
-              <div className="space-y-3 text-xs">
-                {amenityApprovals.map((a) => (
-                  <div key={a.id} className="bg-[#F6F3EC] p-4 rounded-2xl border border-[#DED8C8] flex justify-between items-center">
                     <div>
-                      <div className="font-bold text-[#172D25]">{a.amenity} ({a.date})</div>
-                      <div className="text-slate-600">Reserved by: {a.resident} • Event: {a.event}</div>
+                      <label className="font-bold text-slate-700 block mb-1">Category</label>
+                      <select
+                        value={noticeCategory}
+                        onChange={(e) => setNoticeCategory(e.target.value)}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-bold"
+                      >
+                        <option value="Maintenance Notice">Maintenance Notice</option>
+                        <option value="AGM Event">AGM Event & Elections</option>
+                        <option value="General Circular">General Circular</option>
+                        <option value="Security Alert">Security Alert</option>
+                      </select>
                     </div>
-                    {a.status === 'Pending Approval' ? (
-                      <div className="flex gap-2">
-                        <button onClick={() => handleAmenityDecision(a.id, 'Approved')} className="px-3 py-1.5 bg-[#627636] text-white font-bold rounded-lg">Approve</button>
-                        <button onClick={() => handleAmenityDecision(a.id, 'Rejected')} className="px-3 py-1.5 bg-[#1C352C] text-white font-bold rounded-lg">Reject</button>
-                      </div>
-                    ) : (
-                      <span className="bg-[#627636] text-white px-3 py-1 rounded-full font-bold text-[10px]">{a.status}</span>
-                    )}
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* PAGE 10: Maintenance Management */}
-        {activePage === 'maintenance_mgmt' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Infrastructure Maintenance</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-3 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">8 Society Infrastructure Assets</span>
-              {assetsList.map((asset) => (
-                <div key={asset.name} className="bg-[#F6F3EC] p-4 rounded-xl border border-[#DED8C8] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div>
-                    <div className="font-bold text-[#172D25] text-sm">{asset.name}</div>
-                    <div className="text-slate-600">Vendor: {asset.vendor} • Next Maintenance: {asset.nextService}</div>
+                    <label className="font-bold text-slate-700 block mb-1">Notice Message Content</label>
+                    <textarea
+                      rows={3}
+                      required
+                      value={noticeBody}
+                      onChange={(e) => setNoticeBody(e.target.value)}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 font-medium"
+                    />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-[#627636]">Health: {asset.health}</span>
-                    <span className="bg-[#627636] text-white px-3 py-1 rounded-full font-bold text-[10px]">{asset.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* PAGE 11: Notice Board */}
-        {activePage === 'notices' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Notice Publisher</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <form onSubmit={handlePostNotice} className="space-y-4">
-                <input type="text" required value={noticeTitle} onChange={(e) => setNoticeTitle(e.target.value)} placeholder="Title" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                <textarea value={noticeBody} onChange={(e) => setNoticeBody(e.target.value)} rows={3} placeholder="Body Description" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                <button type="submit" className="w-full py-3.5 bg-[#627636] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg">
-                  POST NOTICE & PUSH TO ALL APPS
-                </button>
-              </form>
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 space-y-3 text-xs">
-              <span className="font-bold text-[#627636] block">Posted Notices ({publishedNotices.length} Circulars)</span>
-              {publishedNotices.map((n) => (
-                <div key={n.id} className="bg-[#F6F3EC] p-4 rounded-xl border border-[#DED8C8] flex justify-between items-center">
-                  <div>
-                    <div className="font-bold text-[#172D25]">{n.title} ({n.id})</div>
-                    <div className="text-slate-600">{n.body}</div>
-                  </div>
-                  <button onClick={() => handleDeleteNotice(n.id, n.title)} className="p-2 bg-red-100 text-red-700 rounded-lg">
-                    <Trash2 className="w-4 h-4" />
+                  <button
+                    type="submit"
+                    className="py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md flex items-center gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Broadcast Notice to 250 Residents</span>
                   </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 12: Billing & Maintenance Fees Engine */}
-        {activePage === 'billing_fees' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Billing & Maintenance Engine</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">Issue Invoice to Flat</span>
-              <form onSubmit={handleIssueCustomBill} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <select value={selectedTargetFlat} onChange={(e) => setSelectedTargetFlat(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]">
-                    {flatsBillingStatus.map(f => (
-                      <option key={f.flat} value={`${f.flat} (${f.resident})`}>{f.flat} - {f.resident}</option>
-                    ))}
-                  </select>
-                  <input type="number" required value={customBillAmount} onChange={(e) => setCustomBillAmount(e.target.value)} placeholder="Amount ₹" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                  <input type="text" value={billNote} onChange={(e) => setBillNote(e.target.value)} placeholder="Bill Note" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                </div>
-                <button type="submit" className="w-full py-3.5 bg-[#627636] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg">
-                  ISSUE INVOICE & SEND PUSH NOTIFICATION
-                </button>
-              </form>
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-[#627636]">Payment Status Tracker</span>
-                <div className="flex gap-2">
-                  <button onClick={() => setBillingFilter('all')} className={`px-3 py-1 rounded-lg ${billingFilter === 'all' ? 'bg-[#627636] text-white' : 'bg-[#F6F3EC]'}`}>All</button>
-                  <button onClick={() => setBillingFilter('paid')} className={`px-3 py-1 rounded-lg ${billingFilter === 'paid' ? 'bg-[#627636] text-white' : 'bg-[#F6F3EC]'}`}>Paid</button>
-                  <button onClick={() => setBillingFilter('unpaid')} className={`px-3 py-1 rounded-lg ${billingFilter === 'unpaid' ? 'bg-[#627636] text-white' : 'bg-[#F6F3EC]'}`}>Unpaid</button>
-                </div>
+                </form>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-[#DED8C8] text-slate-500 font-bold">
-                      <th className="py-2">Flat</th>
-                      <th className="py-2">Resident</th>
-                      <th className="py-2">Amount</th>
-                      <th className="py-2">Payment Details</th>
-                      <th className="py-2 text-right">Status / Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#DED8C8]">
-                    {flatsBillingStatus.filter(f => billingFilter === 'all' ? true : billingFilter === 'paid' ? f.status === 'Paid' : f.status === 'Unpaid').map((f) => (
-                      <tr key={f.flat} className="text-slate-800">
-                        <td className="py-3 font-mono font-bold">{f.flat}</td>
-                        <td className="py-3 font-bold">{f.resident}</td>
-                        <td className="py-3 font-bold text-[#172D25]">{f.amount}</td>
-                        <td className="py-3 text-slate-600">{f.status === 'Paid' ? `Receipt #${f.receiptNo} (${f.mode})` : 'Pending Payment'}</td>
-                        <td className="py-3 text-right">
-                          {f.status === 'Paid' ? (
-                            <span className="bg-[#627636] text-white px-3 py-1 rounded-full font-bold text-[10px]">✓ Paid</span>
-                          ) : (
-                            <button onClick={() => handleSendPaymentReminder(f.flat, f.resident)} className="px-3 py-1 bg-red-700 text-white font-bold rounded text-[10px] ml-auto">Send Reminder</button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 13: Audit Logs */}
-        {activePage === 'audit_logs' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">System Audit Trail Logs</div>
-            <div className="modern-card p-5 sm:p-8 space-y-3 text-xs">
-              <span className="font-bold text-[#627636] block">Timestamped Audit Log Trail</span>
-              {auditLogsList.map((log) => (
-                <div key={log.id} className="bg-[#F6F3EC] p-3.5 rounded-xl border border-[#DED8C8] flex justify-between items-center">
-                  <div>
-                    <div className="font-bold text-[#172D25]">{log.user} ({log.id})</div>
-                    <div className="text-slate-600">{log.action}</div>
-                  </div>
-                  <div className="text-right shrink-0 font-mono text-slate-500">{log.timestamp}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 14: Community Config */}
-        {activePage === 'community_config' && (
-          <div className="space-y-6 max-w-xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Community Configuration</div>
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <div className="font-bold text-[#172D25]">Society Legal & Tax Setup</div>
-              <div className="bg-[#F6F3EC] p-4 rounded-xl border border-[#DED8C8] space-y-2">
-                <div>Name: <strong>Green Haven Sanctuary RWA</strong></div>
-                <div>GSTIN: <strong>29AAAAA0000A1Z5</strong></div>
-                <div>Registration No: <strong>RWA/KA/BNG/2021/9012</strong></div>
-                <div>Towers: <strong>3 Towers (Tower A, B, C) • 250 Units</strong></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 15: Staff & Vendor Management */}
-        {activePage === 'staff_vendor' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Staff & Vendor Credentials Management</div>
-            <p className="text-xs text-slate-600">Issue digital access credentials & login passcodes to new staff members and vendors working in the community</p>
-
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">1. Issue Login Credentials to Staff / Vendor</span>
-              <form onSubmit={handleIssueStaffCredentials} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <input type="text" required value={staffName} onChange={(e) => setStaffName(e.target.value)} placeholder="Staff Name" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                  <input type="text" required value={staffCompany} onChange={(e) => setStaffCompany(e.target.value)} placeholder="Company" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                  <input type="text" required value={staffRole} onChange={(e) => setStaffRole(e.target.value)} placeholder="Role" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                </div>
-                <button type="submit" className="w-full py-4 bg-[#627636] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg">
-                  ISSUE LOGIN CREDENTIALS & DISPATCH SMS
-                </button>
-              </form>
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">2. Active Staff & Vendor Credentials Vault ({staffCredentialsList.length} Accounts)</span>
+              {/* Published Notices List */}
               <div className="space-y-3">
-                {staffCredentialsList.map((s) => (
-                  <div key={s.id} className="bg-[#F6F3EC] p-4 rounded-2xl border border-[#DED8C8] flex justify-between items-center">
+                {publishedNotices.map(n => (
+                  <div key={n.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="font-bold text-[#172D25] text-base">{s.name} ({s.role})</div>
-                      <div className="text-slate-600">Username: <strong className="font-mono text-[#172D25]">{s.username}</strong> • Passcode: <strong className="font-mono text-[#627636]">{s.passCode}</strong></div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-sm text-slate-900">{n.title}</span>
+                        <span className="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                          {n.category}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1">{n.body}</p>
+                      <div className="text-[11px] text-slate-400 mt-1">Published: {n.date} • {n.status}</div>
                     </div>
-                    <button onClick={() => handleRevokeStaffCredentials(s.id, s.name)} className="px-3.5 py-1.5 bg-red-100 text-red-800 font-bold rounded-xl text-xs">
-                      Revoke Credentials
+
+                    <button
+                      onClick={() => handleDeleteNotice(n.id, n.title)}
+                      className="p-2.5 text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 text-xs font-bold cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
               </div>
             </div>
+          )}
 
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">3. Active Society Vendor AMC Contracts</span>
-              <div className="space-y-3">
-                {vendorList.map((v) => (
-                  <div key={v.name} className="bg-[#F6F3EC] p-4 rounded-xl border border-[#DED8C8] flex justify-between items-center">
+          {/* ========================================================================= */}
+          {/* 6. AMENITY MANAGEMENT */}
+          {activePage === 'amenity_mgmt' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Calendar className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Amenity & Facility Booking Approvals</h2>
+                    <p className="text-xs text-slate-500 mt-1">Approve or reject resident bookings for Banquet Hall, Tennis Courts, and Turf Arenas</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {amenityApprovals.map(a => (
+                  <div key={a.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="font-bold text-[#172D25]">{v.name}</div>
-                      <div className="text-slate-600">{v.scope} • Cost: <strong>{v.cost}</strong></div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-xs text-slate-400">{a.id}</span>
+                        <span className="font-black text-sm text-slate-900">{a.amenity}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                          a.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                        }`}>
+                          {a.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-700 mt-1">Requested by: <strong>{a.resident}</strong> • Date: <strong>{a.date}</strong></div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">Event Details: {a.event}</div>
                     </div>
-                    <span className="bg-[#627636] text-white px-3 py-1 rounded-full font-bold text-[10px]">{v.status}</span>
+
+                    {a.status === 'Pending Approval' && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleAmenityDecision(a.id, 'Approved')}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs cursor-pointer"
+                        >
+                          Approve Request
+                        </button>
+                        <button
+                          onClick={() => handleAmenityDecision(a.id, 'Rejected')}
+                          className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-      </main>
+          {/* ========================================================================= */}
+          {/* 7. MAINTENANCE & AMC ASSET TRACKER */}
+          {activePage === 'maintenance_mgmt' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-black text-xl text-slate-900 block">Critical Equipment AMC & Maintenance Ledger</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  {assetsList.map((a, idx) => (
+                    <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <span className="font-bold text-sm text-slate-900">{a.name}</span>
+                        <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">
+                          {a.health} Health
+                        </span>
+                      </div>
+                      <div className="text-slate-600">Contractor: <strong>{a.vendor}</strong></div>
+                      <div className="text-slate-500">Status: {a.status}</div>
+                      <div className="text-indigo-700 font-bold pt-1">Next Scheduled Service: {a.nextService}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 8. GATE VISITOR MANAGEMENT LOGS */}
+          {activePage === 'visitor_mgmt' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-black text-xl text-slate-900 block">Society Gate Access & Visitor History</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                        <th className="py-3">Visitor Name</th>
+                        <th className="py-3">Target Flat</th>
+                        <th className="py-3">Gate & Type</th>
+                        <th className="py-3">Entry Time</th>
+                        <th className="py-3 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {adminVisitorLogs.map(v => (
+                        <tr key={v.id} className="hover:bg-slate-50">
+                          <td className="py-3.5 font-bold text-slate-900">{v.name}</td>
+                          <td className="py-3.5 text-indigo-700 font-bold">{v.flat}</td>
+                          <td className="py-3.5 text-slate-600">{v.gate} ({v.type})</td>
+                          <td className="py-3.5 text-slate-500">{v.entry}</td>
+                          <td className="py-3.5 text-right">
+                            <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                              v.status === 'Inside' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {v.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 9. INCIDENT INVESTIGATION DESK */}
+          {activePage === 'incident_mgmt' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-black text-xl text-slate-900 block">Society Security Occurrence & Investigation Desk</span>
+                <div className="space-y-3 text-xs">
+                  {incidentsList.map(inc => (
+                    <div key={inc.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-slate-400">{inc.id}</span>
+                          <span className="font-bold text-sm text-slate-900">{inc.category} ({inc.flat})</span>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                          inc.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                        }`}>
+                          {inc.status}
+                        </span>
+                      </div>
+                      <p className="text-slate-600">{inc.desc}</p>
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-200/60 text-[11px] text-slate-500">
+                        <span>Logged by {inc.loggedBy} • {inc.time}</span>
+                        {inc.status !== 'Resolved' && (
+                          <button
+                            onClick={() => handleResolveIncident(inc.id)}
+                            className="px-3 py-1 bg-slate-900 text-white font-bold rounded-lg cursor-pointer"
+                          >
+                            Mark Resolved
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 10. EMERGENCY MANAGEMENT & DRILLS */}
+          {activePage === 'emergency_mgmt' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
+                    <Flame className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Emergency Protocols & Community Drills</h2>
+                    <p className="text-xs text-slate-500">Conduct community safety drills and broadcast emergency evacuation instructions</p>
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-red-50/70 border border-red-200 space-y-4 text-xs">
+                  <span className="font-bold text-red-900 text-sm block">Broadcast Community Drill / Evacuation Notice</span>
+                  <div className="flex gap-3">
+                    <select
+                      value={drillType}
+                      onChange={(e) => setDrillType(e.target.value)}
+                      className="p-3 bg-white rounded-xl border border-red-200 font-bold"
+                    >
+                      <option value="Fire Evacuation Drill">Scheduled Fire Evacuation Drill</option>
+                      <option value="Earthquake Safety Drill">Earthquake Safety Protocol</option>
+                      <option value="Power Grid Blackout Drill">Power Substation Safety Drill</option>
+                    </select>
+
+                    <button
+                      onClick={() => alert(`Broadcasted "${drillType}" alert to all resident mobile apps!`)}
+                      className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl cursor-pointer"
+                    >
+                      Dispatch Community Alert
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 11. STAFF & VENDOR CREDENTIALS */}
+          {activePage === 'staff_vendor' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-black text-xl text-slate-900 block">External Vendor AMC Contracts & Digital Credentials</span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  {vendorList.map((v, idx) => (
+                    <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="font-bold text-sm text-slate-900">{v.name}</div>
+                      <div className="text-slate-600">{v.scope}</div>
+                      <div className="font-mono font-bold text-indigo-700">{v.cost}</div>
+                      <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold inline-block mt-1">
+                        {v.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 12. AUDIT LOGS */}
+          {activePage === 'audit_logs' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-black text-xl text-slate-900 block">System Financial & Security Audit Trail</span>
+                <div className="space-y-3 text-xs">
+                  {auditLogsList.map(log => (
+                    <div key={log.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-slate-900">{log.action}</div>
+                        <div className="text-[11px] text-slate-500">By: {log.user} • IP: {log.ip}</div>
+                      </div>
+                      <span className="font-mono text-slate-400 text-[11px]">{log.timestamp}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 13. COMMUNITY CONFIGURATION */}
+          {activePage === 'community_config' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
+                <span className="font-black text-xl text-slate-900 block">Society Bylaws & Maintenance Formula Configuration</span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                    <span className="font-bold text-slate-900 block">Maintenance Rate Calculation</span>
+                    <div className="text-slate-600">Base Rate: <strong>₹ 3.50 per sq.ft / month</strong></div>
+                    <div className="text-slate-600">Sinking Fund: <strong>₹ 500 per month</strong></div>
+                    <div className="text-slate-600">GST Applicability: <strong>18% for bills &gt; ₹7,500/mo</strong></div>
+                  </div>
+
+                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                    <span className="font-bold text-slate-900 block">RWA Society Registration & Banking</span>
+                    <div className="text-slate-600">RWA Reg No: <strong>RWA/HYD/2024/8901</strong></div>
+                    <div className="text-slate-600">GSTIN: <strong>36AAACG8901L1Z4</strong></div>
+                    <div className="text-slate-600">Bank: <strong>HDFC Bank - Pocharam Branch</strong></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 14. SOCIETY ANALYTICS SUITE */}
+          {activePage === 'analytics' && (
+            <div className="space-y-6 animate-fade-in">
+              <AnalyticsDashboard />
+            </div>
+          )}
+
+        </main>
+
+      </div>
 
     </div>
   );
