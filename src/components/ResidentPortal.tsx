@@ -6,7 +6,8 @@ import {
   Lock, LogOut, Mail, MapPin, Megaphone, Menu, MessageCircle, MessageSquare, Music, 
   Newspaper, Package, PartyPopper, Phone, Plus, QrCode, Search, Send, Share2, Shield, 
   ShieldAlert, ShieldCheck, Snowflake, Sparkles, Star, Tag, Trash2, Trophy, Truck, 
-  User, UserCheck, UserPlus, Users, Vote, Waves, Wifi, Wrench, X, XCircle, Zap, Contact, Building2
+  User, UserCheck, UserPlus, Users, Vote, Waves, Wifi, Wrench, X, XCircle, Zap, Contact, Building2,
+  CheckCheck, Percent, RefreshCw, Smartphone, Landmark, ShieldCheck as SecureIcon
 } from 'lucide-react';
 
 interface ResidentPortalProps {
@@ -48,14 +49,47 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   const [guestPurpose, setGuestPurpose] = useState<string>('Dinner Guest');
   const [generatedPass, setGeneratedPass] = useState<{ otp: string; name: string; mobile: string; arrival: string } | null>(null);
 
+  // =========================================================================
+  // MODERN BILLING & PAYMENT ENGINE STATE
+  // =========================================================================
+  const [billStatus, setBillStatus] = useState<'Unpaid' | 'Paid'>('Unpaid');
+  const [earlyBirdApplied, setEarlyBirdApplied] = useState<boolean>(true);
+  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
+  const [paymentStep, setPaymentStep] = useState<'idle' | 'processing' | 'success'>('idle');
+  const [selectedUpiApp, setSelectedUpiApp] = useState<string>('GPay');
+  const [selectedBank, setSelectedBank] = useState<string>('HDFC Bank');
+  
+  // Card Input State
+  const [cardNumber, setCardNumber] = useState<string>('4532 8901 2345 9012');
+  const [cardHolder, setCardHolder] = useState<string>('ANANYA SHARMA');
+  const [cardExpiry, setCardExpiry] = useState<string>('08/29');
+  const [cardCvv, setCardCvv] = useState<string>('892');
+
   // Pre-Paid Meter State
   const [meterBalance, setMeterBalance] = useState<number>(-22.47);
   const [showRechargeModal, setShowRechargeModal] = useState<boolean>(false);
   const [rechargeAmount, setRechargeAmount] = useState<number>(1000);
+  const [autopayEnabled, setAutopayEnabled] = useState<boolean>(true);
 
-  // Dues State
-  const [duesStatus, setDuesStatus] = useState<'All Clear!' | 'Pending' | 'Paid'>('All Clear!');
-  const [isBillPaid, setIsBillPaid] = useState<boolean>(true);
+  // Billing Calculation
+  const baseMaintenance = 3200;
+  const sinkingFund = 500;
+  const waterUsage = 400;
+  const dgBackup = 75.60;
+  const amenityMaintenance = 150;
+  const gstTax = 666;
+  const earlyBirdDiscount = earlyBirdApplied ? 238.30 : 0;
+  const totalPayable = (baseMaintenance + sinkingFund + waterUsage + dgBackup + amenityMaintenance + gstTax - earlyBirdDiscount);
+
+  // Past Invoices Vault
+  const [pastInvoicesList, setPastInvoicesList] = useState([
+    { id: 'INV-AUG-2026', month: 'August 2026', amount: '₹ 4,753.30', status: billStatus, date: billStatus === 'Paid' ? 'Today' : 'Due 31 Aug 2026', receipt: 'GST-9021', mode: 'UPI Autopay' },
+    { id: 'INV-JUL-2026', month: 'July 2026', amount: '₹ 4,766.00', status: 'Paid', date: '04 Jul 2026', receipt: 'GST-8412', mode: 'Netbanking (HDFC)' },
+    { id: 'INV-JUN-2026', month: 'June 2026', amount: '₹ 4,766.00', status: 'Paid', date: '02 Jun 2026', receipt: 'GST-7711', mode: 'Credit Card (Visa)' },
+    { id: 'INV-MAY-2026', month: 'May 2026', amount: '₹ 4,766.00', status: 'Paid', date: '03 May 2026', receipt: 'GST-7012', mode: 'UPI Autopay' },
+    { id: 'INV-APR-2026', month: 'April 2026', amount: '₹ 4,766.00', status: 'Paid', date: '05 Apr 2026', receipt: 'GST-6411', mode: 'Netbanking (ICICI)' },
+  ]);
 
   // Search State
   const [categorySearchQuery, setCategorySearchQuery] = useState<string>('');
@@ -105,15 +139,10 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
       { name: 'Kavita Kumari', exp: '3 Years in Community', rating: '4.8 ★', reviews: 29, flats: 6, phone: '98123 77665', rate: '₹3,200/month' },
       { name: 'Laxmi Shinde', exp: '5 Years in Community', rating: '5.0 ★', reviews: 68, flats: 11, phone: '98450 33441', rate: '₹3,800/month' },
       { name: 'Pooja Bai', exp: '2 Years in Community', rating: '4.7 ★', reviews: 18, flats: 4, phone: '98901 22334', rate: '₹3,000/month' },
-      { name: 'Meena Rathod', exp: '6 Years in Community', rating: '4.9 ★', reviews: 54, flats: 9, phone: '98222 11009', rate: '₹3,600/month' },
-      { name: 'Radha Yadav', exp: '1 Year in Community', rating: '4.6 ★', reviews: 12, flats: 3, phone: '98333 44556', rate: '₹2,900/month' },
-      { name: 'Anita Pawar', exp: '3 Years in Community', rating: '4.8 ★', reviews: 31, flats: 7, phone: '98111 99882', rate: '₹3,400/month' },
-      { name: 'Saraswati Bai', exp: '4 Years in Community', rating: '4.9 ★', reviews: 39, flats: 8, phone: '98777 66554', rate: '₹3,500/month' },
     ],
     'Water Supply': [
       { name: 'AquaPure Mineral Cans (Bisleri 20L)', exp: 'Daily 7 AM & 4 PM Supply', rating: '4.9 ★', reviews: 140, flats: 65, phone: '98220 11990', rate: '₹80/Can' },
       { name: 'Himalayan Spring Water Service', exp: 'Doorstep Delivery', rating: '4.8 ★', reviews: 88, flats: 34, phone: '98111 00223', rate: '₹90/Can' },
-      { name: 'Ganga RO Water Delivery', exp: 'Direct Tower Delivery', rating: '4.7 ★', reviews: 52, flats: 22, phone: '98444 88776', rate: '₹75/Can' },
     ],
     'Gym Trainer': [
       { name: 'Coach Rohit Verma (Certified ACSM)', exp: '8 Years Experience', rating: '5.0 ★', reviews: 38, flats: 14, phone: '98700 12345', rate: '₹4,500/month' },
@@ -125,7 +154,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     ],
     Milk: [
       { name: 'Nandini Fresh Farm Milk (Morning 6 AM)', exp: 'Pasteurized & Toned Cans', rating: '4.9 ★', reviews: 220, flats: 110, phone: '98450 99881', rate: 'Daily Subscription' },
-      { name: 'Amul Taaza / Gold Delivery Team', exp: 'Doorstep Milk Crate Delivery', rating: '4.9 ★', reviews: 195, flats: 85, phone: '98111 44332', rate: 'Daily Subscription' },
     ],
   };
 
@@ -133,18 +161,12 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   const [ticketsList, setTicketsList] = useState([
     { id: 'TK-9021', subject: 'Kitchen Sink Drainage Pipe Water Leakage', category: 'Plumbing', desc: 'Water leaking under the kitchen sink cabinet continuously.', priority: 'High', status: 'In Progress', assignedTo: 'Ramesh Plumber (Ph: 98123 99887)', sla: '1h 45m remaining', date: 'Today 10:15 AM', rating: null as number | null },
     { id: 'TK-8910', subject: 'Tower B Lift #2 Button Panel Flickering', category: 'Electrical', desc: '4th floor call button light blinking.', priority: 'Medium', status: 'Resolved', assignedTo: 'OTIS Engineer Alok', sla: 'Resolved in 42 mins', date: 'Yesterday 04:20 PM', rating: 5 },
-    { id: 'TK-8742', subject: 'Intercom Noise Distortion with Gate 1', category: 'Telecom', desc: 'Static noise when calling guard desk.', priority: 'Low', status: 'Resolved', assignedTo: 'Airtel Telecom Tech', sla: 'Resolved in 2 hours', date: '19 Aug 2026', rating: 4 },
   ]);
 
   const [newTicketSubject, setNewTicketSubject] = useState<string>('');
   const [newTicketCategory, setNewTicketCategory] = useState<string>('Plumbing');
   const [newTicketPriority, setNewTicketPriority] = useState<string>('High');
   const [newTicketDesc, setNewTicketDesc] = useState<string>('');
-
-  // Amenities State
-  const [selectedAmenity, setSelectedAmenity] = useState<string>('Badminton Court 2 (Indoor)');
-  const [selectedSlot, setSelectedSlot] = useState<string>('06:00 PM - 07:00 PM');
-  const [bookingDate, setBookingDate] = useState<string>('2026-08-26');
 
   // Community Polls State
   const [pollVoted, setPollVoted] = useState<number | null>(1);
@@ -173,6 +195,15 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     alert(`Pre-paid Meter Recharged with ₹${rechargeAmount}! New Balance: ₹${(meterBalance + rechargeAmount).toFixed(2)}`);
   };
 
+  const handleExecutePayment = () => {
+    setPaymentStep('processing');
+    setTimeout(() => {
+      setPaymentStep('success');
+      setBillStatus('Paid');
+      setPastInvoicesList(prev => prev.map(inv => inv.id === 'INV-AUG-2026' ? { ...inv, status: 'Paid', date: 'Today (Just Now)', mode: paymentMethod.toUpperCase() } : inv));
+    }, 1500);
+  };
+
   const handleCreateTicket = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTicketSubject) return;
@@ -198,6 +229,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
   const navMenuItems = [
     { id: 'overview', label: 'Overview Dashboard', icon: Home },
+    { id: 'payments', label: 'Paying Bills & Meters', icon: CreditCard, badge: billStatus === 'Unpaid' ? 'Due' : undefined },
     { id: 'visitors_parcels', label: 'Visitors & Parcels', icon: Shield },
     { id: 'helpers', label: 'Helpers & Services (13 Categories)', icon: HandHeart },
     { id: 'members', label: 'Members & Vehicles', icon: Users },
@@ -205,7 +237,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     { id: 'helpdesk', label: 'Helpdesk Tickets', icon: Headphones, badge: '1' },
     { id: 'documents', label: 'Society Documents (8 Files)', icon: Folder },
     { id: 'directory', label: 'Resident & Gate Directory', icon: Contact },
-    { id: 'payments', label: 'Pre-paid Meter & Dues', icon: IndianRupee },
     { id: 'amenities', label: 'Amenities & Courts Booking', icon: Dumbbell },
     { id: 'events', label: 'Events & Festival Calendar', icon: PartyPopper },
     { id: 'social', label: 'Social & Community Polls', icon: Vote },
@@ -240,8 +271,18 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
             </div>
           </div>
 
-          {/* Quick Action Buttons: SOS Siren, Notification, Exit */}
+          {/* Quick Action Buttons */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setActiveSection('payments')}
+              className={`px-4 py-2 rounded-2xl border flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+                billStatus === 'Unpaid' ? 'bg-amber-50 text-amber-900 border-amber-300' : 'bg-emerald-50 text-emerald-900 border-emerald-300'
+              }`}
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>{billStatus === 'Unpaid' ? `Bill Due: ₹ ${totalPayable.toFixed(2)}` : 'Dues All Clear ✓'}</span>
+            </button>
+
             <button
               onClick={() => setShowSosModal(true)}
               className="px-5 py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-2 text-xs font-black shadow-sm transition-transform active:scale-95 cursor-pointer"
@@ -315,7 +356,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   </div>
                   {item.badge && (
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      isActive ? 'bg-red-500 text-white' : 'bg-red-100 text-red-700'
+                      isActive ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800'
                     }`}>
                       {item.badge}
                     </span>
@@ -338,7 +379,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           {activeSection === 'overview' && (
             <div className="space-y-6">
               
-              {/* NOTIFICATION TEST BANNER (Screenshot 3 Sign) */}
+              {/* NOTIFICATION TEST BANNER */}
               {showNotificationToast && (
                 <div className="bg-[#1E293B] text-white p-4 rounded-3xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in">
                   <div className="flex items-center gap-3">
@@ -503,7 +544,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 </div>
               </div>
 
-              {/* SECTION 3: PAYMENTS (Widescreen 3-Card Grid) */}
+              {/* SECTION 3: PAYMENTS & METERS (Widescreen 3-Card Grid) */}
               <div className="space-y-3">
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-500 block px-1">
                   PAYMENTS & METERS
@@ -547,16 +588,18 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                         <IndianRupee className="w-6 h-6" />
                       </div>
                       <div>
-                        <div className="font-black text-base text-slate-900">{duesStatus}</div>
-                        <div className="text-xs text-slate-500 font-medium">August Maintenance Dues</div>
+                        <div className="font-black text-base text-slate-900">
+                          {billStatus === 'Paid' ? 'All Clear ✓' : `₹ ${totalPayable.toFixed(2)} Due`}
+                        </div>
+                        <div className="text-xs text-slate-500 font-medium">August Maintenance</div>
                       </div>
                     </div>
 
                     <button
                       onClick={() => setActiveSection('payments')}
-                      className="w-10 h-10 rounded-full bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center shadow-sm transition-transform active:scale-95 cursor-pointer"
+                      className="px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
                     >
-                      <ArrowRight className="w-5 h-5" />
+                      {billStatus === 'Paid' ? 'View Bill' : 'Pay Bill'}
                     </button>
                   </div>
 
@@ -571,7 +614,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                       </div>
                       <div>
                         <div className="font-bold text-sm text-slate-900">Payment History</div>
-                        <div className="text-xs text-slate-500 font-medium">Tax invoices & CA receipts</div>
+                        <div className="text-xs text-slate-500 font-medium">5 Past Statements & CA Invoices</div>
                       </div>
                     </div>
 
@@ -581,65 +624,289 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 </div>
               </div>
 
-              {/* SECTION 4: HOUSEHOLD WIDGETS & TELEMETRY */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 2. MODERN PAYING BILLS & INVOICE SUITE */}
+          {/* ========================================================================= */}
+          {activeSection === 'payments' && (
+            <div className="space-y-6">
+              
+              {/* Top Hero Bill Header Card */}
+              <div className="bg-gradient-to-tr from-slate-900 via-slate-800 to-indigo-950 text-white p-8 rounded-3xl shadow-xl space-y-6 relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold text-indigo-300 uppercase tracking-widest block">
+                      August 2026 Society Maintenance Statement
+                    </span>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl sm:text-5xl font-black tracking-tight text-white">
+                        ₹ {billStatus === 'Paid' ? '0.00' : totalPayable.toFixed(2)}
+                      </span>
+                      {billStatus === 'Unpaid' && earlyBirdApplied && (
+                        <span className="text-xs text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-500/40">
+                          - ₹ 238.30 Early Bird 5% OFF
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-start sm:items-end gap-2">
+                    <span className={`px-4 py-1.5 rounded-full font-black text-xs tracking-wider uppercase ${
+                      billStatus === 'Paid' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-amber-400 text-slate-950 font-extrabold'
+                    }`}>
+                      {billStatus === 'Paid' ? '✓ Dues Paid & Cleared' : 'Due by 31 Aug 2026'}
+                    </span>
+                    <span className="text-xs text-slate-400 font-medium">Invoice #GST-9021-AUG26</span>
+                  </div>
+                </div>
+
+                {/* Quick Payment Action Bar */}
+                <div className="pt-4 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-4 relative z-10">
+                  <div className="flex items-center gap-4 text-xs text-slate-300">
+                    <span className="flex items-center gap-1.5"><SecureIcon className="w-4 h-4 text-emerald-400" /> 256-Bit SSL Encrypted</span>
+                    <span className="flex items-center gap-1.5"><Smartphone className="w-4 h-4 text-indigo-400" /> 0% Surcharge on UPI</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {billStatus === 'Unpaid' ? (
+                      <button
+                        onClick={() => {
+                          setPaymentStep('idle');
+                          setShowPaymentModal(true);
+                        }}
+                        className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <Zap className="w-4 h-4 fill-slate-950" />
+                        <span>Pay ₹ {totalPayable.toFixed(2)} via 1-Click Fast Pay</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => alert('Downloading CA-Verified GST Tax Invoice PDF #GST-9021...')}
+                        className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Download Tax Invoice PDF</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2-Column Grid: Itemized Bill Breakdown + Pre-Paid Meter */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                {/* Active Helpers Widget */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-sm text-slate-900">Household Helpers Attendance</span>
-                    <button onClick={() => setActiveSection('helpers')} className="text-xs font-bold text-blue-600 hover:underline">View All</button>
+                {/* Left Column (7 Cols): Transparent Itemized Breakdown */}
+                <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <span className="font-extrabold text-base text-slate-900 block">Itemized Maintenance Ledger</span>
+                      <span className="text-xs text-slate-500">Unit: Flat B-108 (2BHK, 1,250 sq.ft)</span>
+                    </div>
+                    <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">
+                      Rate: ₹3.50 / sq.ft
+                    </span>
                   </div>
+
                   <div className="space-y-3 text-xs">
-                    {myHelpersList.map(h => (
-                      <div key={h.id} className="p-3 bg-slate-50 rounded-2xl flex justify-between items-center">
-                        <div>
-                          <div className="font-bold text-slate-900">{h.name} ({h.role})</div>
-                          <div className="text-[11px] text-slate-500">{h.time}</div>
-                        </div>
-                        <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
-                          h.status.includes('Inside') ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
-                        }`}>
-                          {h.status}
-                        </span>
+                    <div className="flex justify-between py-1 text-slate-700">
+                      <span>1. Flat Base Society Maintenance (1,250 sqft)</span>
+                      <span className="font-bold text-slate-900">₹ {baseMaintenance.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between py-1 text-slate-700">
+                      <span>2. Building Sinking Fund & Lift Overhaul Reserve</span>
+                      <span className="font-bold text-slate-900">₹ {sinkingFund.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between py-1 text-slate-700">
+                      <div>
+                        <span>3. Smart Piped Water Meter AMR Usage</span>
+                        <span className="text-[11px] text-slate-400 block">Meter #WM-8902 • 320 Liters/day avg</span>
                       </div>
-                    ))}
+                      <span className="font-bold text-slate-900">₹ {waterUsage.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between py-1 text-slate-700">
+                      <div>
+                        <span>4. 250 kVA Diesel Generator Emergency Backup</span>
+                        <span className="text-[11px] text-slate-400 block">4.2 Units @ ₹18.00/Unit</span>
+                      </div>
+                      <span className="font-bold text-slate-900">₹ {dgBackup.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between py-1 text-slate-700">
+                      <span>5. Clubhouse, Gym & Pool Deck Maintenance</span>
+                      <span className="font-bold text-slate-900">₹ {amenityMaintenance.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between py-1 text-slate-700">
+                      <span>6. Goods & Services Tax (CGST 9% + SGST 9%)</span>
+                      <span className="font-bold text-slate-900">₹ {gstTax.toFixed(2)}</span>
+                    </div>
+
+                    {earlyBirdApplied && (
+                      <div className="flex justify-between py-2 text-emerald-700 font-bold bg-emerald-50 px-3 rounded-xl">
+                        <span>Early Bird 5% Discount (Coupon: EARLYBIRD5)</span>
+                        <span>- ₹ {earlyBirdDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+
+                    <div className="pt-4 border-t-2 border-slate-900 flex justify-between items-center text-sm font-black text-slate-900">
+                      <span>Net Total Amount Payable</span>
+                      <span className="text-xl font-black text-slate-900">₹ {totalPayable.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Autopay Control Toggle */}
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-between gap-4 pt-4">
+                    <div>
+                      <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                        <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Recurring UPI Autopay on 1st of Month</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500">Auto-deduct maintenance dues to avoid late fee penalties.</div>
+                    </div>
+
+                    <button
+                      onClick={() => setAutopayEnabled(!autopayEnabled)}
+                      className={`w-12 h-6 rounded-full transition-colors p-0.5 cursor-pointer ${
+                        autopayEnabled ? 'bg-emerald-500' : 'bg-slate-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                        autopayEnabled ? 'translate-x-6' : 'translate-x-0'
+                      }`} />
+                    </button>
                   </div>
                 </div>
 
-                {/* Gate Deliveries Widget */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-sm text-slate-900">Gate Deliveries & Shelf Lockers</span>
-                    <button onClick={() => setActiveSection('visitors_parcels')} className="text-xs font-bold text-blue-600 hover:underline">View Queue</button>
-                  </div>
-                  <div className="space-y-3 text-xs">
-                    {parcelsList.map(p => (
-                      <div key={p.id} className="p-3 bg-slate-50 rounded-2xl flex justify-between items-center">
-                        <div>
-                          <div className="font-bold text-slate-900">{p.courier} ({p.orderNo})</div>
-                          <div className="text-[11px] text-slate-500">Location: {p.shelf}</div>
-                        </div>
-                        <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
-                          OTP: {p.otp}
-                        </span>
+                {/* Right Column (5 Cols): Pre-Paid Smart Meter Console */}
+                <div className="lg:col-span-5 space-y-6">
+                  
+                  {/* Pre-Paid Meter Card */}
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="font-bold text-sm text-slate-900 block">Smart Electricity Pre-paid Meter</span>
+                        <span className="text-[11px] text-slate-500">Consumer No: #EB-8910-FLATB108</span>
                       </div>
-                    ))}
+                      <span className="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
+                        Low Balance
+                      </span>
+                    </div>
+
+                    {/* Meter Gauge Visual */}
+                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center space-y-2">
+                      <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Meter Balance</div>
+                      <div className="text-3xl font-black text-[#EF4444]">
+                        ₹ {meterBalance.toFixed(2)}
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-medium">Daily Consumption: ~8.4 kWh/day</div>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div className="space-y-2 text-xs">
+                      <span className="font-bold text-slate-700">Quick 1-Tap Recharge:</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[500, 1000, 2000].map(amt => (
+                          <button
+                            key={amt}
+                            onClick={() => {
+                              setRechargeAmount(amt);
+                              setShowRechargeModal(true);
+                            }}
+                            className="py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-800 text-xs transition-transform active:scale-95 cursor-pointer"
+                          >
+                            + ₹ {amt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setShowRechargeModal(true)}
+                      className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
+                    >
+                      Custom Recharge Amount
+                    </button>
                   </div>
+
+                  {/* Bank Account Verification Badge */}
+                  <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Landmark className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-slate-900">Green Haven Sanctuary RWA Account</div>
+                      <div className="text-[11px] text-slate-500 font-mono">HDFC Bank • A/C: 50200099881122 • IFSC: HDFC0001202</div>
+                    </div>
+                  </div>
+
                 </div>
 
+              </div>
+
+              {/* Past 12-Month Invoices & CA Audit Receipts Vault */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-extrabold text-base text-slate-900 block">Past Payment Statements & Tax Receipts</span>
+                    <span className="text-xs text-slate-500">Official CA-audited ledger records with downloadable GST invoices</span>
+                  </div>
+                  <span className="text-xs font-bold text-slate-500">{pastInvoicesList.length} Statements Found</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                        <th className="py-3">Invoice Month</th>
+                        <th className="py-3">Amount</th>
+                        <th className="py-3">Payment Date</th>
+                        <th className="py-3">Mode</th>
+                        <th className="py-3">Receipt No</th>
+                        <th className="py-3 text-right">Tax Invoice</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {pastInvoicesList.map(inv => (
+                        <tr key={inv.id} className="hover:bg-slate-50">
+                          <td className="py-3.5 font-bold text-slate-900">{inv.month}</td>
+                          <td className="py-3.5 font-black text-slate-900">{inv.amount}</td>
+                          <td className="py-3.5 text-slate-500">{inv.date}</td>
+                          <td className="py-3.5 text-slate-600 font-medium">{inv.mode}</td>
+                          <td className="py-3.5 font-mono text-slate-600">{inv.receipt}</td>
+                          <td className="py-3.5 text-right">
+                            {inv.status === 'Paid' ? (
+                              <button
+                                onClick={() => alert(`Downloading GST Invoice #${inv.receipt} for ${inv.month}...`)}
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-[11px] inline-flex items-center gap-1 cursor-pointer"
+                              >
+                                <Download className="w-3.5 h-3.5" /> PDF
+                              </button>
+                            ) : (
+                              <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-full text-[10px]">
+                                Payment Pending
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 2. VISITORS & PARCELS FULL DESKTOP VIEW */}
+          {/* 3. VISITORS & PARCELS FULL DESKTOP VIEW */}
           {/* ========================================================================= */}
           {activeSection === 'visitors_parcels' && (
             <div className="space-y-6">
-              
-              {/* Header Hero Banner (Screenshot 5 Signs) */}
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 rounded-3xl bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5] shadow-xs shrink-0">
@@ -659,10 +926,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 </button>
               </div>
 
-              {/* 2-Column Desktop Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Left Column: Pre-Approved Passes */}
                 <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-sm text-slate-900">Active Pre-Approved Guest Passes</span>
@@ -694,7 +958,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   </div>
                 </div>
 
-                {/* Right Column: Parcel Storage Queue */}
                 <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-sm text-slate-900">Gate Shelf Parcel Locker Queue</span>
@@ -718,19 +981,15 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                     ))}
                   </div>
                 </div>
-
               </div>
-
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 3. HELPERS & 13 SERVICE CATEGORIES FULL DESKTOP VIEW */}
+          {/* 4. HELPERS & 13 SERVICE CATEGORIES FULL DESKTOP VIEW */}
           {/* ========================================================================= */}
           {activeSection === 'helpers' && (
             <div className="space-y-6">
-              
-              {/* Header Hero Banner (Screenshots 1 & 2 Signs) */}
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 rounded-3xl bg-[#FCE7F3] flex items-center justify-center text-[#EC4899] shadow-xs shrink-0">
@@ -747,7 +1006,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 </div>
               </div>
 
-              {/* Search Category Filter */}
               <div className="relative">
                 <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
@@ -759,7 +1017,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 />
               </div>
 
-              {/* 13 Categories Desktop Grid (Screenshot 4 Replication) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {helperCategories.filter(c => c.name.toLowerCase().includes(categorySearchQuery.toLowerCase())).map(cat => {
                   const Icon = cat.icon;
@@ -789,7 +1046,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 })}
               </div>
 
-              {/* Category Verified Providers List */}
               {selectedCategory && (
                 <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
                   <div className="flex justify-between items-center">
@@ -828,13 +1084,11 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   </div>
                 </div>
               )}
-
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 4. MEMBERS & VEHICLES */}
-          {/* ========================================================================= */}
+          {/* 5. MEMBERS & VEHICLES */}
           {activeSection === 'members' && (
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -873,8 +1127,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 5. NOTICES */}
-          {/* ========================================================================= */}
+          {/* 6. NOTICES */}
           {activeSection === 'notices' && (
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -909,12 +1162,9 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 6. HELPDESK TICKETS */}
-          {/* ========================================================================= */}
+          {/* 7. HELPDESK TICKETS */}
           {activeSection === 'helpdesk' && (
             <div className="space-y-6">
-              
-              {/* Ticket Creator Form */}
               <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
                 <span className="font-bold text-base text-slate-900 block">Raise New Helpdesk Complaint</span>
                 
@@ -968,7 +1218,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 </form>
               </div>
 
-              {/* Tickets Directory */}
               <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
                 <span className="font-bold text-base text-slate-900 block">Ticket History & SLA Status</span>
 
@@ -1007,105 +1256,35 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   ))}
                 </div>
               </div>
-
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 7. PRE-PAID METER & DUES */}
-          {/* ========================================================================= */}
-          {activeSection === 'payments' && (
-            <div className="space-y-6">
-              
-              {/* Pre-paid Meter + Dues 2-Column Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Pre-paid Meter */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-base text-slate-900">Pre-paid Electricity Meter</span>
-                    <span className="text-xs text-[#EF4444] font-bold bg-red-50 px-2.5 py-1 rounded-full">Low Balance</span>
-                  </div>
-
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center space-y-2">
-                    <div className="text-xs text-slate-500 font-bold uppercase">Current Meter Balance</div>
-                    <div className="font-black text-3xl text-[#EF4444]">₹ {meterBalance.toFixed(2)}</div>
-                    <p className="text-xs text-slate-500">Power disconnect alert threshold at ₹ 0.00</p>
-                  </div>
-
-                  <button
-                    onClick={() => setShowRechargeModal(true)}
-                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
-                  >
-                    Recharge Pre-paid Meter
-                  </button>
-                </div>
-
-                {/* Maintenance Dues Breakdown */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-base text-slate-900">August 2026 Maintenance</span>
-                    <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-full">Paid ✓</span>
-                  </div>
-
-                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-2.5 text-xs">
-                    <div className="flex justify-between text-slate-600"><span>Maintenance (2BHK 1,250 sqft @ ₹3.50)</span><span className="font-bold">₹ 3,200</span></div>
-                    <div className="flex justify-between text-slate-600"><span>Sinking Fund Contribution</span><span className="font-bold">₹ 500</span></div>
-                    <div className="flex justify-between text-slate-600"><span>Piped Water Usage (320 L/day avg)</span><span className="font-bold">₹ 400</span></div>
-                    <div className="flex justify-between text-slate-600"><span>GST Tax (18%)</span><span className="font-bold">₹ 666</span></div>
-                    <div className="border-t border-slate-200 pt-2 flex justify-between font-black text-sm text-slate-900">
-                      <span>Total Amount</span>
-                      <span className="text-base font-extrabold text-slate-900">₹ 4,766</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => alert('Downloading GST Tax Invoice PDF #GST-9021...')}
-                    className="w-full py-3.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs rounded-2xl flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Download className="w-4 h-4" /> Download GST Invoice PDF
-                  </button>
-                </div>
-
-              </div>
-
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* 8. AMENITIES BOOKING */}
+          {/* 8. AMENITIES, EVENTS, SOCIAL, CHATS, DOCUMENTS, DIRECTORY */}
           {activeSection === 'amenities' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <span className="font-bold text-base text-slate-900 block">Reserve Society Amenities</span>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { name: 'Badminton Court 2 (Indoor Wooden)', slot: '06:00 PM - 07:00 PM', price: 'Free for Residents' },
-                    { name: 'Tennis Court 1 (Synthetic Surface)', slot: '07:00 AM - 08:00 AM', price: 'Free for Residents' },
-                    { name: 'Clubhouse Banquet Hall (150 Capacity)', slot: '05:00 PM - 10:00 PM', price: '₹ 5,000 / Event' },
-                    { name: 'Squash Court 1 (Air Conditioned)', slot: '07:00 PM - 08:00 PM', price: 'Free for Residents' },
-                  ].map((am, idx) => (
-                    <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                      <div>
-                        <div className="font-bold text-sm text-slate-900">{am.name}</div>
-                        <div className="text-xs text-slate-500">{am.slot} • {am.price}</div>
-                      </div>
-                      <button
-                        onClick={() => alert(`Slot booked for ${am.name}!`)}
-                        className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs cursor-pointer"
-                      >
-                        Book Slot
-                      </button>
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+              <span className="font-bold text-base text-slate-900 block">Reserve Society Amenities</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { name: 'Badminton Court 2 (Indoor Wooden)', slot: '06:00 PM - 07:00 PM', price: 'Free for Residents' },
+                  { name: 'Tennis Court 1 (Synthetic Surface)', slot: '07:00 AM - 08:00 AM', price: 'Free for Residents' },
+                  { name: 'Clubhouse Banquet Hall (150 Capacity)', slot: '05:00 PM - 10:00 PM', price: '₹ 5,000 / Event' },
+                  { name: 'Squash Court 1 (Air Conditioned)', slot: '07:00 PM - 08:00 PM', price: 'Free for Residents' },
+                ].map((am, idx) => (
+                  <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
+                    <div>
+                      <div className="font-bold text-sm text-slate-900">{am.name}</div>
+                      <div className="text-xs text-slate-500">{am.slot} • {am.price}</div>
                     </div>
-                  ))}
-                </div>
+                    <button onClick={() => alert(`Slot booked for ${am.name}!`)} className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs cursor-pointer">
+                      Book Slot
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* 9. EVENTS, SOCIAL & CHATS */}
           {activeSection === 'events' && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
               <span className="font-bold text-base text-slate-900 block">Society Events Calendar</span>
@@ -1222,7 +1401,239 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
       </div>
 
       {/* ========================================================================= */}
-      {/* MODAL 1: PRE-APPROVE VISITOR MODAL */}
+      {/* MODAL: INTERACTIVE MULTI-OPTION PAYMENT CHECKOUT MODAL */}
+      {/* ========================================================================= */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg space-y-6 shadow-2xl relative animate-scale-up">
+            
+            {paymentStep !== 'processing' && (
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* STEP 1: SELECT METHOD & PAY */}
+            {paymentStep === 'idle' && (
+              <div className="space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="font-black text-xl text-slate-900">Secure Payment Checkout</h3>
+                    <p className="text-xs text-slate-500">Green Haven Sanctuary RWA Maintenance Payment</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-slate-400 font-bold block">Total Amount</span>
+                    <span className="text-xl font-black text-slate-900">₹ {totalPayable.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Method Tabs */}
+                <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl text-xs font-bold">
+                  <button
+                    onClick={() => setPaymentMethod('upi')}
+                    className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      paymentMethod === 'upi' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Smartphone className="w-4 h-4 text-emerald-600" />
+                    <span>UPI Fast Pay</span>
+                  </button>
+
+                  <button
+                    onClick={() => setPaymentMethod('card')}
+                    className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      paymentMethod === 'card' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4 text-indigo-600" />
+                    <span>Credit / Debit</span>
+                  </button>
+
+                  <button
+                    onClick={() => setPaymentMethod('netbanking')}
+                    className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      paymentMethod === 'netbanking' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Landmark className="w-4 h-4 text-amber-600" />
+                    <span>Net Banking</span>
+                  </button>
+                </div>
+
+                {/* UPI PAY SECTION */}
+                {paymentMethod === 'upi' && (
+                  <div className="space-y-4">
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center gap-4">
+                      <div className="w-24 h-24 bg-white p-1 rounded-xl shadow-xs shrink-0 flex items-center justify-center border border-slate-200">
+                        <QrCode className="w-20 h-20 text-slate-900" />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Scan & Pay via any UPI App</span>
+                        <div className="font-bold text-xs text-slate-900">Scan Dynamic UPI QR Code</div>
+                        <div className="text-[11px] text-slate-500 font-mono">greenhaven.rwa@hdfcbank</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs">
+                      <label className="font-bold text-slate-700">Or Select 1-Click UPI App:</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {['GPay', 'PhonePe', 'Paytm'].map(app => (
+                          <button
+                            key={app}
+                            onClick={() => setSelectedUpiApp(app)}
+                            className={`p-3 rounded-xl border font-bold text-center cursor-pointer transition-all ${
+                              selectedUpiApp === app ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {app}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CARD PAY SECTION */}
+                {paymentMethod === 'card' && (
+                  <div className="space-y-4">
+                    {/* Live Virtual Card Preview */}
+                    <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-lg space-y-3">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold tracking-wider">HDFC MILLENNIA DEBIT</span>
+                        <span className="font-mono font-bold">VISA</span>
+                      </div>
+                      <div className="font-mono text-lg tracking-widest pt-2">{cardNumber || '•••• •••• •••• ••••'}</div>
+                      <div className="flex justify-between text-[11px] text-slate-300 pt-1">
+                        <span>{cardHolder || 'CARD HOLDER'}</span>
+                        <span>EXP: {cardExpiry || 'MM/YY'}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">Card Number</label>
+                        <input
+                          type="text"
+                          value={cardNumber}
+                          onChange={(e) => setCardNumber(e.target.value)}
+                          className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">Expiry Date</label>
+                        <input
+                          type="text"
+                          value={cardExpiry}
+                          onChange={(e) => setCardExpiry(e.target.value)}
+                          className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">CVV</label>
+                        <input
+                          type="password"
+                          maxLength={3}
+                          value={cardCvv}
+                          onChange={(e) => setCardCvv(e.target.value)}
+                          className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* NET BANKING SECTION */}
+                {paymentMethod === 'netbanking' && (
+                  <div className="space-y-3 text-xs">
+                    <label className="font-bold text-slate-700">Select Banking Partner:</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 'Punjab National'].map(bank => (
+                        <button
+                          key={bank}
+                          onClick={() => setSelectedBank(bank)}
+                          className={`p-3 rounded-xl border font-bold text-left cursor-pointer transition-all ${
+                            selectedBank === bank ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          {bank}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleExecutePayment}
+                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-sm shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                >
+                  <Lock className="w-4 h-4 fill-slate-950" />
+                  <span>Authorize & Pay ₹ {totalPayable.toFixed(2)}</span>
+                </button>
+              </div>
+            )}
+
+            {/* STEP 2: PROCESSING ANIMATION */}
+            {paymentStep === 'processing' && (
+              <div className="py-12 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mx-auto" />
+                <h3 className="font-extrabold text-xl text-slate-900">Processing Payment...</h3>
+                <p className="text-xs text-slate-500">Contacting Payment Gateway & Authorizing 256-Bit SSL Encrypted Transaction</p>
+              </div>
+            )}
+
+            {/* STEP 3: PAYMENT SUCCESS & INSTANT GST RECEIPT */}
+            {paymentStep === 'success' && (
+              <div className="text-center space-y-4 py-2">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCheck className="w-8 h-8" />
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+                    Transaction Approved ✓
+                  </span>
+                  <h3 className="font-black text-2xl text-slate-900 pt-2">₹ {totalPayable.toFixed(2)} Paid</h3>
+                  <p className="text-xs text-slate-500">August 2026 Maintenance Dues Cleared for Flat B-108</p>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-left space-y-1 font-mono">
+                  <div className="flex justify-between"><span>Transaction ID:</span><span className="font-bold text-slate-900">TXN-9021-8841-IN</span></div>
+                  <div className="flex justify-between"><span>Receipt Number:</span><span className="font-bold text-slate-900">GST-9021</span></div>
+                  <div className="flex justify-between"><span>Payment Method:</span><span className="font-bold text-slate-900">{paymentMethod.toUpperCase()}</span></div>
+                  <div className="flex justify-between"><span>Timestamp:</span><span>{new Date().toLocaleTimeString()} Today</span></div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      alert('Downloading Verified GST Tax Invoice PDF #GST-9021...');
+                      setShowPaymentModal(false);
+                    }}
+                    className="flex-1 py-3.5 bg-slate-900 text-white font-bold rounded-2xl text-xs shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Tax Invoice PDF</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl text-xs cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: PRE-APPROVE VISITOR MODAL */}
       {/* ========================================================================= */}
       {showPreApproveModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
@@ -1308,7 +1719,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 2: RECHARGE PRE-PAID METER MODAL */}
+      {/* MODAL: RECHARGE PRE-PAID METER MODAL */}
       {/* ========================================================================= */}
       {showRechargeModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
@@ -1351,7 +1762,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 3: EMERGENCY SOS PANIC MODAL */}
+      {/* MODAL: EMERGENCY SOS PANIC MODAL */}
       {/* ========================================================================= */}
       {showSosModal && (
         <div className="fixed inset-0 bg-red-950/80 backdrop-blur-xs flex items-center justify-center z-50 p-4">
