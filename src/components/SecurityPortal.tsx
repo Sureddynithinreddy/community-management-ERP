@@ -1,727 +1,1412 @@
 import React, { useState } from 'react';
-import { SecurityPageId } from '../types/portalTypes';
-import { SecurityAnalytics } from './SecurityAnalytics';
 import { 
   ShieldCheck, UserCheck, Package, Car, Search, Flame, AlertTriangle, 
   Clock, HelpCircle, LayoutDashboard, ArrowLeft, Wifi, WifiOff, Camera, Check,
-  Plus, CheckCircle2, XCircle, Phone, Download, QrCode, Sparkles, AlertCircle, ShieldAlert, LogOut, Menu, X
+  Plus, CheckCircle2, XCircle, Phone, Download, QrCode, Sparkles, AlertCircle, 
+  ShieldAlert, LogOut, Menu, X, Bell, UserPlus, PhoneCall, ChevronRight,
+  TrendingUp, BarChart3, Radio, FileText, CheckCheck, RefreshCw, KeyRound,
+  Lock, Eye, Shield, Users, Building2, MapPin, Truck, AlertOctagon, UserX,
+  BadgeCheck, Hammer, Sparkle
 } from 'lucide-react';
+import { SecurityAnalytics } from './SecurityAnalytics';
 
 interface SecurityPortalProps {
   onExit: () => void;
 }
 
-export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
-  const [activePage, setActivePage] = useState<SecurityPageId>('dashboard');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+type SecurityNavSection = 
+  | 'dashboard'
+  | 'visitors'
+  | 'checkout'
+  | 'parcels'
+  | 'anpr'
+  | 'staff'
+  | 'sos'
+  | 'incidents'
+  | 'patrol'
+  | 'lostfound'
+  | 'analytics';
 
-  // Network Offline Simulation
+interface VisitorEntry {
+  id: string;
+  name: string;
+  phone: string;
+  flat: string;
+  purpose: 'Delivery' | 'Guest' | 'Cab' | 'Service Tech' | 'Daily Staff';
+  company?: string;
+  vehicle: string;
+  entryTime: string;
+  exitTime: string;
+  status: 'Inside' | 'Departed';
+  photo: string;
+  gate: string;
+  guardName: string;
+  passOtp?: string;
+}
+
+interface ParcelEntry {
+  id: string;
+  courier: string;
+  orderNo: string;
+  flat: string;
+  shelf: string;
+  loggedTime: string;
+  dwell: string;
+  status: 'Awaiting Pickup' | 'Picked Up';
+  pickupOtp: string;
+  recipientPhone: string;
+}
+
+interface StaffEntry {
+  id: string;
+  name: string;
+  role: string;
+  phone: string;
+  assignedFlats: string;
+  status: 'Inside Society' | 'Checked Out';
+  entryTime: string;
+  aadhaarVerified: boolean;
+  rating: string;
+}
+
+export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
+  // Navigation State
+  const [activeSection, setActiveSection] = useState<SecurityNavSection>('dashboard');
+
+  // Offline Sync State
   const [isOffline, setIsOffline] = useState<boolean>(false);
   const [offlineQueue, setOfflineQueue] = useState<number>(0);
 
-  // 1. Visitor Check-In / Check-Out Register (6 Live Entries)
-  const [vName, setVName] = useState<string>('Rajesh Mehta');
-  const [vPhone, setVPhone] = useState<string>('98765 12345');
-  const [vFlat, setVFlat] = useState<string>('Flat A-402');
-  const [vPurpose, setVPurpose] = useState<string>('Personal Guest');
-  const [vVehicle, setVVehicle] = useState<string>('KA-05-MA-1234');
+  // Modals
+  const [showCheckInModal, setShowCheckInModal] = useState<boolean>(false);
+  const [showParcelModal, setShowParcelModal] = useState<boolean>(false);
+  const [showSosModal, setShowSosModal] = useState<boolean>(false);
+  const [showOtpValidateModal, setShowOtpValidateModal] = useState<boolean>(false);
+  const [otpToValidate, setOtpToValidate] = useState<string>('');
+  const [otpValidationResult, setOtpValidationResult] = useState<string | null>(null);
 
-  const [visitorRegister, setVisitorRegister] = useState([
-    { id: 'VIS-901', name: 'Rajesh Mehta', phone: '98765 12345', flat: 'Flat A-402', purpose: 'Guest', vehicle: 'KA-05-MA-1234', entryTime: '11:35 AM', exitTime: '--', status: 'Inside', photo: 'CAM-101.jpg' },
-    { id: 'VIS-900', name: 'Sunita Devi (Maid)', phone: '98765 99887', flat: 'Flat A-402, B-102', purpose: 'Daily Maid', vehicle: 'Walk-in', entryTime: '09:15 AM', exitTime: '--', status: 'Inside', photo: 'CAM-099.jpg' },
-    { id: 'VIS-899', name: 'Ramesh Kumar (Amazon)', phone: '98123 44556', flat: 'Flat B-102', purpose: 'Delivery', vehicle: 'KA-01-AZ-8812', entryTime: '11:20 AM', exitTime: '11:28 AM', status: 'Departed', photo: 'CAM-098.jpg' },
-    { id: 'VIS-898', name: 'Plumber Ramesh', phone: '98345 66778', flat: 'Flat B-102', purpose: 'Service Tech', vehicle: 'KA-04-PL-1102', entryTime: '08:30 AM', exitTime: '10:45 AM', status: 'Departed', photo: 'CAM-095.jpg' },
-    { id: 'VIS-897', name: 'Rahul Sharma (Swiggy)', phone: '98901 22334', flat: 'Flat C-301', purpose: 'Food Delivery', vehicle: 'KA-05-SW-4912', entryTime: '12:05 PM', exitTime: '12:12 PM', status: 'Departed', photo: 'CAM-092.jpg' },
-    { id: 'VIS-896', name: 'Pooja Hegde', phone: '98123 99999', flat: 'Flat A-104', purpose: 'Pre-Approved Guest', vehicle: 'KA-01-PH-7711', entryTime: '01:30 PM', exitTime: '--', status: 'Inside', photo: 'CAM-090.jpg' },
+  // =========================================================================
+  // 1. VISITOR REGISTER STATE (6 Active Entries)
+  // =========================================================================
+  const [vName, setVName] = useState<string>('Rajesh Kumar');
+  const [vPhone, setVPhone] = useState<string>('98765 12099');
+  const [vFlat, setVFlat] = useState<string>('Flat B-108');
+  const [vPurpose, setVPurpose] = useState<'Delivery' | 'Guest' | 'Cab' | 'Service Tech' | 'Daily Staff'>('Delivery');
+  const [vCompany, setVCompany] = useState<string>('Blinkit 10-Min Delivery');
+  const [vVehicle, setVVehicle] = useState<string>('TS-08-EM-4921 (EV Bike)');
+
+  const [visitorRegister, setVisitorRegister] = useState<VisitorEntry[]>([
+    { id: 'VIS-901', name: 'Rajesh Kumar', phone: '98765 12099', flat: 'Flat B-108', purpose: 'Delivery', company: 'Blinkit', vehicle: 'TS-08-EM-4921 (EV Bike)', entryTime: '11:45 AM', exitTime: '--', status: 'Inside', photo: 'CAM-101.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh' },
+    { id: 'VIS-900', name: 'Sunita Devi (Maid)', phone: '98765 99887', flat: 'Flat B-108, Flat A-402', purpose: 'Daily Staff', vehicle: 'Walk-in', entryTime: '09:15 AM', exitTime: '--', status: 'Inside', photo: 'CAM-099.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh' },
+    { id: 'VIS-899', name: 'Siddharth Verma', phone: '98765 43210', flat: 'Flat B-108', purpose: 'Guest', vehicle: 'KA-05-MA-1234', entryTime: '10:30 AM', exitTime: '--', status: 'Inside', photo: 'CAM-098.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh', passOtp: '892-104' },
+    { id: 'VIS-898', name: 'Ramesh Plumber', phone: '98123 99887', flat: 'Flat B-108', purpose: 'Service Tech', vehicle: 'KA-04-PL-1102', entryTime: '10:15 AM', exitTime: '--', status: 'Inside', photo: 'CAM-095.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh' },
+    { id: 'VIS-897', name: 'Rahul Sharma (Swiggy)', phone: '98901 22334', flat: 'Flat C-301', purpose: 'Delivery', company: 'Swiggy', vehicle: 'KA-05-SW-4912', entryTime: '11:05 AM', exitTime: '11:15 AM', status: 'Departed', photo: 'CAM-092.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh' },
+    { id: 'VIS-896', name: 'Driver Alok (Uber)', phone: '98123 99999', flat: 'Flat A-104', purpose: 'Cab', vehicle: 'KA-01-PH-7711 (White Dzire)', entryTime: '11:20 AM', exitTime: '11:32 AM', status: 'Departed', photo: 'CAM-090.jpg', gate: 'Gate 2 Rear', guardName: 'Guard Ramu' },
   ]);
 
-  // 2. Deliveries Log & Shelf Queue (5 Parcels)
+  // Visitor Filter
+  const [visitorFilterTab, setVisitorFilterTab] = useState<'all' | 'inside' | 'departed'>('all');
+  const [visitorSearch, setVisitorSearch] = useState<string>('');
+
+  // =========================================================================
+  // 2. PARCEL LOCKER REGISTER STATE (5 Parcels)
+  // =========================================================================
   const [delCompany, setDelCompany] = useState<string>('Amazon Courier');
-  const [delFlat, setDelFlat] = useState<string>('Flat B-102');
+  const [delFlat, setDelFlat] = useState<string>('Flat B-108');
   const [delOrderNo, setDelOrderNo] = useState<string>('#AZ-9021');
+  const [delShelf, setDelShelf] = useState<string>('Shelf B-4');
+  const [delPhone, setDelPhone] = useState<string>('98765 11111');
 
-  const [deliveryParcels, setDeliveryParcels] = useState([
-    { id: 'PAR-101', courier: 'Amazon Courier', orderNo: '#AZ-9021', flat: 'Flat B-102', shelf: 'Shelf B-4', loggedTime: '11:20 AM', dwell: '1.2 Hours', status: 'Awaiting Pickup' },
-    { id: 'PAR-102', courier: 'Swiggy InstaMart', orderNo: '#SW-4912', flat: 'Flat C-301', shelf: 'Cold Storage Locker #02', loggedTime: '11:32 AM', dwell: '45 Mins', status: 'Awaiting Pickup' },
-    { id: 'PAR-103', courier: 'Zomato Food', orderNo: '#ZM-8812', flat: 'Flat A-402', shelf: 'Shelf A-1 (Hot Food)', loggedTime: '12:01 PM', dwell: '20 Mins', status: 'Awaiting Pickup' },
-    { id: 'PAR-104', courier: 'Flipkart Logistics', orderNo: '#FK-1102', flat: 'Flat A-104', shelf: 'Shelf A-2', loggedTime: '09:45 AM', dwell: '3.1 Hours', status: 'Awaiting Pickup' },
-    { id: 'PAR-099', courier: 'Blinkit Instant', orderNo: '#BK-5541', flat: 'Flat B-204', shelf: 'Shelf B-1', loggedTime: '08:15 AM', dwell: 'Picked Up', status: 'Picked Up' },
+  const [deliveryParcels, setDeliveryParcels] = useState<ParcelEntry[]>([
+    { id: 'PAR-101', courier: 'Amazon Courier', orderNo: '#AZ-9021', flat: 'Flat B-108', shelf: 'Shelf B-4', loggedTime: '11:20 AM', dwell: '1.2 Hours', status: 'Awaiting Pickup', pickupOtp: '4091', recipientPhone: '98765 11111' },
+    { id: 'PAR-102', courier: 'Swiggy InstaMart', orderNo: '#SW-4912', flat: 'Flat B-108', shelf: 'Cold Storage Locker #02', loggedTime: '11:32 AM', dwell: '45 Mins', status: 'Awaiting Pickup', pickupOtp: '8821', recipientPhone: '98765 11111' },
+    { id: 'PAR-103', courier: 'Zomato Food', orderNo: '#ZM-8812', flat: 'Flat A-402', shelf: 'Shelf A-1 (Hot Food)', loggedTime: '12:01 PM', dwell: '20 Mins', status: 'Awaiting Pickup', pickupOtp: '3312', recipientPhone: '98765 22334' },
+    { id: 'PAR-104', courier: 'Flipkart Logistics', orderNo: '#FK-1102', flat: 'Flat A-104', shelf: 'Shelf A-2', loggedTime: '09:45 AM', dwell: '3.1 Hours', status: 'Awaiting Pickup', pickupOtp: '1904', recipientPhone: '98123 44556' },
+    { id: 'PAR-099', courier: 'Blinkit Instant', orderNo: '#BK-5541', flat: 'Flat B-204', shelf: 'Shelf B-1', loggedTime: '08:15 AM', dwell: 'Picked Up', status: 'Picked Up', pickupOtp: '7721', recipientPhone: '98990 11223' },
   ]);
 
-  // 3. ANPR License Plate Scanner & Parking Violations
+  // =========================================================================
+  // 3. ANPR LICENSE PLATE & VEHICLE TRACKER
+  // =========================================================================
   const [plateQuery, setPlateQuery] = useState<string>('KA-03-MB-4921');
-  const [plateSearchResult] = useState<{ plate: string; owner: string; flat: string; slot: string; type: string }>({
-    plate: 'KA-03-MB-4921', owner: 'Ananya Sharma', flat: 'Flat A-402', slot: 'Parking Slot B-42', type: 'Resident Honda City'
+  const [searchedPlateInfo, setSearchedPlateInfo] = useState<{ plate: string; owner: string; flat: string; slot: string; type: string; status: string } | null>({
+    plate: 'KA-03-MB-4921',
+    owner: 'Ananya Sharma',
+    flat: 'Flat B-108 (Tower B)',
+    slot: 'Basement 1 - Slot B-42',
+    type: 'Resident Honda City Sedan',
+    status: 'Whitelisted FastTag RFID Active ✓'
   });
 
   const [flaggedVehicles, setFlaggedVehicles] = useState([
-    { plate: 'MH-12-PQ-9988', flat: 'Flat B-102 Visitor', violation: 'Parked blocking Tower B Basement Ramp', severity: 'Critical', status: 'Warning Issued' },
-    { plate: 'KA-05-AB-1234', flat: 'Flat C-301 Guest', violation: 'Overstayed visitor parking limit (6+ Hours)', severity: 'Moderate', status: 'Citation Logged' },
-    { plate: 'KA-01-XY-9999', flat: 'Unauthorized Vehicle', violation: 'Entered without ANPR plate registration', severity: 'High', status: 'Under Inspection' },
+    { plate: 'MH-12-PQ-9988', flat: 'Flat B-102 Visitor', violation: 'Parked blocking Tower B Basement Ramp', severity: 'Critical', status: 'Warning Issued', time: '10:15 AM' },
+    { plate: 'KA-05-AB-1234', flat: 'Flat C-301 Guest', violation: 'Overstayed visitor parking limit (6+ Hours)', severity: 'Moderate', status: 'Citation Logged', time: '09:40 AM' },
+    { plate: 'KA-01-XY-9999', flat: 'Unauthorized Vehicle', violation: 'Entered without ANPR plate registration', severity: 'High', status: 'Under Inspection', time: '08:20 AM' },
   ]);
 
-  // 4. Resident Verification Search
-  const [searchFlat, setSearchFlat] = useState<string>('Flat A-402');
-  const [verifiedResident] = useState({
-    name: 'Ananya Sharma', flat: 'Flat A-402 (2BHK, Tower A)', status: 'Owner Verified', family: '3 Registered Members (Ananya, Rahul, Aarav)', vehicles: 'KA-03-MB-4921 (Honda City)', autoApprove: 'Enabled for Deliveries & Pre-Approved Guests'
-  });
+  // =========================================================================
+  // 4. DAILY STAFF & HELPERS ATTENDANCE (6 Active Staff)
+  // =========================================================================
+  const [staffList, setStaffList] = useState<StaffEntry[]>([
+    { id: 'STF-01', name: 'Sunita Devi', role: 'Daily Housekeeping Maid', phone: '98765 99887', assignedFlats: 'Flat B-108, Flat A-402', status: 'Inside Society', entryTime: '09:15 AM', aadhaarVerified: true, rating: '4.9 ★' },
+    { id: 'STF-02', name: 'Ramesh Kumar', role: 'Morning Cook', phone: '98123 44556', assignedFlats: 'Flat B-108, Flat B-201', status: 'Checked Out', entryTime: '07:00 AM - 09:00 AM', aadhaarVerified: true, rating: '4.8 ★' },
+    { id: 'STF-03', name: 'Alok Sharma', role: 'Car Washer & Cleaner', phone: '98345 66778', assignedFlats: 'Tower B Basements (12 Cars)', status: 'Checked Out', entryTime: '06:00 AM - 07:30 AM', aadhaarVerified: true, rating: '4.9 ★' },
+    { id: 'STF-04', name: 'Ramesh Plumber', role: 'Community Duty Plumber', phone: '98123 99887', assignedFlats: 'Helpdesk Maintenance Dispatch', status: 'Inside Society', entryTime: '10:15 AM', aadhaarVerified: true, rating: '4.9 ★' },
+    { id: 'STF-05', name: 'Alok Electrician', role: 'Lead Electrician', phone: '98123 44556', assignedFlats: 'Tower A Substation', status: 'Inside Society', entryTime: '08:30 AM', aadhaarVerified: true, rating: '5.0 ★' },
+    { id: 'STF-06', name: 'Pooja Bai', role: 'Cleaning Staff', phone: '98901 22334', assignedFlats: 'Flat C-102, Flat C-304', status: 'Inside Society', entryTime: '09:45 AM', aadhaarVerified: true, rating: '4.7 ★' },
+  ]);
 
-  // 5. Emergency SOS Console
-  const [sosDispatched, setSosDispatched] = useState<boolean>(false);
-
-  // 6. Incident Reporting Log
+  // =========================================================================
+  // 5. INCIDENTS & OCCURRENCE BOOK
+  // =========================================================================
   const [incCategory, setIncCategory] = useState<string>('Parking Dispute');
-  const [incDesc, setIncDesc] = useState<string>('Visitor car parked blocking Tower B basement ramp');
+  const [incFlat, setIncFlat] = useState<string>('Flat B-108');
+  const [incDesc, setIncDesc] = useState<string>('Visitor car parked blocking Tower B basement ramp.');
   const [incidentsList, setIncidentsList] = useState([
-    { id: 'INC-8921', category: 'Parking Dispute', flat: 'Flat B-102', desc: 'Visitor car parked blocking basement ramp', loggedBy: 'Guard Vikram', status: 'Under Investigation', time: '10:45 AM' },
-    { id: 'INC-8810', category: 'Noise Disturbance', flat: 'Flat C-401', desc: 'Loud music past 11 PM', loggedBy: 'Guard Suresh', status: 'Resolved', time: 'Yesterday' },
-    { id: 'INC-8742', category: 'Pool Rules Violation', flat: 'Flat A-201', desc: 'Glass bottles brought to swimming pool deck', loggedBy: 'Guard Dinesh', status: 'Resolved', time: '19 Aug 2026' },
+    { id: 'INC-8921', category: 'Parking Dispute', flat: 'Flat B-102', desc: 'Visitor car parked blocking basement ramp', loggedBy: 'Guard Vikram Singh', status: 'Under Investigation', time: '10:45 AM', priority: 'High' },
+    { id: 'INC-8810', category: 'Noise Disturbance', flat: 'Flat C-401', desc: 'Loud music past 11 PM reported by neighbors', loggedBy: 'Guard Suresh', status: 'Resolved', time: 'Yesterday', priority: 'Medium' },
+    { id: 'INC-8742', category: 'Pool Rules Violation', flat: 'Flat A-201', desc: 'Glass bottles brought to swimming pool deck', loggedBy: 'Guard Dinesh', status: 'Resolved', time: '19 Aug 2026', priority: 'Low' },
   ]);
 
-  // 7. Guard Patrol Checkpoints
+  // =========================================================================
+  // 6. GUARD PATROL CHECKPOINTS
+  // =========================================================================
   const [patrolPoints, setPatrolPoints] = useState([
-    { name: 'Checkpoint 1: Main Gate Outer Perimeter', scanned: true, time: '11:00 AM' },
-    { name: 'Checkpoint 2: Tower A Basement Parking', scanned: true, time: '11:15 AM' },
-    { name: 'Checkpoint 3: Clubhouse Back Entrance', scanned: false, time: '--' },
-    { name: 'Checkpoint 4: Swimming Pool Deck', scanned: false, time: '--' },
+    { id: 1, name: 'Checkpoint 1: Main Gate Outer Perimeter', scanned: true, time: '11:00 AM', location: 'Gate 1 Outer Wall' },
+    { id: 2, name: 'Checkpoint 2: Tower B Basement Parking Ramp', scanned: true, time: '11:15 AM', location: 'Basement 1 Ramp' },
+    { id: 3, name: 'Checkpoint 3: Clubhouse Back Entrance & Pool', scanned: false, time: '--', location: 'Clubhouse Ground Floor' },
+    { id: 4, name: 'Checkpoint 4: DG Power Backup Substation', scanned: false, time: '--', location: 'Rear Utility Yard' },
+    { id: 5, name: 'Checkpoint 5: Tower A Fire Hose Station', scanned: false, time: '--', location: 'Tower A Ground' },
   ]);
 
-  // 8. Lost & Found Register
-  const [foundItemName, setFoundItemName] = useState<string>('Hyundai Car Key Ring');
+  // =========================================================================
+  // 7. LOST & FOUND REGISTER
+  // =========================================================================
+  const [foundItemName, setFoundItemName] = useState<string>('Hyundai Car Smart Key Ring');
   const [foundLoc, setFoundLoc] = useState<string>('Swimming Pool Deck');
   const [lostFoundList, setLostFoundList] = useState([
-    { id: 'LF-101', item: 'Hyundai Car Key Ring', loc: 'Swimming Pool Deck', date: 'Today 09:30 AM', status: 'Unclaimed' },
-    { id: 'LF-098', item: 'Child Blue Bicycle', loc: 'Garden Play Area', date: '21 Aug 2026', status: 'Claimed by Flat B-201' },
-    { id: 'LF-095', item: 'Leather Wallet with Cards', loc: 'Clubhouse Gym', date: '18 Aug 2026', status: 'Claimed by Flat C-301' },
-    { id: 'LF-091', item: 'Ray-Ban Sunglasses', loc: 'Tennis Court 1', date: '14 Aug 2026', status: 'Unclaimed' },
+    { id: 'LF-101', item: 'Hyundai Car Smart Key Ring', loc: 'Swimming Pool Deck', date: 'Today 09:30 AM', status: 'Unclaimed', photo: 'KEY-101.jpg' },
+    { id: 'LF-098', item: 'Child Blue Bicycle (Hero Sprint)', loc: 'Garden Play Area', date: '21 Aug 2026', status: 'Claimed by Flat B-201', photo: 'CYCLE-98.jpg' },
+    { id: 'LF-095', item: 'Leather Wallet with ID Cards', loc: 'Clubhouse Gym', date: '18 Aug 2026', status: 'Claimed by Flat C-301', photo: 'WALLET-95.jpg' },
+    { id: 'LF-091', item: 'Ray-Ban Aviator Sunglasses', loc: 'Tennis Court 1', date: '14 Aug 2026', status: 'Unclaimed', photo: 'SUNGLASS-91.jpg' },
   ]);
 
-  // Action Handlers
+  // Emergency SOS Dispatch State
+  const [emergencyAlertActive, setEmergencyAlertActive] = useState<boolean>(false);
+
+  // Handlers
   const handleCheckInVisitor = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!vName) return;
+
     const newId = `VIS-${Math.floor(900 + Math.random() * 100)}`;
-    setVisitorRegister([
-      { id: newId, name: vName, phone: vPhone, flat: vFlat, purpose: vPurpose, vehicle: vVehicle, entryTime: 'Just Now', exitTime: '--', status: 'Inside', photo: 'CAM-NEW.jpg' },
-      ...visitorRegister
-    ]);
-    if (isOffline) setOfflineQueue(prev => prev + 1);
-    alert(`Visitor ${vName} entry logged & resident notified!`);
+    const newEntry: VisitorEntry = {
+      id: newId,
+      name: vName,
+      phone: vPhone,
+      flat: vFlat,
+      purpose: vPurpose,
+      company: vCompany,
+      vehicle: vVehicle || 'Walk-in',
+      entryTime: 'Just Now (11:50 AM)',
+      exitTime: '--',
+      status: 'Inside',
+      photo: `CAM-${Math.floor(100 + Math.random() * 100)}.jpg`,
+      gate: 'Gate 1 Main',
+      guardName: 'Guard Vikram Singh'
+    };
+
+    setVisitorRegister([newEntry, ...visitorRegister]);
+    setShowCheckInModal(false);
+    alert(`VISITOR ENTRY LOGGED (${newId}) ✓\nGate barrier lifted for ${vName} heading to ${vFlat}!\nResident notified on mobile app.`);
   };
 
   const handleCheckOutVisitor = (id: string) => {
-    setVisitorRegister(prev => prev.map(v => v.id === id ? { ...v, exitTime: 'Just Now', status: 'Departed' } : v));
-    alert(`Visitor ${id} checked out! Exit timestamp logged.`);
+    setVisitorRegister(prev => prev.map(v => v.id === id ? { ...v, status: 'Departed', exitTime: 'Just Now' } : v));
+    alert(`CHECK-OUT LOGGED ✓\nExit barrier lifted. Visitor marked as Departed.`);
   };
 
-  const handleLogDelivery = (e: React.FormEvent) => {
+  const handleLogParcel = (e: React.FormEvent) => {
     e.preventDefault();
-    const newId = `PAR-${Math.floor(100 + Math.random() * 900)}`;
-    setDeliveryParcels([
-      { id: newId, courier: delCompany, orderNo: delOrderNo, flat: delFlat, shelf: 'Shelf B-4', loggedTime: 'Just Now', dwell: '0 Mins', status: 'Awaiting Pickup' },
-      ...deliveryParcels
-    ]);
-    alert(`Delivery Parcel ${newId} logged at Gate Shelf B-4 for ${delFlat}!`);
+    if (!delOrderNo) return;
+
+    const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const newId = `PAR-${Math.floor(100 + Math.random() * 100)}`;
+    const newParcel: ParcelEntry = {
+      id: newId,
+      courier: delCompany,
+      orderNo: delOrderNo,
+      flat: delFlat,
+      shelf: delShelf,
+      loggedTime: 'Just Now',
+      dwell: '0 Mins',
+      status: 'Awaiting Pickup',
+      pickupOtp: randomOtp,
+      recipientPhone: delPhone
+    };
+
+    setDeliveryParcels([newParcel, ...deliveryParcels]);
+    setShowParcelModal(false);
+    alert(`PARCEL STORED AT ${delShelf} (${newId}) ✓\nPickup Passcode OTP: ${randomOtp} dispatched to ${delFlat} resident!`);
   };
 
-  const handlePickupParcel = (id: string) => {
-    setDeliveryParcels(prev => prev.map(p => p.id === id ? { ...p, status: 'Picked Up', dwell: 'Picked Up' } : p));
+  const handleVerifyParcelPickup = (id: string) => {
+    setDeliveryParcels(prev => prev.map(p => p.id === id ? { ...p, status: 'Picked Up', dwell: 'Picked Up Just Now' } : p));
+    alert(`PARCEL HANDED OVER ✓\nMarked as collected by resident.`);
   };
 
-  const handleScanPatrol = (index: number) => {
-    const updated = [...patrolPoints];
-    updated[index].scanned = true;
-    updated[index].time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setPatrolPoints(updated);
-    alert(`Scanned Patrol Checkpoint: ${updated[index].name}!`);
-  };
-
-  const handleLogIncident = (e: React.FormEvent) => {
+  const handlePlateSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const newId = `INC-${Math.floor(8900 + Math.random() * 100)}`;
-    setIncidentsList([
-      { id: newId, category: incCategory, flat: 'Flat B-102', desc: incDesc, loggedBy: 'Guard Vikram', status: 'Under Investigation', time: 'Just Now' },
-      ...incidentsList
-    ]);
-    alert(`Incident ${newId} logged!`);
+    if (plateQuery.toUpperCase().includes('KA-03-MB-4921') || plateQuery.toUpperCase().includes('4921')) {
+      setSearchedPlateInfo({
+        plate: 'KA-03-MB-4921',
+        owner: 'Ananya Sharma',
+        flat: 'Flat B-108 (Tower B)',
+        slot: 'Basement 1 - Slot B-42',
+        type: 'Resident Honda City Sedan (White)',
+        status: 'Whitelisted FastTag RFID Active ✓'
+      });
+    } else {
+      setSearchedPlateInfo({
+        plate: plateQuery.toUpperCase(),
+        owner: 'Visitor / Unregistered Vehicle',
+        flat: 'Not Associated to Any Resident',
+        slot: 'Temporary Visitor Parking Bay V-04',
+        type: 'Visitor Entry',
+        status: 'Non-Resident • Guard Gate Pass Required'
+      });
+    }
   };
 
-  const handleLogLostItem = (e: React.FormEvent) => {
+  const handleToggleStaff = (id: string) => {
+    setStaffList(prev => prev.map(s => {
+      if (s.id === id) {
+        const newStatus = s.status === 'Inside Society' ? 'Checked Out' : 'Inside Society';
+        return { ...s, status: newStatus, entryTime: newStatus === 'Inside Society' ? 'Just Now' : s.entryTime };
+      }
+      return s;
+    }));
+  };
+
+  const handleScanCheckpoint = (id: number) => {
+    setPatrolPoints(prev => prev.map(p => p.id === id ? { ...p, scanned: true, time: 'Just Now' } : p));
+    alert(`CHECKPOINT SCANNED ✓\nGPS & QR timestamp verified for patrol point.`);
+  };
+
+  const handleValidateOtp = (e: React.FormEvent) => {
     e.preventDefault();
-    const newId = `LF-${Math.floor(100 + Math.random() * 900)}`;
-    setLostFoundList([
-      { id: newId, item: foundItemName, loc: foundLoc, date: 'Today', status: 'Unclaimed' },
-      ...lostFoundList
-    ]);
-    alert(`Lost Item ${newId} logged!`);
+    const cleanOtp = otpToValidate.replace('-', '').trim();
+    if (cleanOtp === '892104' || cleanOtp === '892-104') {
+      setOtpValidationResult('VALID: Pre-Approved Guest Pass for Siddharth Verma -> Flat B-108 (Valid for Today)');
+    } else if (cleanOtp === '4091') {
+      setOtpValidationResult('VALID: Amazon Parcel Pickup OTP for Flat B-108 (Shelf B-4)');
+    } else if (cleanOtp === '7812') {
+      setOtpValidationResult('VALID: Close-Job OTP for Service Tech Ramesh Plumber (Flat B-108)');
+    } else {
+      setOtpValidationResult('INVALID / EXPIRED OTP PASSCODE. Please check with resident.');
+    }
   };
 
-  const handleClaimLostItem = (id: string) => {
-    setLostFoundList(prev => prev.map(l => l.id === id ? { ...l, status: 'Claimed by Resident' } : l));
-  };
+  const insideCount = visitorRegister.filter(v => v.status === 'Inside').length;
+  const awaitingParcelsCount = deliveryParcels.filter(p => p.status === 'Awaiting Pickup').length;
+  const staffInsideCount = staffList.filter(s => s.status === 'Inside Society').length;
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard & Telemetry', icon: LayoutDashboard },
-    { id: 'check_in_out', label: 'Check In/Out Visitors', icon: UserCheck },
-    { id: 'log_deliveries', label: 'Log Deliveries', icon: Package },
-    { id: 'delivery_mgmt', label: 'Delivery Management', icon: Package },
-    { id: 'vehicle_mgmt', label: 'Vehicle Management', icon: Car },
-    { id: 'resident_verification', label: 'Resident Verification', icon: Search },
-    { id: 'emergency_sos', label: 'Emergency / SOS', icon: Flame },
-    { id: 'incident_reporting', label: 'Incident Reporting', icon: AlertTriangle },
-    { id: 'guard_shifts', label: 'Guard Shift Management', icon: Clock },
-    { id: 'lost_and_found', label: 'Lost & Found', icon: HelpCircle },
+  const navMenuItems = [
+    { id: 'dashboard', label: 'Security Command Dashboard', icon: LayoutDashboard },
+    { id: 'visitors', label: 'Visitor Check-In & Approvals', icon: ShieldCheck, badge: `${insideCount} Inside`, badgeColor: 'bg-emerald-100 text-emerald-800 font-bold' },
+    { id: 'checkout', label: 'Check-Out & Exit Scanner', icon: LogOut },
+    { id: 'parcels', label: 'Gate Shelf Parcel Lockers', icon: Package, badge: `${awaitingParcelsCount} Awaiting`, badgeColor: 'bg-amber-100 text-amber-900 font-bold' },
+    { id: 'anpr', label: 'ANPR AI Plate & Parking', icon: Car },
+    { id: 'staff', label: 'Daily Staff & Attendance', icon: Users, badge: `${staffInsideCount} Active`, badgeColor: 'bg-blue-100 text-blue-800 font-bold' },
+    { id: 'sos', label: 'Emergency SOS Alarm Console', icon: Flame, badge: emergencyAlertActive ? '🚨 SIREN' : undefined, badgeColor: 'bg-red-600 text-white animate-pulse' },
+    { id: 'incidents', label: 'Incident Occurrence Book', icon: FileText },
+    { id: 'patrol', label: 'Guard QR Patrol Checkpoints', icon: MapPin },
+    { id: 'lostfound', label: 'Lost & Found Register', icon: Search },
+    { id: 'analytics', label: 'Gate Traffic & Analytics', icon: BarChart3 },
   ];
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#F6F3EC]">
+    <div className="min-h-screen bg-[#F8F9FA] text-slate-800 font-sans antialiased flex flex-col selection:bg-[#0F172A] selection:text-white">
       
-      {/* MOBILE TOP BAR WITH HAMBURGER TOGGLE */}
-      <div className="md:hidden bg-[#1C352C] text-white p-4 flex items-center justify-between sticky top-0 z-30 shadow-md">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-[#F6F3EC] flex items-center justify-center">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#1C352C]" />
-          </div>
-          <div>
-            <div className="serif-title text-base text-[#F6F3EC]">Green Haven</div>
-            <div className="text-[9px] font-bold text-[#9DBEB2] uppercase tracking-widest">Security Terminal</div>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-xl bg-[#12241D] text-[#9DBEB2] border border-[#2A4C3F]"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* SIDEBAR (Responsive Mobile Drawer + Desktop Sidebar) */}
-      <aside className={`modern-sidebar w-full md:w-72 md:min-w-[280px] text-white p-6 shrink-0 flex flex-col justify-between md:min-h-screen z-20 transition-all ${
-        mobileMenuOpen ? 'block' : 'hidden md:flex'
-      }`}>
-        <div className="space-y-6">
-          <div className="hidden md:flex items-center gap-3 pb-5 border-b border-[#2A4C3F]">
-            <div className="w-10 h-10 rounded-full bg-[#F6F3EC] flex items-center justify-center shadow-lg">
-              <div className="w-4 h-4 rounded-full bg-[#1C352C]" />
+      {/* ========================================================================= */}
+      {/* TOP DESKTOP HEADER BAR */}
+      {/* ========================================================================= */}
+      <header className="bg-white border-b border-slate-200 px-6 sm:px-10 py-4 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          
+          {/* Brand & Gate Station Identifier */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-900 p-0.5 shadow-sm flex items-center justify-center shrink-0">
+              <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-xl">
+                <span>👮</span>
+              </div>
             </div>
+
             <div>
-              <div className="serif-title text-xl text-[#F6F3EC] tracking-wide">Green Haven</div>
-              <div className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#9DBEB2]">
-                Security Desk
+              <div className="flex items-center gap-2">
+                <span className="font-black text-2xl text-slate-900 tracking-tight">Gate 1 Main Barrier</span>
+                <span className="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-bold">Shift: 08:00 AM - 08:00 PM</span>
+              </div>
+              <div className="text-xs text-slate-500 font-medium">
+                ASBL Springs, Pocharam • Security Operations Console
               </div>
             </div>
           </div>
 
-          <div className="bg-[#12241D] p-4 rounded-2xl border border-[#2A4C3F] flex items-center gap-3.5 shadow-inner">
-            <div className="w-10 h-10 rounded-xl bg-[#1C352C] border border-[#2A4C3F] text-[#9DBEB2] font-bold text-sm flex items-center justify-center shadow-md">
-              G1
+          {/* Quick Actions & Live Hardware Status */}
+          <div className="flex items-center gap-3">
+            
+            {/* Live Camera Feed Indicator */}
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold text-slate-700">
+              <Camera className="w-4 h-4 text-emerald-600 animate-pulse" />
+              <span>ANPR CAM 1 LIVE</span>
             </div>
-            <div>
-              <div className="font-bold text-white text-xs">Vikram Singh</div>
-              <div className="text-[11px] text-[#9DBEB2]">Gate 1 Main Entry</div>
+
+            {/* Offline Mode Toggle */}
+            <button
+              onClick={() => {
+                setIsOffline(!isOffline);
+                if (!isOffline) {
+                  setOfflineQueue(3);
+                } else {
+                  setOfflineQueue(0);
+                  alert('OFFLINE QUEUE SYNCED: 3 entries pushed to society cloud database ✓');
+                }
+              }}
+              className={`px-3.5 py-2 rounded-2xl border text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                isOffline ? 'bg-amber-100 border-amber-300 text-amber-900' : 'bg-slate-50 border-slate-200 text-slate-700'
+              }`}
+            >
+              {isOffline ? <WifiOff className="w-4 h-4 text-amber-700" /> : <Wifi className="w-4 h-4 text-emerald-600" />}
+              <span>{isOffline ? `Offline Mode (${offlineQueue} Queued)` : 'Cloud Synced'}</span>
+            </button>
+
+            {/* Validate OTP Passcode Button */}
+            <button
+              onClick={() => {
+                setOtpValidationResult(null);
+                setOtpToValidate('');
+                setShowOtpValidateModal(true);
+              }}
+              className="px-4 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4 text-indigo-600" />
+              <span>Verify Passcode</span>
+            </button>
+
+            {/* SOS Trigger */}
+            <button
+              onClick={() => setShowSosModal(true)}
+              className="px-5 py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-2 text-xs font-black shadow-sm transition-transform active:scale-95 cursor-pointer"
+            >
+              <Flame className="w-4 h-4 text-[#DC2626] animate-pulse" />
+              <span>🚨 SECURITY SOS</span>
+            </button>
+
+            <button
+              onClick={onExit}
+              className="px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-2 text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Exit</span>
+            </button>
+          </div>
+
+        </div>
+      </header>
+
+      {/* ========================================================================= */}
+      {/* DESKTOP SIDEBAR + EXPANSIVE MAIN WORKSPACE */}
+      {/* ========================================================================= */}
+      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col md:flex-row gap-6 p-6 sm:p-8">
+        
+        {/* DESKTOP LEFT SIDEBAR NAVIGATION */}
+        <aside className="w-full md:w-72 shrink-0 space-y-4">
+          
+          {/* Guard Profile Card */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+                VS
+              </div>
+              <div>
+                <div className="font-bold text-sm text-slate-900">Guard Vikram Singh</div>
+                <div className="text-xs text-slate-500 font-medium">Lead Security Officer (Gate 1)</div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-600">
+              <span>Station: <strong>Gate 1 Barrier</strong></span>
+              <span className="text-emerald-600 font-bold">On Duty ✓</span>
             </div>
           </div>
 
-          <nav className="space-y-1.5 max-h-[55vh] overflow-y-auto pr-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#9DBEB2] px-2 block mb-2">
-              Gate Functions
+          {/* Quick Gate Action Buttons */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs space-y-2 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block px-1">
+              Quick Gate Actions
             </span>
-            {navItems.map((item) => {
+
+            <button
+              onClick={() => setShowCheckInModal(true)}
+              className="w-full p-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95 cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>+ New Visitor Check-In</span>
+            </button>
+
+            <button
+              onClick={() => setShowParcelModal(true)}
+              className="w-full p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl flex items-center justify-center gap-2 border border-slate-200 transition-transform active:scale-95 cursor-pointer"
+            >
+              <Package className="w-4 h-4 text-indigo-600" />
+              <span>+ Log Gate Shelf Parcel</span>
+            </button>
+          </div>
+
+          {/* Gate Telemetry Stats */}
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-sm space-y-3 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 block">
+              Gate 1 Live Telemetry
+            </span>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="bg-white/10 p-3 rounded-2xl">
+                <span className="text-[10px] text-slate-300 block">Visitors Inside</span>
+                <span className="text-xl font-black text-white">{insideCount}</span>
+              </div>
+              <div className="bg-white/10 p-3 rounded-2xl">
+                <span className="text-[10px] text-slate-300 block">Shelf Parcels</span>
+                <span className="text-xl font-black text-amber-300">{awaitingParcelsCount}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Menu */}
+          <nav className="bg-white p-3 rounded-3xl border border-slate-200/80 shadow-xs space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3 py-2 block">
+              Guard Workspaces
+            </span>
+            {navMenuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activePage === item.id;
+              const isActive = activeSection === item.id;
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    setActivePage(item.id as SecurityPageId);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold transition-all text-left ${
-                    isActive
-                      ? 'bg-[#627636] text-white shadow-lg font-bold'
-                      : 'text-[#E4EFEA] hover:bg-[#2A4C3F]/50 hover:text-white'
+                  onClick={() => setActiveSection(item.id as SecurityNavSection)}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-bold transition-all text-left cursor-pointer ${
+                    isActive 
+                      ? 'bg-slate-900 text-white shadow-md' 
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#9DBEB2]'}`} />
-                  <span className="truncate">{item.label}</span>
+                  <div className="flex items-center gap-3 truncate">
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      item.badgeColor || (isActive ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700')
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
           </nav>
-        </div>
 
-        <div className="pt-6 border-t border-[#2A4C3F] space-y-3 mt-6">
-          <button
-            onClick={() => setIsOffline(!isOffline)}
-            className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 ${
-              isOffline ? 'bg-amber-600 text-white' : 'bg-[#12241D] text-[#9DBEB2] border border-[#2A4C3F]'
-            }`}
-          >
-            {isOffline ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4 text-[#627636]" />}
-            <span>{isOffline ? 'Offline Mode' : 'Online Mode'}</span>
-          </button>
+        </aside>
 
-          <button
-            onClick={onExit}
-            className="w-full py-3 bg-[#627636] hover:bg-[#52632B] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>EXIT TO ALL PORTALS</span>
-          </button>
-        </div>
-      </aside>
+        {/* ========================================================================= */}
+        {/* EXPANSIVE MAIN DESKTOP CONTENT AREA */}
+        {/* ========================================================================= */}
+        <main className="flex-1 space-y-6">
+          
+          {/* ========================================================================= */}
+          {/* 1. COMMAND DASHBOARD */}
+          {/* ========================================================================= */}
+          {activeSection === 'dashboard' && (
+            <div className="space-y-6">
+              
+              {/* Top Hero Gate Command Banner */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                <div className="flex items-center gap-5 relative z-10">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner shrink-0">
+                    <Shield className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-white">Security Command & Gate Control</h2>
+                    <p className="text-xs text-slate-300 mt-1">Real-time visitor check-ins, ANPR license plate recognition, and parcel locker management</p>
+                  </div>
+                </div>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-4 sm:p-8 space-y-6 overflow-y-auto max-w-6xl w-full">
-        
-        {/* PAGE 1: Dashboard */}
-        {activePage === 'dashboard' && (
-          <div className="space-y-6">
-            {isOffline && (
-              <div className="bg-amber-100 border border-amber-400 text-amber-900 p-4 rounded-2xl text-xs font-bold space-y-1">
-                <div>⚠️ Gate Wi-Fi Disconnected Simulation Active</div>
-                <div className="font-mono">SQLite Local Queue: {offlineQueue} Offline Records Pending Cloud Sync</div>
+                <div className="flex flex-wrap items-center gap-3 relative z-10">
+                  <button
+                    onClick={() => setShowCheckInModal(true)}
+                    className="px-5 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    <UserPlus className="w-4 h-4 fill-slate-950" />
+                    <span>Quick Visitor Check-In</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowParcelModal(true)}
+                    className="px-5 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    <Package className="w-4 h-4 text-indigo-600" />
+                    <span>Log Parcel</span>
+                  </button>
+                </div>
               </div>
-            )}
-            <SecurityAnalytics />
-          </div>
-        )}
 
-        {/* PAGE 2: Check In / Out Visitors */}
-        {activePage === 'check_in_out' && (
-          <div className="space-y-6 max-w-4xl">
-            <div>
-              <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Check In / Out Visitors</div>
-              <p className="text-xs text-slate-600 mt-1">Log new gate entries, send push approval to resident, and manage live visitors inside society</p>
+              {/* 4 Stat Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <UserCheck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-500">Visitors Inside</div>
+                    <div className="text-2xl font-black text-slate-900">{insideCount} People</div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Package className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-500">Gate Shelf Parcels</div>
+                    <div className="text-2xl font-black text-slate-900">{awaitingParcelsCount} Awaiting</div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-500">Daily Staff Inside</div>
+                    <div className="text-2xl font-black text-slate-900">{staffInsideCount} Staff</div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                    <Car className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-500">Flagged Vehicles</div>
+                    <div className="text-2xl font-black text-rose-600">{flaggedVehicles.length} Flagged</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Active Entries Ledger */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900">Today's Gate Visitor & Delivery Register</h3>
+                    <p className="text-xs text-slate-500">Real-time log of entries through Gate 1 Main Barrier</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveSection('visitors')}
+                      className="px-4 py-2 bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      View Full Register →
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                        <th className="py-3">Visitor Name</th>
+                        <th className="py-3">Purpose / Category</th>
+                        <th className="py-3">Target Unit</th>
+                        <th className="py-3">Vehicle</th>
+                        <th className="py-3">Entry Time</th>
+                        <th className="py-3">Status</th>
+                        <th className="py-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {visitorRegister.slice(0, 5).map(v => (
+                        <tr key={v.id} className="hover:bg-slate-50">
+                          <td className="py-3.5 font-bold text-slate-900">
+                            <div>{v.name}</div>
+                            <div className="text-[11px] text-slate-400 font-mono">{v.phone}</div>
+                          </td>
+                          <td className="py-3.5 font-medium text-slate-700">
+                            <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded font-bold text-[10px]">
+                              {v.company || v.purpose}
+                            </span>
+                          </td>
+                          <td className="py-3.5 font-bold text-indigo-600">{v.flat}</td>
+                          <td className="py-3.5 font-mono text-slate-600">{v.vehicle}</td>
+                          <td className="py-3.5 text-slate-500">{v.entryTime}</td>
+                          <td className="py-3.5">
+                            <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                              v.status === 'Inside' ? 'bg-emerald-100 text-emerald-800 animate-pulse' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {v.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 text-right">
+                            {v.status === 'Inside' ? (
+                              <button
+                                onClick={() => handleCheckOutVisitor(v.id)}
+                                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-[11px] cursor-pointer"
+                              >
+                                Log Exit
+                              </button>
+                            ) : (
+                              <span className="text-slate-400 text-[11px]">Departed ({v.exitTime})</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
             </div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">
-                1. New Visitor Entry Form & Camera Photo Capture
-              </span>
+          )}
 
-              <form onSubmit={handleCheckInVisitor} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="font-bold text-[#172D25] block mb-1">Visitor Full Name</label>
-                    <input type="text" required value={vName} onChange={(e) => setVName(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
+          {/* ========================================================================= */}
+          {/* 2. VISITOR CHECK-IN & APPROVALS WORKSPACE */}
+          {/* ========================================================================= */}
+          {activeSection === 'visitors' && (
+            <div className="space-y-6">
+              
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <UserCheck className="w-8 h-8" />
                   </div>
                   <div>
-                    <label className="font-bold text-[#172D25] block mb-1">Mobile Number</label>
-                    <input type="tel" required value={vPhone} onChange={(e) => setVPhone(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                  </div>
-                  <div>
-                    <label className="font-bold text-[#172D25] block mb-1">Target Flat Number</label>
-                    <input type="text" required value={vFlat} onChange={(e) => setVFlat(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
+                    <h2 className="font-black text-2xl text-slate-900">Visitor Check-In & Gate Register</h2>
+                    <p className="text-xs text-slate-500 mt-1">Log unannounced visitors, verify pre-approved guest QR passes, and dispatch approvals</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-bold text-[#172D25] block mb-1">Purpose of Visit</label>
-                    <select value={vPurpose} onChange={(e) => setVPurpose(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]">
-                      <option value="Personal Guest">Personal Guest</option>
-                      <option value="Daily Maid / Cook">Daily Maid / Cook</option>
-                      <option value="Service Technician">Service Technician</option>
-                      <option value="Delivery Partner">Delivery Partner</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-[#172D25] block mb-1">Vehicle Plate Number (Optional)</label>
-                    <input type="text" value={vVehicle} onChange={(e) => setVVehicle(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                  </div>
-                </div>
-
-                <button type="submit" className="w-full py-4 bg-[#627636] hover:bg-[#52632B] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg">
-                  {isOffline ? 'QUEUE ENTRY IN OFFLINE LOCAL STORAGE' : 'LOG ENTRY & SEND PUSH APPROVAL TO RESIDENT'}
+                <button
+                  onClick={() => setShowCheckInModal(true)}
+                  className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
+                >
+                  + New Visitor Check-In
                 </button>
-              </form>
-            </div>
+              </div>
 
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">
-                2. Live Visitors Register ({visitorRegister.length} Visitors Logged Today)
-              </span>
+              {/* Filter Tabs & Search Bar */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="flex gap-2 text-xs">
+                    <button
+                      onClick={() => setVisitorFilterTab('all')}
+                      className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                    >
+                      All ({visitorRegister.length})
+                    </button>
+                    <button
+                      onClick={() => setVisitorFilterTab('inside')}
+                      className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'inside' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                    >
+                      Inside Society ({insideCount})
+                    </button>
+                    <button
+                      onClick={() => setVisitorFilterTab('departed')}
+                      className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'departed' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                    >
+                      Departed ({visitorRegister.length - insideCount})
+                    </button>
+                  </div>
 
-              <div className="overflow-x-auto text-xs">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-[#DED8C8] text-slate-500 font-bold">
-                      <th className="py-2">Visitor ID</th>
-                      <th className="py-2">Visitor Name & Mobile</th>
-                      <th className="py-2">Target Flat</th>
-                      <th className="py-2">Purpose</th>
-                      <th className="py-2">Check In</th>
-                      <th className="py-2 text-right">Status / Check-OUT</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#DED8C8]">
-                    {visitorRegister.map((v) => (
-                      <tr key={v.id} className="text-slate-800">
-                        <td className="py-3 font-mono font-bold text-[#172D25]">{v.id}</td>
-                        <td className="py-3 font-bold">{v.name} ({v.phone})</td>
-                        <td className="py-3 font-bold text-[#627636]">{v.flat}</td>
-                        <td className="py-3">{v.purpose}</td>
-                        <td className="py-3 font-mono text-slate-500">{v.entryTime}</td>
-                        <td className="py-3 text-right">
-                          {v.status === 'Inside' ? (
+                  <div className="w-full sm:w-72 relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search visitor, phone, flat..."
+                      value={visitorSearch}
+                      onChange={(e) => setVisitorSearch(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {visitorRegister
+                    .filter(v => visitorFilterTab === 'all' || (visitorFilterTab === 'inside' ? v.status === 'Inside' : v.status === 'Departed'))
+                    .filter(v => v.name.toLowerCase().includes(visitorSearch.toLowerCase()) || v.flat.toLowerCase().includes(visitorSearch.toLowerCase()) || v.phone.includes(visitorSearch))
+                    .map(v => (
+                      <div key={v.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-xl shadow-xs border border-slate-200 shrink-0">
+                            {v.purpose === 'Delivery' ? '⚡' : v.purpose === 'Cab' ? '🚗' : v.purpose === 'Service Tech' ? '👨‍🔧' : '👤'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-slate-900">{v.name}</span>
+                              <span className="bg-slate-200 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                                {v.company || v.purpose}
+                              </span>
+                              <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                v.status === 'Inside' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                              }`}>
+                                {v.status}
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-500 mt-1">
+                              Flat: <strong className="text-slate-900">{v.flat}</strong> • Phone: {v.phone} • Vehicle: <strong className="font-mono">{v.vehicle}</strong> • Entry: {v.entryTime}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-center">
+                          {v.status === 'Inside' && (
                             <button
                               onClick={() => handleCheckOutVisitor(v.id)}
-                              className="px-3.5 py-1.5 bg-[#1C352C] text-white font-bold rounded-lg text-[11px] shadow flex items-center gap-1 ml-auto hover:bg-[#12241D]"
+                              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
                             >
-                              <LogOut className="w-3 h-3" /> Check-OUT
+                              Log Check-Out
                             </button>
-                          ) : (
-                            <span className="bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-bold text-[10px]">
-                              Departed ({v.exitTime})
-                            </span>
                           )}
-                        </td>
-                      </tr>
+                          <button
+                            onClick={() => alert(`Calling resident of ${v.flat} on intercom...`)}
+                            className="p-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl cursor-pointer"
+                          >
+                            <Phone className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 3. CHECK-OUT & EXIT SCANNER */}
+          {activeSection === 'checkout' && (
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                <span className="font-black text-xl text-slate-900 block">Gate Exit Scanner & Barrier Release</span>
+                <p className="text-xs text-slate-500">Scan license plate or select visitor currently inside society to record checkout and lift exit barrier.</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  {visitorRegister.filter(v => v.status === 'Inside').map(v => (
+                    <div key={v.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-4">
+                      <div>
+                        <div className="font-bold text-sm text-slate-900">{v.name}</div>
+                        <div className="text-xs text-slate-500">Flat: {v.flat} • {v.vehicle}</div>
+                        <div className="text-[11px] text-emerald-700 font-bold mt-1">Entered at {v.entryTime}</div>
+                      </div>
+                      <button
+                        onClick={() => handleCheckOutVisitor(v.id)}
+                        className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shrink-0"
+                      >
+                        Raise Exit Barrier
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* PAGE 3: Log Deliveries */}
-        {activePage === 'log_deliveries' && (
-          <div className="space-y-6 max-w-xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Log Deliveries at Gate Desk</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <form onSubmit={handleLogDelivery} className="space-y-4 text-xs">
-                <div>
-                  <label className="font-bold text-[#172D25] block mb-1">Delivery Agency / Company</label>
-                  <select value={delCompany} onChange={(e) => setDelCompany(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]">
-                    <option value="Amazon Courier">Amazon Courier</option>
-                    <option value="Zomato Food Delivery">Zomato Food Delivery</option>
-                    <option value="Swiggy InstaMart">Swiggy InstaMart</option>
-                    <option value="Flipkart Logistics">Flipkart Logistics</option>
-                    <option value="Blinkit Instant">Blinkit Instant Delivery</option>
-                  </select>
+          {/* ========================================================================= */}
+          {/* 4. GATE SHELF PARCEL LOCKERS */}
+          {activeSection === 'parcels' && (
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Package className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Gate Shelf Parcel Lockers</h2>
+                    <p className="text-xs text-slate-500 mt-1">Secure parcel storage for deliveries left at gate when residents are away</p>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="font-bold text-[#172D25] block mb-1">Target Flat Number</label>
-                  <input type="text" required value={delFlat} onChange={(e) => setDelFlat(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                </div>
-
-                <div>
-                  <label className="font-bold text-[#172D25] block mb-1">Order / Tracking ID</label>
-                  <input type="text" value={delOrderNo} onChange={(e) => setDelOrderNo(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                </div>
-
-                <button type="submit" className="w-full py-4 bg-[#1C352C] hover:bg-[#12241D] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg">
-                  LOG PARCEL PHOTO & ASSIGN GATE SHELF B-4
+                <button
+                  onClick={() => setShowParcelModal(true)}
+                  className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
+                >
+                  + Store New Parcel
                 </button>
-              </form>
-            </div>
-          </div>
-        )}
+              </div>
 
-        {/* PAGE 4: Delivery Management Queue */}
-        {activePage === 'delivery_mgmt' && (
-          <div className="space-y-6 max-w-4xl">
-            <div>
-              <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Delivery Management & Gate Shelf Storage</div>
-              <p className="text-xs text-slate-600 mt-1">Track parcels currently stored at Gate Desk shelves awaiting resident pickup</p>
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 space-y-4">
-              <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">
-                Active Shelf Parcels Queue ({deliveryParcels.filter(p => p.status === 'Awaiting Pickup').length} Parcels Awaiting Pickup)
-              </span>
-
-              <div className="space-y-3 text-xs">
-                {deliveryParcels.map((p) => (
-                  <div key={p.id} className="bg-[#F6F3EC] p-5 rounded-2xl border border-[#DED8C8] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                      <div className="font-bold text-[#172D25] text-base">{p.courier} ({p.orderNo})</div>
-                      <div className="text-slate-600">
-                        Target Flat: <strong className="text-[#172D25]">{p.flat}</strong> • Shelf Location: <strong className="text-[#627636]">{p.shelf}</strong>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {deliveryParcels.map(p => (
+                  <div key={p.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-black text-base text-slate-900">{p.courier} ({p.orderNo})</div>
+                        <div className="text-xs text-slate-500 mt-0.5">Target: <strong className="text-indigo-600 font-bold">{p.flat}</strong> • Phone: {p.recipientPhone}</div>
                       </div>
-                      <div className="text-slate-500 text-[11px]">Logged: {p.loggedTime} • Dwell Time: {p.dwell}</div>
+                      <span className={`px-2.5 py-1 rounded-full font-bold text-xs ${
+                        p.status === 'Awaiting Pickup' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {p.status}
+                      </span>
                     </div>
 
-                    {p.status === 'Awaiting Pickup' ? (
+                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Assigned Shelf Location</span>
+                        <span className="font-bold text-slate-900">{p.shelf}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Pickup OTP Passcode</span>
+                        <span className="font-mono font-black text-sm text-indigo-600">OTP {p.pickupOtp}</span>
+                      </div>
+                    </div>
+
+                    {p.status === 'Awaiting Pickup' && (
                       <button
-                        onClick={() => handlePickupParcel(p.id)}
-                        className="px-4 py-2.5 bg-[#627636] hover:bg-[#52632B] text-white font-bold rounded-xl shadow"
+                        onClick={() => handleVerifyParcelPickup(p.id)}
+                        className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
                       >
-                        Mark Picked Up by Resident
+                        Verify Pickup & Handover
                       </button>
-                    ) : (
-                      <span className="bg-[#1C352C] text-white px-3.5 py-1.5 rounded-full font-bold text-[10px]">
-                        ✓ Picked Up
-                      </span>
                     )}
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* PAGE 5: Vehicle Management */}
-        {activePage === 'vehicle_mgmt' && (
-          <div className="space-y-6 max-w-4xl">
-            <div>
-              <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Vehicle & Parking Management</div>
-              <p className="text-xs text-slate-600 mt-1">ANPR License Plate Scanner, visitor vehicle registration, and parking violations log</p>
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">ANPR Plate Scanner Lookup</span>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={plateQuery}
-                  onChange={(e) => setPlateQuery(e.target.value)}
-                  className="flex-1 p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8] font-mono font-bold"
-                />
-                <button
-                  onClick={() => alert(`ANPR Scan match found for plate ${plateQuery}!`)}
-                  className="px-5 bg-[#627636] text-white font-bold rounded-xl shadow"
-                >
-                  Scan Plate
-                </button>
-              </div>
-
-              {plateSearchResult && (
-                <div className="bg-[#F6F3EC] p-5 rounded-2xl border border-[#DED8C8] space-y-2">
-                  <div className="font-bold text-[#172D25] text-base">{plateSearchResult.plate} ({plateSearchResult.type})</div>
-                  <div className="text-slate-700">Registered Owner: {plateSearchResult.owner} ({plateSearchResult.flat})</div>
-                  <div className="text-[#627636] font-bold">Allocated Reserved Slot: {plateSearchResult.slot}</div>
-                </div>
-              )}
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-red-700 uppercase tracking-wider block">Flagged Parking Violations Register ({flaggedVehicles.length} Cases)</span>
-              <div className="space-y-3">
-                {flaggedVehicles.map((fv) => (
-                  <div key={fv.plate} className="bg-[#F6F3EC] p-4 rounded-xl border border-[#DED8C8] flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-[#172D25] font-mono">{fv.plate} ({fv.flat})</div>
-                      <div className="text-red-700 font-semibold">{fv.violation}</div>
-                    </div>
-                    <button
-                      onClick={() => alert(`Warning & towing alert sent to owner of vehicle ${fv.plate}!`)}
-                      className="px-3.5 py-1.5 bg-red-700 text-white font-bold rounded-lg"
-                    >
-                      Issue Warning
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 6: Resident Verification */}
-        {activePage === 'resident_verification' && (
-          <div className="space-y-6 max-w-xl">
-            <div>
-              <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Resident Identity Verification</div>
-              <p className="text-xs text-slate-600 mt-1">Fast lookup of resident owner details, family members, and auto-approve preferences</p>
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={searchFlat}
-                  onChange={(e) => setSearchFlat(e.target.value)}
-                  className="flex-1 p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8] font-mono font-bold"
-                />
-                <button
-                  onClick={() => alert(`Verified details for ${searchFlat}!`)}
-                  className="px-5 bg-[#627636] text-white font-bold rounded-xl shadow"
-                >
-                  Lookup Flat
-                </button>
-              </div>
-
-              {verifiedResident && (
-                <div className="bg-[#F6F3EC] p-6 rounded-3xl border border-[#DED8C8] space-y-3">
-                  <div className="serif-title text-2xl text-[#172D25]">{verifiedResident.name}</div>
-                  <div className="text-slate-700 font-bold">{verifiedResident.flat}</div>
-                  <div className="text-[#627636] font-bold">Status: {verifiedResident.status}</div>
-                  <div className="text-slate-600">Family: {verifiedResident.family}</div>
-                  <div className="text-slate-600">Vehicles: {verifiedResident.vehicles}</div>
-                  <div className="bg-[#9DBEB2]/40 p-3 rounded-xl font-bold text-[#172D25] text-[11px]">
-                    Preferences: {verifiedResident.autoApprove}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 7: Emergency SOS Console */}
-        {activePage === 'emergency_sos' && (
-          <div className="space-y-6 max-w-4xl">
-            <div>
-              <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Emergency SOS Receiver Console</div>
-              <p className="text-xs text-slate-600 mt-1">Real-time alert receiver from resident panic buttons with immediate guard dispatch triggers</p>
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 border-red-300 space-y-4 text-xs">
-              <div className="bg-red-100 border border-red-300 p-6 rounded-3xl space-y-4 text-red-950">
-                <div className="serif-title text-2xl text-red-900 flex items-center gap-2">
-                  <Flame className="w-6 h-6 text-red-600 animate-pulse" />
-                  🚨 LIVE PANIC SOS ALARM FROM FLAT A-402
-                </div>
+          {/* ========================================================================= */}
+          {/* 5. ANPR AI CAMERA & VEHICLE SCANNER */}
+          {activeSection === 'anpr' && (
+            <div className="space-y-6">
+              
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                <span className="font-black text-xl text-slate-900 block">ANPR AI Camera & Plate OCR Scanner</span>
                 
-                <div className="font-bold text-sm">Resident: Ananya Sharma • Flat A-402 (Tower A, Level 4)</div>
-                <p className="text-xs text-red-900">Triggered via Resident App Emergency Siren at 11:42 AM.</p>
-
-                <div className="flex flex-wrap gap-3 pt-2">
+                <form onSubmit={handlePlateSearch} className="flex gap-3">
+                  <input
+                    type="text"
+                    placeholder="Enter License Plate Number (e.g. KA-03-MB-4921)..."
+                    value={plateQuery}
+                    onChange={(e) => setPlateQuery(e.target.value)}
+                    className="flex-1 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-mono font-bold uppercase focus:outline-none"
+                  />
                   <button
-                    onClick={() => {
-                      setSosDispatched(true);
-                      alert('Gate Guards dispatched to Flat A-402!');
-                    }}
-                    className="px-6 py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl shadow text-xs"
+                    type="submit"
+                    className="px-6 py-3.5 bg-slate-900 text-white font-bold rounded-2xl text-xs cursor-pointer"
                   >
-                    DISPATCH GATE GUARDS TO FLAT A-402
+                    Scan / Lookup Plate
                   </button>
+                </form>
 
-                  <button
-                    onClick={() => alert('Calling Emergency Services (112)...')}
-                    className="px-6 py-3 bg-[#1C352C] text-white font-bold rounded-xl shadow text-xs"
-                  >
-                    CALL EMERGENCY SERVICES (112 / 108)
-                  </button>
-                </div>
-
-                {sosDispatched && (
-                  <div className="bg-red-700 text-white p-3 rounded-xl text-center font-bold text-xs animate-pulse">
-                    ✓ Guards Vikram & Suresh dispatched to Flat A-402 (Eta 1.5 mins)
+                {searchedPlateInfo && (
+                  <div className="p-6 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-3 animate-fade-in">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-mono font-black text-2xl text-slate-900">{searchedPlateInfo.plate}</div>
+                        <div className="text-xs text-slate-600 mt-1">Owner: <strong>{searchedPlateInfo.owner}</strong> • {searchedPlateInfo.flat}</div>
+                      </div>
+                      <span className="bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full">
+                        {searchedPlateInfo.status}
+                      </span>
+                    </div>
+                    <div className="pt-2 border-t border-indigo-200/60 flex justify-between text-xs text-slate-700">
+                      <span>Allocated: <strong>{searchedPlateInfo.slot}</strong></span>
+                      <span>Vehicle: {searchedPlateInfo.type}</span>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* PAGE 8: Incident Reporting */}
-        {activePage === 'incident_reporting' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Incident Reporting Log</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <form onSubmit={handleLogIncident} className="space-y-4">
+              {/* Flagged Vehicles & Parking Violations */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                <span className="font-black text-base text-slate-900 block">Flagged Vehicles & Parking Violations ({flaggedVehicles.length})</span>
+                <div className="space-y-3 text-xs">
+                  {flaggedVehicles.map((fv, idx) => (
+                    <div key={idx} className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex justify-between items-center">
+                      <div>
+                        <div className="font-mono font-bold text-sm text-slate-900">{fv.plate} ({fv.flat})</div>
+                        <div className="text-slate-600 mt-0.5">{fv.violation} • Logged at {fv.time}</div>
+                      </div>
+                      <span className="bg-rose-200 text-rose-900 font-bold px-3 py-1 rounded-full text-[10px]">
+                        {fv.severity} - {fv.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 6. DAILY STAFF ATTENDANCE */}
+          {activeSection === 'staff' && (
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="font-black text-xl text-slate-900">Daily Household Staff & Helpers Attendance</h2>
+                    <p className="text-xs text-slate-500">Biometric Aadhaar verified maids, cooks, cleaners, and maintenance technicians</p>
+                  </div>
+                  <span className="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full text-xs">
+                    {staffInsideCount} Staff Inside
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {staffList.map(s => (
+                    <div key={s.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                            <span>{s.name}</span>
+                            {s.aadhaarVerified && <BadgeCheck className="w-4 h-4 text-emerald-600" />}
+                          </div>
+                          <div className="text-xs text-slate-500">{s.role} • {s.phone}</div>
+                          <div className="text-[11px] text-indigo-600 font-medium mt-0.5">{s.assignedFlats}</div>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                          s.status === 'Inside Society' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                        }`}>
+                          {s.status}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-200/60 text-xs">
+                        <span className="text-slate-500">{s.entryTime}</span>
+                        <button
+                          onClick={() => handleToggleStaff(s.id)}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-xs cursor-pointer ${
+                            s.status === 'Inside Society' ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
+                          }`}
+                        >
+                          {s.status === 'Inside Society' ? 'Check Out' : 'Check In'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 7. EMERGENCY SOS CONSOLE */}
+          {activeSection === 'sos' && (
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
+                    <Flame className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Emergency SOS Command & Dispatch</h2>
+                    <p className="text-xs text-slate-500">Instant siren alerts triggered by residents or security patrols</p>
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                  <span className="font-bold text-sm text-slate-900 block">Emergency Response Hotline</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="p-4 bg-white rounded-xl border border-slate-200">
+                      <span className="text-slate-500 block">Ambulance Service</span>
+                      <span className="font-mono font-bold text-lg text-red-600">108 / 112</span>
+                    </div>
+                    <div className="p-4 bg-white rounded-xl border border-slate-200">
+                      <span className="text-slate-500 block">Local Fire Station</span>
+                      <span className="font-mono font-bold text-lg text-slate-900">101</span>
+                    </div>
+                    <div className="p-4 bg-white rounded-xl border border-slate-200">
+                      <span className="text-slate-500 block">Pocharam Police Station</span>
+                      <span className="font-mono font-bold text-lg text-slate-900">040-27891100</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 8. INCIDENT OCCURRENCE BOOK */}
+          {activeSection === 'incidents' && (
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                <span className="font-black text-xl text-slate-900 block">Incident Occurrence Book & Shift Log</span>
+                <div className="space-y-3">
+                  {incidentsList.map(inc => (
+                    <div key={inc.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-xs text-slate-500">{inc.id}</span>
+                          <span className="font-bold text-sm text-slate-900">{inc.category} ({inc.flat})</span>
+                        </div>
+                        <span className="bg-amber-100 text-amber-900 font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                          {inc.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600">{inc.desc}</p>
+                      <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-200/60">
+                        Logged by: {inc.loggedBy} • {inc.time}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 9. GUARD QR PATROL CHECKPOINTS */}
+          {activeSection === 'patrol' && (
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                <span className="font-black text-xl text-slate-900 block">Guard QR Patrol Checkpoints</span>
+                <div className="space-y-3 text-xs">
+                  {patrolPoints.map(p => (
+                    <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-sm text-slate-900">{p.name}</div>
+                        <div className="text-slate-500">{p.location}</div>
+                      </div>
+                      {p.scanned ? (
+                        <span className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full">
+                          Scanned ({p.time}) ✓
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleScanCheckpoint(p.id)}
+                          className="px-4 py-2 bg-slate-900 text-white font-bold rounded-xl cursor-pointer"
+                        >
+                          Scan QR Tag
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 10. LOST & FOUND REGISTER */}
+          {activeSection === 'lostfound' && (
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                <span className="font-black text-xl text-slate-900 block">Lost & Found Property Register</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  {lostFoundList.map(lf => (
+                    <div key={lf.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="font-bold text-sm text-slate-900">{lf.item}</div>
+                        <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                          lf.status.includes('Claimed') ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                        }`}>
+                          {lf.status}
+                        </span>
+                      </div>
+                      <div className="text-slate-500">Found Location: <strong>{lf.loc}</strong> • {lf.date}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 11. SECURITY ANALYTICS */}
+          {activeSection === 'analytics' && (
+            <div className="space-y-6">
+              <SecurityAnalytics />
+            </div>
+          )}
+
+        </main>
+
+      </div>
+
+      {/* ========================================================================= */}
+      {/* MODAL: NEW VISITOR CHECK-IN MODAL */}
+      {/* ========================================================================= */}
+      {showCheckInModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setShowCheckInModal(false)}
+              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h3 className="font-black text-xl text-slate-900">New Visitor Entry Check-In</h3>
+              <p className="text-xs text-slate-500">Gate 1 Entry Barrier • Auto-dispatch approval to resident app</p>
+            </div>
+
+            <form onSubmit={handleCheckInVisitor} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-[#172D25] block mb-1">Incident Category</label>
-                  <select value={incCategory} onChange={(e) => setIncCategory(e.target.value)} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]">
-                    <option value="Parking Dispute">Parking Dispute</option>
-                    <option value="Noise Disturbance">Noise Disturbance Past 11 PM</option>
-                    <option value="Pool Rules Violation">Pool Rules Violation</option>
+                  <label className="font-bold text-slate-700 block mb-1">Visitor Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={vName}
+                    onChange={(e) => setVName(e.target.value)}
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Mobile Number</label>
+                  <input
+                    type="tel"
+                    required
+                    value={vPhone}
+                    onChange={(e) => setVPhone(e.target.value)}
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Destination Flat</label>
+                  <input
+                    type="text"
+                    required
+                    value={vFlat}
+                    onChange={(e) => setVFlat(e.target.value)}
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Purpose Category</label>
+                  <select
+                    value={vPurpose}
+                    onChange={(e) => setVPurpose(e.target.value as any)}
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  >
+                    <option value="Delivery">Delivery (Blinkit / Swiggy)</option>
+                    <option value="Guest">Personal Guest</option>
+                    <option value="Cab">Cab Pickup (Uber / Ola)</option>
+                    <option value="Service Tech">Service Technician</option>
+                    <option value="Daily Staff">Daily Staff</option>
                   </select>
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-[#172D25] block mb-1">Description</label>
-                  <textarea value={incDesc} onChange={(e) => setIncDesc(e.target.value)} rows={3} className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
+                  <label className="font-bold text-slate-700 block mb-1">Company / Delivery App</label>
+                  <input
+                    type="text"
+                    value={vCompany}
+                    onChange={(e) => setVCompany(e.target.value)}
+                    placeholder="e.g. Blinkit, Swiggy, Uber"
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  />
                 </div>
-
-                <button type="submit" className="w-full py-3.5 bg-[#1C352C] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg">
-                  LOG INCIDENT & SEND REPORT TO COMMITTEE
-                </button>
-              </form>
-            </div>
-
-            <div className="modern-card p-5 sm:p-8 space-y-3 text-xs">
-              <span className="font-bold text-[#627636]">Logged Incidents Directory ({incidentsList.length} Cases)</span>
-              {incidentsList.map((inc) => (
-                <div key={inc.id} className="bg-[#F6F3EC] p-4 rounded-xl border border-[#DED8C8] flex justify-between items-center">
-                  <div>
-                    <div className="font-bold text-[#172D25]">{inc.id} - {inc.category} ({inc.flat})</div>
-                    <div className="text-slate-600">{inc.desc}</div>
-                  </div>
-                  <span className="bg-[#1C352C] text-white px-3 py-1 rounded-full font-bold text-[10px]">{inc.status}</span>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Vehicle Plate No</label>
+                  <input
+                    type="text"
+                    value={vVehicle}
+                    onChange={(e) => setVVehicle(e.target.value)}
+                    placeholder="e.g. TS-08-EM-4921"
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 9: Guard Shifts & Patrol QR Scanner */}
-        {activePage === 'guard_shifts' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Guard Shift Management & QR Patrols</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">Security Patrol Checkpoint QR Scanner</span>
-              
-              <div className="space-y-3">
-                {patrolPoints.map((cp, idx) => (
-                  <div key={cp.name} className="bg-[#F6F3EC] p-4 rounded-xl border border-[#DED8C8] flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-[#172D25] text-sm">{cp.name}</div>
-                      <div className="text-slate-600">{cp.scanned ? `Scanned at ${cp.time}` : 'Pending Scan'}</div>
-                    </div>
-                    {cp.scanned ? (
-                      <span className="bg-[#627636] text-white px-3.5 py-1.5 rounded-xl font-bold text-[10px]">
-                        ✓ Scanned
-                      </span>
-                    ) : (
-                      <button onClick={() => handleScanPatrol(idx)} className="px-4 py-2 bg-[#1C352C] text-white font-bold rounded-xl shadow">
-                        Scan QR Checkpoint
-                      </button>
-                    )}
-                  </div>
-                ))}
               </div>
-            </div>
+
+              <button
+                type="submit"
+                className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs shadow-lg mt-2 cursor-pointer"
+              >
+                Dispatch Entry Approval & Lift Barrier
+              </button>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* PAGE 10: Lost & Found Register */}
-        {activePage === 'lost_and_found' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="serif-title text-2xl sm:text-3xl text-[#172D25]">Lost & Found Register</div>
-            
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">Log Found Item</span>
-              <form onSubmit={handleLogLostItem} className="space-y-3">
-                <input type="text" required value={foundItemName} onChange={(e) => setFoundItemName(e.target.value)} placeholder="Item Description (e.g. Hyundai Car Key Ring)" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                <input type="text" required value={foundLoc} onChange={(e) => setFoundLoc(e.target.value)} placeholder="Location Found (e.g. Swimming Pool Deck)" className="w-full p-3 bg-[#F6F3EC] rounded-xl border border-[#DED8C8]" />
-                <button type="submit" className="w-full py-3 bg-[#627636] text-white serif-title text-xs tracking-wider rounded-xl shadow-lg">
-                  LOG ITEM TO FOUND REGISTER
-                </button>
-              </form>
+      {/* ========================================================================= */}
+      {/* MODAL: LOG GATE SHELF PARCEL MODAL */}
+      {/* ========================================================================= */}
+      {showParcelModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setShowParcelModal(false)}
+              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h3 className="font-black text-xl text-slate-900">Store Parcel at Gate Shelf</h3>
+              <p className="text-xs text-slate-500">Assign locker shelf and generate pickup OTP for resident</p>
             </div>
 
-            <div className="modern-card p-5 sm:p-8 space-y-4 text-xs">
-              <span className="font-bold text-[#627636] uppercase tracking-wider block">Found Items Inventory Directory ({lostFoundList.length} Items)</span>
-              <div className="space-y-3">
-                {lostFoundList.map((lf) => (
-                  <div key={lf.id} className="bg-[#F6F3EC] p-4 rounded-xl border border-[#DED8C8] flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-[#172D25] text-sm">{lf.item} ({lf.id})</div>
-                      <div className="text-slate-600">Location: {lf.loc} • Logged: {lf.date}</div>
-                    </div>
-                    {lf.status === 'Unclaimed' ? (
-                      <button onClick={() => handleClaimLostItem(lf.id)} className="px-3.5 py-1.5 bg-[#627636] text-white font-bold rounded-lg text-xs shadow">
-                        Mark Claimed
-                      </button>
-                    ) : (
-                      <span className="bg-[#1C352C] text-white px-3 py-1 rounded-full font-bold text-[10px]">{lf.status}</span>
-                    )}
-                  </div>
-                ))}
+            <form onSubmit={handleLogParcel} className="space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Courier / Service Provider</label>
+                <input
+                  type="text"
+                  required
+                  value={delCompany}
+                  onChange={(e) => setDelCompany(e.target.value)}
+                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                />
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Target Flat</label>
+                  <input
+                    type="text"
+                    required
+                    value={delFlat}
+                    onChange={(e) => setDelFlat(e.target.value)}
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Order / Tracking #</label>
+                  <input
+                    type="text"
+                    required
+                    value={delOrderNo}
+                    onChange={(e) => setDelOrderNo(e.target.value)}
+                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Shelf Slot Location</label>
+                <select
+                  value={delShelf}
+                  onChange={(e) => setDelShelf(e.target.value)}
+                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
+                >
+                  <option value="Shelf B-4">Shelf B-4 (Tower B Packages)</option>
+                  <option value="Shelf B-1">Shelf B-1</option>
+                  <option value="Shelf A-1">Shelf A-1 (Tower A Packages)</option>
+                  <option value="Cold Storage Locker #02">Cold Storage Locker #02 (Dairy / Food)</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs shadow-lg mt-2 cursor-pointer"
+              >
+                Log Parcel & Send Resident OTP
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: VALIDATE PASSCODE / OTP MODAL */}
+      {/* ========================================================================= */}
+      {showOtpValidateModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setShowOtpValidateModal(false)}
+              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h3 className="font-black text-xl text-slate-900">Verify Resident / Guest Passcode</h3>
+              <p className="text-xs text-slate-500">Enter 4-digit or 6-digit OTP passcode provided by visitor</p>
+            </div>
+
+            <form onSubmit={handleValidateOtp} className="space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Passcode / OTP</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 892-104 or 4091"
+                  value={otpToValidate}
+                  onChange={(e) => setOtpToValidate(e.target.value)}
+                  className="w-full p-3.5 bg-slate-50 rounded-xl border border-slate-200 font-mono text-center text-lg font-black tracking-widest uppercase"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs shadow-lg cursor-pointer"
+              >
+                Validate Passcode
+              </button>
+            </form>
+
+            {otpValidationResult && (
+              <div className={`p-4 rounded-2xl border text-xs font-bold ${
+                otpValidationResult.includes('VALID:') ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'
+              }`}>
+                {otpValidationResult}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: SECURITY SOS PANIC MODAL */}
+      {/* ========================================================================= */}
+      {showSosModal && (
+        <div className="fixed inset-0 bg-red-950/80 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-5 shadow-2xl border-2 border-red-500 relative text-center">
+            <button
+              onClick={() => setShowSosModal(false)}
+              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="w-20 h-20 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto animate-bounce">
+              <Flame className="w-10 h-10" />
+            </div>
+
+            <div className="font-black text-2xl text-red-900">🚨 SECURITY EMERGENCY SIREN</div>
+            <p className="text-xs text-slate-600">
+              Broadcast emergency siren to all security gate posts and emergency response units.
+            </p>
+
+            <div className="space-y-3 pt-2">
+              <button
+                onClick={() => {
+                  setEmergencyAlertActive(true);
+                  alert('SECURITY EMERGENCY BROADCAST ACTIVE! All patrol guards notified.');
+                  setShowSosModal(false);
+                }}
+                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl text-xs shadow-lg cursor-pointer"
+              >
+                BROADCAST GATE 1 EMERGENCY SIREN
+              </button>
+
+              <button
+                onClick={() => alert('Dialing 112 / 108 Emergency Ambulance / Police Services...')}
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl text-xs cursor-pointer"
+              >
+                Call Police / Ambulance (112)
+              </button>
             </div>
           </div>
-        )}
-
-      </main>
+        </div>
+      )}
 
     </div>
   );
