@@ -6,7 +6,7 @@ import {
   Clock, DollarSign, Check, ChevronRight, Sparkles, Filter, Phone, Mail, MapPin, Eye, Zap, ShieldAlert, X, Trash2, Send, AlertCircle, Key, Lock, QrCode, Menu, LogOut,
   BarChart3, RefreshCw, BadgeCheck, Bell, Smartphone, ArrowUpRight, CheckSquare,
   HelpCircle, CreditCard, PieChart, Activity, UserPlus, Car, Home, Layers,
-  PhoneCall, ShieldQuestion, Briefcase, FileCheck, Award, Printer
+  PhoneCall, ShieldQuestion, Briefcase, FileCheck, Award, Printer, FileSpreadsheet
 } from 'lucide-react';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 
@@ -26,6 +26,7 @@ export type AdminPageId =
   | 'incident_mgmt'
   | 'emergency_mgmt'
   | 'staff_vendor'
+  | 'view_reports'
   | 'audit_logs'
   | 'community_config'
   | 'analytics';
@@ -214,7 +215,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     { flat: 'Flat B-204', resident: 'Rohan Deshmukh', phone: '98990 11223', bhk: '2BHK', amount: '₹ 4,900', status: 'Paid', dueDate: '31 Aug 2026', receiptNo: 'GST-7711', mode: 'Credit Card (02 Aug)' },
   ]);
 
-  // 10. UPGRADED: Staff & Vendor Credentials Console
+  // 10. Staff & Vendor Credentials Console
   const [staffName, setStaffName] = useState<string>('Ramesh Pawar');
   const [staffCompany, setStaffCompany] = useState<string>('AquaClean Swimming Pool Services');
   const [staffRole, setStaffRole] = useState<string>('Pool Maintenance Supervisor');
@@ -236,7 +237,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     { name: 'AquaClean Swimming Pool Services', scope: 'Daily Chemical Balancing, Filtration Plant & Lifeguard Support', cost: '₹ 25,000 / month', status: 'Active (Valid till Mar 2027)', sla: 'Chlorine & pH Certified Daily', hotline: '+91 98111 33221', engineers: '1 Pool Specialist' },
   ]);
 
-  // 11. Audit Logs
+  // 11. View Reports Registry
+  const [societyReportsList] = useState([
+    { id: 'REP-AUG-2026', title: 'Monthly Maintenance & GST Collection Ledger', category: 'Finance & Billing', date: 'August 2026 (Month-End)', size: '2.4 MB PDF', records: '250 Unit Invoices' },
+    { id: 'REP-KYC-2026', title: 'Resident Ownership & Tenant KYC Dossier Directory', category: 'Administration', date: 'Updated Today 11:30 AM', size: '1.8 MB Excel', records: '740 Verified Residents' },
+    { id: 'REP-GATE-2026', title: 'Gate 1 & Gate 2 Comprehensive Visitor & ANPR Vehicle Log', category: 'Security Desk', date: 'Last 30 Days', size: '4.2 MB Excel', records: '14,460 Logged Entries' },
+    { id: 'REP-AMC-2026', title: 'AMC Contractor & Vendor SLA Performance Audit', category: 'Facilities Management', date: 'Q3 FY 2026-27', size: '1.2 MB PDF', records: '4 Active Vendor Audits' },
+    { id: 'REP-AMENITY-2026', title: 'Clubhouse Amenity & Banquet Hall Revenue Statement', category: 'Amenity Booking', date: 'August 2026', size: '980 KB PDF', records: '18 Event Bookings' },
+    { id: 'REP-INCIDENT-2026', title: 'Society Incident Occurrence & Investigation Ledger', category: 'Security Desk', date: 'Year-to-Date 2026', size: '1.1 MB PDF', records: '32 Logged Incidents' },
+  ]);
+
+  // 12. Audit Logs
   const [auditLogsList] = useState([
     { id: 'LOG-8812', user: 'Ramesh Chandra (Treasurer)', action: 'Updated maintenance billing formula to ₹3.50/sq.ft + 18% GST', timestamp: 'Today 11:30 AM', ip: '192.168.1.45' },
     { id: 'LOG-8811', user: 'Vikram Singh (Guard)', action: 'Logged Blinkit delivery entry pass for Flat B-108', timestamp: 'Today 11:20 AM', ip: '192.168.1.102' },
@@ -367,9 +378,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     { id: 'incident_mgmt', label: 'Incident Investigation Desk', icon: AlertTriangle, badge: `${incidentsList.filter(i => i.status !== 'Resolved').length} Open`, badgeColor: 'bg-rose-100 text-rose-800' },
     { id: 'emergency_mgmt', label: 'Emergency Protocols & Drills', icon: Flame },
     { id: 'staff_vendor', label: 'Staff & Vendor Credentials', icon: Building2, badge: `${vendorList.length} AMC Firms`, badgeColor: 'bg-slate-100 text-slate-700 font-bold' },
+    { id: 'view_reports', label: 'Official Society Reports', icon: FileText, badge: `${societyReportsList.length} Reports`, badgeColor: 'bg-emerald-100 text-emerald-800 font-bold' },
+    { id: 'analytics', label: 'Executive Analytics Suite', icon: TrendingUp },
     { id: 'audit_logs', label: 'Audit Trail & Access Logs', icon: Shield },
     { id: 'community_config', label: 'Community Bylaw & Formula', icon: Settings },
-    { id: 'analytics', label: 'Society Analytics Suite', icon: TrendingUp },
   ];
 
   return (
@@ -471,24 +483,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
             <button
               onClick={() => {
-                setActivePage('staff_vendor');
-                setVendorSubTab('issue_pass');
+                setActivePage('view_reports');
               }}
               className="w-full p-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
-              <Key className="w-4 h-4 text-amber-400" />
-              <span>+ Issue Staff Digital Pass</span>
+              <FileText className="w-4 h-4 text-emerald-400" />
+              <span>Download Society Reports</span>
             </button>
 
             <button
               onClick={() => {
-                setActivePage('manage_residents');
-                setResidentSubTab('onboard');
+                setActivePage('analytics');
               }}
               className="w-full p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl flex items-center justify-center gap-2 border border-slate-200 transition-transform active:scale-95 cursor-pointer"
             >
-              <UserPlus className="w-4 h-4 text-indigo-600" />
-              <span>+ Onboard Resident</span>
+              <TrendingUp className="w-4 h-4 text-indigo-600" />
+              <span>View Live Analytics</span>
             </button>
           </div>
 
@@ -1505,7 +1515,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 7. MAINTENANCE & AMC ASSET TRACKER */}
-          {/* ========================================================================= */}
           {activePage === 'maintenance_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1531,7 +1540,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 8. GATE VISITOR MANAGEMENT LOGS */}
-          {/* ========================================================================= */}
           {activePage === 'visitor_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1572,7 +1580,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 9. INCIDENT INVESTIGATION DESK */}
-          {/* ========================================================================= */}
           {activePage === 'incident_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1612,7 +1619,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 10. EMERGENCY MANAGEMENT & DRILLS */}
-          {/* ========================================================================= */}
           {activePage === 'emergency_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1652,7 +1658,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 11. UPGRADED: STAFF & VENDOR CREDENTIALS CONSOLE */}
+          {/* 11. STAFF & VENDOR CREDENTIALS CONSOLE */}
           {/* ========================================================================= */}
           {activePage === 'staff_vendor' && (
             <div className="space-y-6 animate-fade-in">
@@ -1939,7 +1945,86 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 12. AUDIT LOGS */}
+          {/* 12. NEW: OFFICIAL SOCIETY REPORTS CENTER */}
+          {/* ========================================================================= */}
+          {activePage === 'view_reports' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Official Society Reports & Export Ledger</h2>
+                    <p className="text-xs text-slate-500 mt-1">Generate, view, and export official financial, KYC, gate visitor, and maintenance statements</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => alert('Generating society-wide comprehensive audit archive package (ZIP)...')}
+                  className="px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs shadow-md flex items-center gap-2 cursor-pointer transition-transform active:scale-95"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export All Statements (ZIP)</span>
+                </button>
+              </div>
+
+              {/* Reports Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {societyReportsList.map(rep => (
+                  <div key={rep.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <span className="font-mono font-bold text-xs text-slate-400">{rep.id}</span>
+                        <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
+                          {rep.category}
+                        </span>
+                      </div>
+
+                      <h3 className="font-black text-base text-slate-900">{rep.title}</h3>
+                      
+                      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex justify-between text-xs text-slate-600">
+                        <span>Period: <strong>{rep.date}</strong></span>
+                        <span>Scope: <strong>{rep.records}</strong></span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
+                      <span className="text-slate-400 font-mono">{rep.size}</span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => alert(`Exporting ${rep.title} as PDF...`)}
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>PDF</span>
+                        </button>
+                        <button
+                          onClick={() => alert(`Exporting ${rep.title} as Excel CSV...`)}
+                          className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FileSpreadsheet className="w-3.5 h-3.5" />
+                          <span>Excel</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 13. EXECUTIVE ANALYTICS SUITE */}
+          {/* ========================================================================= */}
+          {activePage === 'analytics' && (
+            <div className="space-y-6 animate-fade-in">
+              <AnalyticsDashboard />
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 14. AUDIT LOGS */}
           {/* ========================================================================= */}
           {activePage === 'audit_logs' && (
             <div className="space-y-6 animate-fade-in">
@@ -1961,7 +2046,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 13. COMMUNITY CONFIGURATION */}
+          {/* 15. COMMUNITY CONFIGURATION */}
           {/* ========================================================================= */}
           {activePage === 'community_config' && (
             <div className="space-y-6 animate-fade-in">
@@ -1984,15 +2069,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* 14. SOCIETY ANALYTICS SUITE */}
-          {/* ========================================================================= */}
-          {activePage === 'analytics' && (
-            <div className="space-y-6 animate-fade-in">
-              <AnalyticsDashboard />
             </div>
           )}
 
