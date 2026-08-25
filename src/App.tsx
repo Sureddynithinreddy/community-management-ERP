@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, Smartphone, LayoutDashboard, ArrowRight, TreePine, Sparkles, ChevronRight, Check
+  ShieldCheck, Smartphone, LayoutDashboard, ArrowRight, Sparkles, ChevronRight, Check,
+  Building2, Users, Receipt, Shield, Package, Car, KeyRound, CheckCircle2,
+  Lock, Eye, ArrowUpRight, Radio, Flame, Calendar, Wrench, Megaphone,
+  UserCheck, AlertCircle, Compass, HelpCircle
 } from 'lucide-react';
 import { ResidentPortal } from './components/ResidentPortal';
 import { SecurityPortal } from './components/SecurityPortal';
@@ -13,63 +16,67 @@ export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<ActivePortalView>('gateway');
 
   return (
-    <div className="min-h-screen bg-[#F6F3EC] text-[#172D25] font-sans antialiased selection:bg-[#627636] selection:text-white flex flex-col justify-between relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8F9FA] text-slate-800 font-sans antialiased selection:bg-[#0F172A] selection:text-white flex flex-col justify-between relative overflow-x-hidden">
       
-      {/* Background Ambient Glow Lights */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-tr from-[#9DBEB2]/30 via-[#E4EFEA]/40 to-[#627636]/20 blur-[140px] pointer-events-none rounded-full z-0" />
-      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-[#1C352C]/5 blur-[120px] pointer-events-none rounded-full z-0" />
+      {/* Background Ambient Subtle Gradients */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-gradient-to-b from-indigo-100/40 via-slate-100/30 to-transparent blur-[120px] pointer-events-none rounded-full z-0" />
+      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-emerald-100/20 blur-[140px] pointer-events-none rounded-full z-0" />
 
       <div className="relative z-10">
+        
         {/* ========================================================================= */}
         {/* TOP HEADER - Rendered ONLY on Gateway View */}
         {/* ========================================================================= */}
         {activeView === 'gateway' && (
-          <header className="bg-[#1C352C]/95 backdrop-blur-md text-white px-6 sm:px-12 py-5 shadow-xl border-b border-[#2A4C3F]">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 sm:px-12 py-4 sticky top-0 z-30 shadow-xs">
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
               
               {/* Logo Badge */}
               <div 
                 onClick={() => setActiveView('gateway')}
                 className="flex items-center gap-3.5 cursor-pointer group"
               >
-                <div className="w-10 h-10 rounded-full bg-[#F6F3EC] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                  <div className="w-4 h-4 rounded-full bg-[#1C352C]" />
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-950 p-0.5 shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-white font-black text-xl">
+                    <span>🏢</span>
+                  </div>
                 </div>
                 <div>
-                  <span className="serif-title text-2xl tracking-wide text-[#F6F3EC] block leading-none">
-                    Green Haven
+                  <span className="font-black text-xl tracking-tight text-slate-900 block leading-none">
+                    ASBL Springs
                   </span>
-                  <span className="text-[10px] font-sans uppercase font-bold tracking-widest text-[#9DBEB2] block mt-0.5">
-                    Sanctuary ERP System
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 block mt-0.5">
+                    Pocharam • Enterprise Community ERP
                   </span>
                 </div>
               </div>
 
               {/* Direct Portal Jump Links */}
-              <nav className="hidden md:flex items-center gap-8 text-xs sm:text-sm serif-title tracking-widest text-[#E4EFEA]">
+              <nav className="hidden md:flex items-center gap-2 text-xs font-bold text-slate-600">
                 <button
                   onClick={() => setActiveView('resident_portal')}
-                  className="hover:text-[#9DBEB2] transition-colors py-1 hover:border-b-2 border-[#627636]"
+                  className="px-3.5 py-2 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
                 >
-                  1. RESIDENTS PORTAL
+                  1. Residents Portal
                 </button>
                 <button
                   onClick={() => setActiveView('guard_portal')}
-                  className="hover:text-[#9DBEB2] transition-colors py-1 hover:border-b-2 border-[#627636]"
+                  className="px-3.5 py-2 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
                 >
-                  2. SECURITY PORTAL
+                  2. Security Portal
                 </button>
                 <button
                   onClick={() => setActiveView('admin_portal')}
-                  className="hover:text-[#9DBEB2] transition-colors py-1 hover:border-b-2 border-[#627636]"
+                  className="px-3.5 py-2 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
                 >
-                  3. ADMIN PORTAL
+                  3. Admin Portal
                 </button>
               </nav>
 
-              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#2A4C3F]/60 border border-[#9DBEB2]/30 text-xs font-bold text-[#9DBEB2]">
-                <span className="w-2 h-2 rounded-full bg-[#627636] animate-pulse" />
-                <span>3 PORTALS ONLINE</span>
+              {/* Status Badge */}
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>3 Portals Online & Synced</span>
               </div>
 
             </div>
@@ -82,180 +89,226 @@ export const App: React.FC = () => {
         {activeView === 'gateway' && (
           <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-12">
             
-            {/* ULTRA-MODERN HERO BANNER CARD */}
-            <div className="modern-hero-card p-8 sm:p-14 text-[#172D25] shadow-2xl relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* HERO BANNER CARD */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 sm:p-14 rounded-3xl shadow-xl relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               
+              {/* Background ambient glow */}
+              <div className="absolute -right-20 -top-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
               {/* Left Hero Details */}
-              <div className="lg:col-span-6 space-y-6 z-10">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1C352C] text-[#F6F3EC] text-xs font-semibold tracking-wider uppercase shadow-md">
-                  <Sparkles className="w-3.5 h-3.5 text-[#627636]" />
-                  Gated Community Operating System
+              <div className="lg:col-span-7 space-y-6 z-10">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-indigo-200 text-xs font-bold tracking-wide">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Next-Generation Gated Community Operating System</span>
                 </div>
 
-                <h1 className="serif-title text-4xl sm:text-6xl text-[#172D25] leading-[1.08] tracking-wide">
-                  Green Haven <br />
-                  <span className="italic font-normal">Sanctuary</span>
+                <h1 className="font-black text-4xl sm:text-6xl text-white leading-[1.08] tracking-tight">
+                  ASBL Springs <br />
+                  <span className="bg-gradient-to-r from-indigo-200 via-white to-emerald-200 bg-clip-text text-transparent">
+                    Community ERP
+                  </span>
                 </h1>
 
-                <p className="text-sm sm:text-base text-[#1C352C]/90 max-w-lg leading-relaxed font-medium">
-                  Welcome to Green Haven ERP. Experience unified digital living across Residents, Security Guards, and Management Committee Officers.
+                <p className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed font-medium">
+                  Welcome to ASBL Springs ERP. Unified digital infrastructure connecting <strong>250 Luxury Residences</strong>, <strong>24/7 Gate Security</strong>, and the <strong>RWA Management Committee</strong>.
                 </p>
 
                 {/* Hero Direct Action Buttons */}
-                <div className="pt-2 flex flex-wrap items-center gap-3.5">
+                <div className="pt-2 flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => setActiveView('resident_portal')}
-                    className="px-6 py-3.5 bg-[#627636] hover:bg-[#52632B] text-white serif-title text-xs tracking-widest rounded-xl shadow-xl transition-all transform hover:scale-105 hover:shadow-2xl"
+                    className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-black text-xs rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
                   >
-                    1. RESIDENTS PORTAL
+                    <Smartphone className="w-4 h-4 text-indigo-600" />
+                    <span>1. Residents Portal</span>
                   </button>
 
                   <button
                     onClick={() => setActiveView('guard_portal')}
-                    className="px-6 py-3.5 bg-[#1C352C] hover:bg-[#12241D] text-[#F6F3EC] serif-title text-xs tracking-widest rounded-xl shadow-md transition-all transform hover:scale-105"
+                    className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
                   >
-                    2. SECURITY PORTAL
+                    <ShieldCheck className="w-4 h-4 fill-slate-950" />
+                    <span>2. Security Portal</span>
                   </button>
 
                   <button
                     onClick={() => setActiveView('admin_portal')}
-                    className="px-6 py-3.5 bg-[#627636] hover:bg-[#52632B] text-white serif-title text-xs tracking-widest rounded-xl shadow-md transition-all transform hover:scale-105"
+                    className="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
                   >
-                    3. ADMIN PORTAL
+                    <Building2 className="w-4 h-4" />
+                    <span>3. Admin Portal</span>
                   </button>
                 </div>
               </div>
 
-              {/* Right Greenhouse Graphic */}
-              <div className="lg:col-span-6 flex justify-center items-center z-10">
-                <div className="w-full max-w-md bg-[#F6F3EC]/50 p-6 rounded-3xl border border-[#1C352C]/20 backdrop-blur-md shadow-2xl">
-                  <svg viewBox="0 0 500 320" className="w-full h-auto drop-shadow-lg">
-                    <rect x="10" y="10" width="480" height="300" rx="16" fill="#C8DDD5" opacity="0.6" />
-                    <line x1="20" y1="280" x2="480" y2="280" stroke="#172D25" strokeWidth="3" />
-                    <path d="M 120 280 L 120 140 L 250 70 L 380 140 L 380 280 Z" fill="none" stroke="#FFFFFF" strokeWidth="4" />
-                    <line x1="250" y1="70" x2="250" y2="280" stroke="#FFFFFF" strokeWidth="3" />
-                    <line x1="120" y1="140" x2="380" y2="140" stroke="#FFFFFF" strokeWidth="3" />
-                    <path d="M 210 280 L 210 180 Q 250 160 290 180 L 290 280" fill="#1C352C" opacity="0.18" stroke="#FFFFFF" strokeWidth="3" />
-                    <path d="M 140 280 Q 130 200 170 170 Q 180 230 160 280 Z" fill="#1C352C" />
-                    <path d="M 170 280 Q 200 190 240 180 Q 210 240 190 280 Z" fill="#627636" />
-                    <path d="M 360 280 Q 370 190 320 160 Q 310 230 340 280 Z" fill="#1C352C" />
-                    <path d="M 330 280 Q 290 180 260 190 Q 290 240 310 280 Z" fill="#627636" />
-                    <polygon points="410,280 405,250 435,250 430,280" fill="#627636" />
-                    <path d="M 420 250 Q 400 210 420 190 Q 440 210 420 250 Z" fill="#1C352C" />
-                  </svg>
+              {/* Right Telemetry Box */}
+              <div className="lg:col-span-5 flex justify-center items-center z-10">
+                <div className="w-full bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl space-y-4 text-xs text-white">
+                  <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                    <span className="font-bold text-slate-200">Society Live Telemetry</span>
+                    <span className="bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded text-[10px]">Real-Time Active</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3.5 bg-black/20 rounded-2xl border border-white/10">
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Community Scale</span>
+                      <span className="font-black text-lg text-white">250 Flats</span>
+                      <span className="text-[10px] text-slate-300 block">740 Residents</span>
+                    </div>
+
+                    <div className="p-3.5 bg-black/20 rounded-2xl border border-white/10">
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Security On Duty</span>
+                      <span className="font-black text-lg text-emerald-300">8 Guards</span>
+                      <span className="text-[10px] text-slate-300 block">Gate 1 & Gate 2</span>
+                    </div>
+
+                    <div className="p-3.5 bg-black/20 rounded-2xl border border-white/10">
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase">August Dues</span>
+                      <span className="font-black text-lg text-amber-300">₹ 14.8 L</span>
+                      <span className="text-[10px] text-slate-300 block">92% Collected</span>
+                    </div>
+
+                    <div className="p-3.5 bg-black/20 rounded-2xl border border-white/10">
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase">ANPR AI Camera</span>
+                      <span className="font-black text-lg text-indigo-300">100% OCR</span>
+                      <span className="text-[10px] text-slate-300 block">Boom Automated</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
             </div>
 
-            {/* THE 3 PORTAL CARDS - Modern Glassmorphism */}
-            <div>
-              <div className="text-center max-w-xl mx-auto space-y-2 mb-10">
-                <span className="text-xs font-bold text-[#627636] uppercase tracking-wider block">
-                  Select System Entrance
+            {/* THE 3 PORTAL CARDS - Modern Desktop ERP Gateway */}
+            <div className="space-y-6">
+              <div className="text-center max-w-xl mx-auto space-y-2">
+                <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest block">
+                  Select User Gateway
                 </span>
-                <h2 className="serif-title text-3xl sm:text-4xl text-[#172D25] tracking-wide">
-                  Choose Your Portal Access
+                <h2 className="font-black text-3xl sm:text-4xl text-slate-900 tracking-tight">
+                  Choose Your Dedicated Portal
                 </h2>
-                <p className="text-xs text-[#1C352C]/80 font-medium">
-                  Each portal contains a full sidebar navigation for all features listed in your specification.
+                <p className="text-xs text-slate-500 font-medium">
+                  Experience seamless pair programming and community management across all three integrated systems.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                {/* 1. ADMIN PORTAL CARD */}
-                <div className="modern-card p-8 space-y-6 flex flex-col justify-between group">
+                {/* 1. RESIDENTS PORTAL CARD */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between space-y-6 group">
                   <div className="space-y-4">
-                    <div className="w-13 h-13 rounded-2xl bg-[#1C352C] text-[#F6F3EC] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform p-3">
-                      <LayoutDashboard className="w-6 h-6 text-[#9DBEB2]" />
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                      <Smartphone className="w-7 h-7" />
                     </div>
 
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#627636] block">
-                        Management Hub
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 block">
+                        Resident Living Suite
                       </span>
-                      <h3 className="serif-title text-2xl text-[#172D25] mt-0.5">Admin Portal</h3>
+                      <h3 className="font-black text-2xl text-slate-900 mt-0.5">Residents Portal</h3>
                     </div>
 
-                    <p className="text-xs text-[#1C352C]/90 leading-relaxed font-medium">
-                      Manage guards, residents, view reports, analytics, visitor/incident/emergency mgmt, amenity/maintenance, billing & audit logs.
+                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                      Pay maintenance bills, approve Blinkit/Swiggy deliveries & cabs, raise complaints, book amenities, browse 13 helper categories, view notices, and manage your resident profile.
                     </p>
 
-                    <div className="bg-[#F6F3EC] p-3 rounded-xl border border-[#DED8C8] text-[11px] font-mono text-[#172D25]">
-                      🔑 Dummy: treasurer.rwa@greenhaven.org
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setActiveView('admin_portal')}
-                    className="w-full py-4 bg-[#627636] hover:bg-[#52632B] text-white serif-title text-xs tracking-widest rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 transform group-hover:scale-[1.02]"
-                  >
-                    <span>SIGN IN TO ADMIN PORTAL</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* 2. RESIDENTS PORTAL CARD */}
-                <div className="modern-card p-8 space-y-6 flex flex-col justify-between group">
-                  <div className="space-y-4">
-                    <div className="w-13 h-13 rounded-2xl bg-[#1C352C] text-[#F6F3EC] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform p-3">
-                      <Smartphone className="w-6 h-6 text-[#9DBEB2]" />
-                    </div>
-
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#627636] block">
-                        Resident Hub
-                      </span>
-                      <h3 className="serif-title text-2xl text-[#172D25] mt-0.5">Residents Portal</h3>
-                    </div>
-
-                    <p className="text-xs text-[#1C352C]/90 leading-relaxed font-medium">
-                      Paying bills, approve visitors, raise complaints, book anything (court), view announcements and events.
-                    </p>
-
-                    <div className="bg-[#F6F3EC] p-3 rounded-xl border border-[#DED8C8] text-[11px] font-mono text-[#172D25]">
-                      🔑 Dummy: ananya.a402@greenhaven.org
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Demo Profile:</span>
+                        <span className="font-bold text-slate-900">Ananya Sharma (Flat B-108)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Fast Passcode:</span>
+                        <span className="font-mono font-bold text-indigo-600">OTP 892-104</span>
+                      </div>
                     </div>
                   </div>
 
                   <button
                     onClick={() => setActiveView('resident_portal')}
-                    className="w-full py-4 bg-[#1C352C] hover:bg-[#12241D] text-white serif-title text-xs tracking-widest rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 transform group-hover:scale-[1.02]"
+                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer transform group-hover:scale-[1.02]"
                   >
-                    <span>SIGN IN TO RESIDENTS PORTAL</span>
+                    <span>LAUNCH RESIDENTS PORTAL</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
-                {/* 3. SECURITY PORTAL CARD */}
-                <div className="modern-card p-8 space-y-6 flex flex-col justify-between group">
+                {/* 2. SECURITY GUARD PORTAL CARD */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between space-y-6 group">
                   <div className="space-y-4">
-                    <div className="w-13 h-13 rounded-2xl bg-[#1C352C] text-[#F6F3EC] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform p-3">
-                      <ShieldCheck className="w-6 h-6 text-[#9DBEB2]" />
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                      <ShieldCheck className="w-7 h-7" />
                     </div>
 
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#627636] block">
-                        Security Desk Hub
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 block">
+                        Gate Control & Security Desk
                       </span>
-                      <h3 className="serif-title text-2xl text-[#172D25] mt-0.5">Security Portal</h3>
+                      <h3 className="font-black text-2xl text-slate-900 mt-0.5">Security Portal</h3>
                     </div>
 
-                    <p className="text-xs text-[#1C352C]/90 leading-relaxed font-medium">
-                      Check in/out visitors, log deliveries, vehicle management, resident verification, emergency SOS, incident reporting, lost & found.
+                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                      Check-in/out visitors, print gate badges, ANPR AI license plate scanner, manage gate parcel lockers (including cold storage), resident verification, and emergency SOS dispatch.
                     </p>
 
-                    <div className="bg-[#F6F3EC] p-3 rounded-xl border border-[#DED8C8] text-[11px] font-mono text-[#172D25]">
-                      🔑 Dummy: vikram.gate1@greenhaven.org
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Duty Officer:</span>
+                        <span className="font-bold text-slate-900">Guard Vikram Singh</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Barrier Station:</span>
+                        <span className="font-bold text-emerald-700">Gate 1 Main Boom</span>
+                      </div>
                     </div>
                   </div>
 
                   <button
                     onClick={() => setActiveView('guard_portal')}
-                    className="w-full py-4 bg-[#627636] hover:bg-[#52632B] text-white serif-title text-xs tracking-widest rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 transform group-hover:scale-[1.02]"
+                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer transform group-hover:scale-[1.02]"
                   >
-                    <span>SIGN IN TO SECURITY PORTAL</span>
+                    <span>LAUNCH SECURITY PORTAL</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* 3. ADMIN MANAGEMENT COMMITTEE PORTAL CARD */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between space-y-6 group">
+                  <div className="space-y-4">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                      <Building2 className="w-7 h-7" />
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 block">
+                        Management Committee Hub
+                      </span>
+                      <h3 className="font-black text-2xl text-slate-900 mt-0.5">Admin Portal</h3>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                      Manage 8 security guards & shift rosters, resident flat directory, automated monthly billing engine, push society notices, approve banquet bookings, and monitor AMC assets.
+                    </p>
+
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Council Officer:</span>
+                        <span className="font-bold text-slate-900">Ramesh Chandra (President)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Governance:</span>
+                        <span className="font-bold text-indigo-700">RWA Committee 2025-27</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setActiveView('admin_portal')}
+                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer transform group-hover:scale-[1.02]"
+                  >
+                    <span>LAUNCH ADMIN PORTAL</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -285,8 +338,11 @@ export const App: React.FC = () => {
 
       {/* FOOTER */}
       {activeView === 'gateway' && (
-        <footer className="bg-[#1C352C] text-[#F6F3EC] py-8 text-center text-xs serif-title tracking-wider border-t border-[#2A4C3F] mt-16">
-          Green Haven Eco-Sanctuary • Gated Community 3-Portal System
+        <footer className="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 font-medium mt-16">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>ASBL Springs, Pocharam • Integrated Gated Community ERP Operating System</span>
+            <span className="font-mono text-slate-400">Version 3.4.0 • Enterprise Cloud Synced ✓</span>
+          </div>
         </footer>
       )}
 
