@@ -6,7 +6,7 @@ import {
   Clock, DollarSign, Check, ChevronRight, Sparkles, Filter, Phone, Mail, MapPin, Eye, Zap, ShieldAlert, X, Trash2, Send, AlertCircle, Key, Lock, QrCode, Menu, LogOut,
   BarChart3, RefreshCw, BadgeCheck, Bell, Smartphone, ArrowUpRight, CheckSquare,
   HelpCircle, CreditCard, PieChart, Activity, UserPlus, Car, Home, Layers,
-  PhoneCall, ShieldQuestion
+  PhoneCall, ShieldQuestion, Briefcase, FileCheck, Award, Printer
 } from 'lucide-react';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 
@@ -48,6 +48,20 @@ interface ResidentRecord {
   helpersCount: number;
 }
 
+interface StaffCredential {
+  id: string;
+  name: string;
+  company: string;
+  role: string;
+  mobile: string;
+  username: string;
+  passCode: string;
+  gateAccess: string;
+  status: 'Active Credentials' | 'Revoked / Suspended';
+  aadhaar: string;
+  validTill: string;
+}
+
 export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
   const [activePage, setActivePage] = useState<AdminPageId>('dashboard');
 
@@ -57,6 +71,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<'ALL' | 'Owner' | 'Tenant'>('ALL');
   const [selectedDuesFilter, setSelectedDuesFilter] = useState<'ALL' | 'Due' | 'Paid'>('ALL');
   const [selectedResidentDetail, setSelectedResidentDetail] = useState<ResidentRecord | null>(null);
+
+  // Staff & Vendor Sub-Tab State
+  const [vendorSubTab, setVendorSubTab] = useState<'contracts' | 'staff_passes' | 'issue_pass'>('contracts');
+  const [selectedStaffPassModal, setSelectedStaffPassModal] = useState<StaffCredential | null>(null);
 
   // New Resident Onboarding Form State
   const [newFlat, setNewFlat] = useState<string>('Flat B-302');
@@ -196,25 +214,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     { flat: 'Flat B-204', resident: 'Rohan Deshmukh', phone: '98990 11223', bhk: '2BHK', amount: '₹ 4,900', status: 'Paid', dueDate: '31 Aug 2026', receiptNo: 'GST-7711', mode: 'Credit Card (02 Aug)' },
   ]);
 
-  // 10. Staff & Vendor Credentials Console
+  // 10. UPGRADED: Staff & Vendor Credentials Console
   const [staffName, setStaffName] = useState<string>('Ramesh Pawar');
   const [staffCompany, setStaffCompany] = useState<string>('AquaClean Swimming Pool Services');
   const [staffRole, setStaffRole] = useState<string>('Pool Maintenance Supervisor');
-  const [staffMobile, setStaffMobile] = useState<string>('98123 99887');
+  const [staffMobile, setStaffMobile] = useState<string>('+91 98123 99887');
   const [staffAadhaar, setStaffAadhaar] = useState<string>('4012-9012-8841');
   const [staffGateAccess, setStaffGateAccess] = useState<string>('Gate 1 & Gate 2 Access');
 
-  const [staffCredentialsList, setStaffCredentialsList] = useState([
-    { id: 'STF-101', name: 'Ramesh Pawar', company: 'AquaClean Pool Services', role: 'Pool Maintenance Supervisor', mobile: '98123 99887', username: 'ramesh.aquaclean', passCode: 'GH-8921-X', gateAccess: 'Gate 1 & Gate 2', status: 'Active Credentials', aadhaar: 'VERIFIED ✓' },
-    { id: 'STF-098', name: 'Suresh Electrician', company: 'GreenHaven Facilities', role: 'Chief Electrician', mobile: '98765 00998', username: 'suresh.elec', passCode: 'GH-4102-Y', gateAccess: 'All Towers Access', status: 'Active Credentials', aadhaar: 'VERIFIED ✓' },
-    { id: 'STF-092', name: 'OTIS Technician Alok', company: 'OTIS Elevator Services', role: 'Elevator Maintenance Engineer', mobile: '98345 11223', username: 'alok.otis', passCode: 'GH-7711-Z', gateAccess: 'Tower A, B, C Lifts', status: 'Active Credentials', aadhaar: 'VERIFIED ✓' },
+  const [staffCredentialsList, setStaffCredentialsList] = useState<StaffCredential[]>([
+    { id: 'STF-101', name: 'Ramesh Pawar', company: 'AquaClean Pool Services', role: 'Pool Maintenance Supervisor', mobile: '+91 98123 99887', username: 'ramesh.aquaclean', passCode: 'GH-8921-X', gateAccess: 'Gate 1 & Gate 2 (Pool Deck)', status: 'Active Credentials', aadhaar: 'XXXX-XXXX-8841 (Verified ✓)', validTill: '31 Dec 2026' },
+    { id: 'STF-098', name: 'Suresh Electrician', company: 'GreenHaven Facilities', role: 'Chief Facilities Electrician', mobile: '+91 98765 00998', username: 'suresh.elec', passCode: 'GH-4102-Y', gateAccess: 'All Towers & Substation', status: 'Active Credentials', aadhaar: 'XXXX-XXXX-9908 (Verified ✓)', validTill: '31 Dec 2026' },
+    { id: 'STF-092', name: 'OTIS Technician Alok', company: 'OTIS Elevator Services', role: 'Elevator Maintenance Engineer', mobile: '+91 98345 11223', username: 'alok.otis', passCode: 'GH-7711-Z', gateAccess: 'Tower A, B, C Lift Motor Rooms', status: 'Active Credentials', aadhaar: 'XXXX-XXXX-1123 (Verified ✓)', validTill: '15 Jan 2027' },
+    { id: 'STF-088', name: 'Sunita Devi', company: 'CleanPro Facility Housekeeping', role: 'Lead Housekeeper & Waste Lead', mobile: '+91 98765 33445', username: 'sunita.cleanpro', passCode: 'GH-3344-K', gateAccess: 'All Residential Corridors', status: 'Active Credentials', aadhaar: 'XXXX-XXXX-3345 (Verified ✓)', validTill: '30 Nov 2026' },
   ]);
 
   const [vendorList] = useState([
-    { name: 'OTIS Elevator Services Pvt Ltd', scope: 'Annual AMC for 6 Elevators (Towers A, B, C)', cost: '₹ 1,20,000 / year', status: 'Active (Valid till Jan 2027)' },
-    { name: 'GreenShield Security Agency', scope: '12 Security Guards (Round-the-clock 3 Shifts)', cost: '₹ 2,40,000 / month', status: 'Active (Valid till Dec 2026)' },
-    { name: 'CleanPro Housekeeping Services', scope: '8 Housekeeping Cleaners & Waste Management', cost: '₹ 95,000 / month', status: 'Active (Valid till Nov 2026)' },
-    { name: 'AquaClean Swimming Pool Services', scope: 'Daily Chemical Balancing & Pool Cleaning', cost: '₹ 25,000 / month', status: 'Active (Valid till Mar 2027)' },
+    { name: 'OTIS Elevator Services Pvt Ltd', scope: 'Annual Comprehensive AMC for 6 High-Speed Passenger Elevators (Towers A, B, C)', cost: '₹ 1,20,000 / year', status: 'Active (Valid till Jan 2027)', sla: '99.4% Uptime SLA', hotline: '+91 1800 220 847', engineers: '2 Dedicated Techs' },
+    { name: 'GreenShield Security Agency', scope: '12 Security Guards & Lead Supervisors (Round-the-clock 3 Shifts)', cost: '₹ 2,40,000 / month', status: 'Active (Valid till Dec 2026)', sla: '100% Post Coverage SLA', hotline: '+91 98123 45678', engineers: '12 Certified Guards' },
+    { name: 'CleanPro Housekeeping Services', scope: '8 Housekeeping Staff, Common Area Sanitization & Waste Management', cost: '₹ 95,000 / month', status: 'Active (Valid till Nov 2026)', sla: 'Daily Audit Score 98%', hotline: '+91 98222 11009', engineers: '8 Housekeepers' },
+    { name: 'AquaClean Swimming Pool Services', scope: 'Daily Chemical Balancing, Filtration Plant & Lifeguard Support', cost: '₹ 25,000 / month', status: 'Active (Valid till Mar 2027)', sla: 'Chlorine & pH Certified Daily', hotline: '+91 98111 33221', engineers: '1 Pool Specialist' },
   ]);
 
   // 11. Audit Logs
@@ -248,11 +267,39 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
   const handleIssueStaffCredentials = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!staffName || !staffMobile) return;
+
     const newId = `STF-${Math.floor(100 + Math.random() * 900)}`;
-    const username = `${staffName.toLowerCase().split(' ')[0]}.${staffCompany.toLowerCase().split(' ')[0]}`;
+    const username = `${staffName.toLowerCase().replace(/\s+/g, '.')}.${staffCompany.toLowerCase().split(' ')[0]}`;
     const passCode = `GH-${Math.floor(1000 + Math.random() * 9000)}-PASS`;
-    setStaffCredentialsList([{ id: newId, name: staffName, company: staffCompany, role: staffRole, mobile: staffMobile, username: username, passCode: passCode, gateAccess: staffGateAccess, status: 'Active Credentials', aadhaar: 'VERIFIED ✓' }, ...staffCredentialsList]);
-    alert(`Credentials issued for ${staffName}!`);
+    
+    const newStaff: StaffCredential = {
+      id: newId,
+      name: staffName,
+      company: staffCompany,
+      role: staffRole,
+      mobile: staffMobile,
+      username: username,
+      passCode: passCode,
+      gateAccess: staffGateAccess,
+      status: 'Active Credentials',
+      aadhaar: `${staffAadhaar} (Verified ✓)`,
+      validTill: '31 Dec 2026'
+    };
+
+    setStaffCredentialsList([newStaff, ...staffCredentialsList]);
+    setVendorSubTab('staff_passes');
+    alert(`DIGITAL PASS ISSUED ✓\nCredentials activated for ${staffName} (${staffCompany}). Access Token: ${passCode}`);
+  };
+
+  const handleToggleStaffCredentials = (id: string) => {
+    setStaffCredentialsList(prev => prev.map(s => {
+      if (s.id === id) {
+        const nextStatus = s.status === 'Active Credentials' ? 'Revoked / Suspended' : 'Active Credentials';
+        return { ...s, status: nextStatus };
+      }
+      return s;
+    }));
   };
 
   const handleIssueCustomBill = (e: React.FormEvent) => {
@@ -319,7 +366,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     { id: 'visitor_mgmt', label: 'Gate Visitor Management', icon: UserCheck },
     { id: 'incident_mgmt', label: 'Incident Investigation Desk', icon: AlertTriangle, badge: `${incidentsList.filter(i => i.status !== 'Resolved').length} Open`, badgeColor: 'bg-rose-100 text-rose-800' },
     { id: 'emergency_mgmt', label: 'Emergency Protocols & Drills', icon: Flame },
-    { id: 'staff_vendor', label: 'Staff & Vendor Credentials', icon: Building2 },
+    { id: 'staff_vendor', label: 'Staff & Vendor Credentials', icon: Building2, badge: `${vendorList.length} AMC Firms`, badgeColor: 'bg-slate-100 text-slate-700 font-bold' },
     { id: 'audit_logs', label: 'Audit Trail & Access Logs', icon: Shield },
     { id: 'community_config', label: 'Community Bylaw & Formula', icon: Settings },
     { id: 'analytics', label: 'Society Analytics Suite', icon: TrendingUp },
@@ -424,23 +471,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
             <button
               onClick={() => {
-                setActivePage('manage_residents');
-                setResidentSubTab('onboard');
+                setActivePage('staff_vendor');
+                setVendorSubTab('issue_pass');
               }}
               className="w-full p-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
-              <UserPlus className="w-4 h-4" />
-              <span>+ Onboard New Resident</span>
+              <Key className="w-4 h-4 text-amber-400" />
+              <span>+ Issue Staff Digital Pass</span>
             </button>
 
             <button
               onClick={() => {
-                setActivePage('notices');
+                setActivePage('manage_residents');
+                setResidentSubTab('onboard');
               }}
               className="w-full p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl flex items-center justify-center gap-2 border border-slate-200 transition-transform active:scale-95 cursor-pointer"
             >
-              <Megaphone className="w-4 h-4 text-indigo-600" />
-              <span>+ Post Society Notice</span>
+              <UserPlus className="w-4 h-4 text-indigo-600" />
+              <span>+ Onboard Resident</span>
             </button>
           </div>
 
@@ -781,7 +829,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 3. UPGRADED: MANAGE RESIDENTS & FLATS DIRECTORY */}
+          {/* 3. MANAGE RESIDENTS & FLATS DIRECTORY */}
           {/* ========================================================================= */}
           {activePage === 'manage_residents' && (
             <div className="space-y-6 animate-fade-in">
@@ -1604,26 +1652,289 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 11. STAFF & VENDOR CREDENTIALS */}
+          {/* 11. UPGRADED: STAFF & VENDOR CREDENTIALS CONSOLE */}
           {/* ========================================================================= */}
           {activePage === 'staff_vendor' && (
             <div className="space-y-6 animate-fade-in">
-              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <span className="font-black text-xl text-slate-900 block">External Vendor AMC Contracts & Digital Credentials</span>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  {vendorList.map((v, idx) => (
-                    <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                      <div className="font-bold text-sm text-slate-900">{v.name}</div>
-                      <div className="text-slate-600">{v.scope}</div>
-                      <div className="font-mono font-bold text-indigo-700">{v.cost}</div>
-                      <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold inline-block mt-1">
-                        {v.status}
-                      </span>
-                    </div>
-                  ))}
+              
+              {/* Top Hero Banner */}
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Building2 className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Staff & Vendor Management Suite</h2>
+                    <p className="text-xs text-slate-500 mt-1">Manage external AMC contractor contracts, digital staff security passes, and gate access authorizations</p>
+                  </div>
+                </div>
+
+                {/* Sub-Tab Selector */}
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl text-xs font-bold gap-1 self-stretch sm:self-center">
+                  <button
+                    onClick={() => setVendorSubTab('contracts')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      vendorSubTab === 'contracts' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🏢 AMC Contracts ({vendorList.length})
+                  </button>
+
+                  <button
+                    onClick={() => setVendorSubTab('staff_passes')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      vendorSubTab === 'staff_passes' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    👷 Staff Passes ({staffCredentialsList.length})
+                  </button>
+
+                  <button
+                    onClick={() => setVendorSubTab('issue_pass')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      vendorSubTab === 'issue_pass' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ➕ Issue Access Pass
+                  </button>
                 </div>
               </div>
+
+              {/* 4 Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Active AMC Vendor Firms</span>
+                  <span className="text-2xl font-black text-slate-900">4 Agencies</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Registered Contractor Staff</span>
+                  <span className="text-2xl font-black text-indigo-600">28 Personnel</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Police & Aadhaar KYC</span>
+                  <span className="text-2xl font-black text-emerald-600">100% Verified</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Contractor Monthly Outflow</span>
+                  <span className="text-2xl font-black text-slate-900">₹ 4.80 L / mo</span>
+                </div>
+              </div>
+
+              {/* VIEW 1: AMC VENDOR CONTRACTS */}
+              {vendorSubTab === 'contracts' && (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {vendorList.map((v, idx) => (
+                      <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="font-black text-base text-slate-900 block">{v.name}</span>
+                              <span className="text-xs text-emerald-700 font-bold">{v.status}</span>
+                            </div>
+                            <span className="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                              {v.sla}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-slate-600 leading-relaxed pt-1">{v.scope}</p>
+
+                          <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
+                            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                              <span className="text-[10px] text-slate-400 block font-bold uppercase">Contract Rate</span>
+                              <span className="font-black text-slate-900">{v.cost}</span>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                              <span className="text-[10px] text-slate-400 block font-bold uppercase">Deployed Team</span>
+                              <span className="font-bold text-indigo-700">{v.engineers}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-xs">
+                          <span className="text-slate-500 font-medium font-mono">Hotline: {v.hotline}</span>
+                          <button
+                            onClick={() => alert(`Downloaded Official AMC Agreement PDF for ${v.name}`)}
+                            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-xl text-[11px] cursor-pointer"
+                          >
+                            Agreement PDF ↓
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 2: STAFF DIGITAL PASSES & CREDENTIALS */}
+              {vendorSubTab === 'staff_passes' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 animate-fade-in">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900">Contractor Staff Digital Passports</h3>
+                      <p className="text-xs text-slate-500">Active personnel passes with gate access zones, Aadhaar verification, and token revocations</p>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                          <th className="py-3">Staff ID & Name</th>
+                          <th className="py-3">Agency / Firm</th>
+                          <th className="py-3">Role / Trade</th>
+                          <th className="py-3">Gate Access Zone</th>
+                          <th className="py-3">Passcode Token</th>
+                          <th className="py-3">Status</th>
+                          <th className="py-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {staffCredentialsList.map(s => (
+                          <tr key={s.id} className="hover:bg-slate-50">
+                            <td className="py-3.5 font-bold text-slate-900">
+                              <div>{s.name}</div>
+                              <div className="text-[10px] text-slate-400 font-mono">{s.id} • {s.mobile}</div>
+                            </td>
+                            <td className="py-3.5 text-slate-700 font-medium">{s.company}</td>
+                            <td className="py-3.5 text-indigo-700 font-bold">{s.role}</td>
+                            <td className="py-3.5 text-slate-600">{s.gateAccess}</td>
+                            <td className="py-3.5 font-mono font-bold text-slate-900">{s.passCode}</td>
+                            <td className="py-3.5">
+                              <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                s.status === 'Active Credentials' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                              }`}>
+                                {s.status}
+                              </span>
+                            </td>
+                            <td className="py-3.5 text-right space-x-2">
+                              <button
+                                onClick={() => setSelectedStaffPassModal(s)}
+                                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-[11px] cursor-pointer"
+                              >
+                                View ID Badge
+                              </button>
+                              <button
+                                onClick={() => handleToggleStaffCredentials(s.id)}
+                                className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer ${
+                                  s.status === 'Active Credentials' ? 'text-rose-600 hover:bg-rose-50' : 'text-emerald-700 hover:bg-emerald-50'
+                                }`}
+                              >
+                                {s.status === 'Active Credentials' ? 'Revoke' : 'Activate'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 3: ISSUE ACCESS PASS FORM */}
+              {vendorSubTab === 'issue_pass' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div>
+                    <h3 className="font-black text-lg text-slate-900">Issue Contractor Digital Security Pass</h3>
+                    <p className="text-xs text-slate-500">Generate digital security pass with gate QR authorization and Aadhaar verification</p>
+                  </div>
+
+                  <form onSubmit={handleIssueStaffCredentials} className="space-y-6 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">1. Staff Full Name</label>
+                        <input
+                          type="text"
+                          required
+                          value={staffName}
+                          onChange={(e) => setStaffName(e.target.value)}
+                          placeholder="e.g. Ramesh Pawar"
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">2. Contractor Agency / Vendor</label>
+                        <select
+                          value={staffCompany}
+                          onChange={(e) => setStaffCompany(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        >
+                          <option value="AquaClean Swimming Pool Services">AquaClean Swimming Pool Services</option>
+                          <option value="OTIS Elevator Services Pvt Ltd">OTIS Elevator Services Pvt Ltd</option>
+                          <option value="GreenShield Security Agency">GreenShield Security Agency</option>
+                          <option value="CleanPro Facility Housekeeping">CleanPro Facility Housekeeping</option>
+                          <option value="GreenHaven Facilities Management">GreenHaven Facilities Management</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">3. Trade Role / Designation</label>
+                        <input
+                          type="text"
+                          required
+                          value={staffRole}
+                          onChange={(e) => setStaffRole(e.target.value)}
+                          placeholder="e.g. Pool Maintenance Supervisor"
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-medium focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">4. Mobile Number</label>
+                        <input
+                          type="tel"
+                          required
+                          value={staffMobile}
+                          onChange={(e) => setStaffMobile(e.target.value)}
+                          placeholder="e.g. +91 98123 99887"
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-mono font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">5. Aadhaar KYC Number</label>
+                        <input
+                          type="text"
+                          required
+                          value={staffAadhaar}
+                          onChange={(e) => setStaffAadhaar(e.target.value)}
+                          placeholder="e.g. 4012-9012-8841"
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-mono font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">6. Gate Access Zone Clearance</label>
+                        <select
+                          value={staffGateAccess}
+                          onChange={(e) => setStaffGateAccess(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        >
+                          <option value="Gate 1 & Gate 2 (Pool Deck)">Gate 1 & Gate 2 (Pool Deck)</option>
+                          <option value="All Towers & Substation">All Towers & Substation</option>
+                          <option value="Tower A, B, C Lift Motor Rooms">Tower A, B, C Lift Motor Rooms</option>
+                          <option value="All Residential Corridors">All Residential Corridors</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Key className="w-4 h-4 text-amber-400" />
+                      <span>Issue Digital Access Pass & Notify Gate Station</span>
+                    </button>
+                  </form>
+                </div>
+              )}
+
             </div>
           )}
 
@@ -1774,6 +2085,77 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
                 Reset App Password
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: CONTRACTOR DIGITAL ID BADGE MODAL */}
+      {/* ========================================================================= */}
+      {selectedStaffPassModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-6 shadow-2xl relative">
+            <button
+              onClick={() => setSelectedStaffPassModal(null)}
+              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Printable Digital ID Card */}
+            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl shadow-xl space-y-4 text-center relative overflow-hidden">
+              <div className="flex justify-between items-center border-b border-white/10 pb-3 text-left">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 block">
+                    ASBL Springs ERP
+                  </span>
+                  <span className="font-bold text-xs text-white">Authorized Contractor Pass</span>
+                </div>
+                <span className="bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded text-[10px]">
+                  ACTIVE PASS
+                </span>
+              </div>
+
+              <div className="w-20 h-20 mx-auto rounded-2xl bg-white/10 border-2 border-white/30 flex items-center justify-center text-4xl shadow-inner">
+                👷
+              </div>
+
+              <div>
+                <h4 className="font-black text-xl text-white">{selectedStaffPassModal.name}</h4>
+                <p className="text-xs text-indigo-200 font-medium">{selectedStaffPassModal.role}</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">{selectedStaffPassModal.company}</p>
+              </div>
+
+              <div className="bg-white/10 p-3 rounded-2xl border border-white/10 text-left space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Passcode:</span>
+                  <span className="font-mono font-bold text-amber-300">{selectedStaffPassModal.passCode}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Gate Zone:</span>
+                  <span className="font-bold text-white truncate max-w-[170px]">{selectedStaffPassModal.gateAccess}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Aadhaar KYC:</span>
+                  <span className="text-emerald-300 font-bold">Verified ✓</span>
+                </div>
+              </div>
+
+              <div className="pt-2 text-[10px] text-slate-400 font-mono">
+                Badge ID: {selectedStaffPassModal.id} • Valid Till: {selectedStaffPassModal.validTill}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                alert(`Security Pass for ${selectedStaffPassModal.name} sent to connected gate badge printer!`);
+                setSelectedStaffPassModal(null);
+              }}
+              className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print Physical Gate Badge</span>
+            </button>
           </div>
         </div>
       )}
