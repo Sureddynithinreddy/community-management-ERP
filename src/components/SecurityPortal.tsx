@@ -8,7 +8,7 @@ import {
   Lock, Eye, Shield, Users, Building2, MapPin, Truck, AlertOctagon, UserX,
   BadgeCheck, Hammer, Sparkle, Printer, Share2, ArrowUpRight, ShieldQuestion,
   Snowflake, Scan, Compass, ShieldBan, Tag, Siren, Volume2, VolumeX, ShieldQuestion as ShieldQ,
-  PhoneForwarded, Send
+  PhoneForwarded, Send, ArrowUp, ArrowDown, Key, CheckSquare, Sparkles as SparklesIcon
 } from 'lucide-react';
 import { SecurityAnalytics } from './SecurityAnalytics';
 
@@ -135,6 +135,21 @@ interface SosIncident {
   notes?: string;
 }
 
+interface LostFoundItem {
+  id: string;
+  title: string;
+  category: 'Keys & Smart Remotes' | 'Wallets & IDs' | 'Electronics' | 'Kids Toys & Bikes' | 'Personal Accessories';
+  loc: string;
+  date: string;
+  status: 'Unclaimed In Custody' | 'Claimed & Returned';
+  locker: string;
+  loggedBy: string;
+  photo: string;
+  claimedBy?: string;
+  claimedFlat?: string;
+  claimedDate?: string;
+}
+
 export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // Navigation State
   const [activeSection, setActiveSection] = useState<SecurityNavSection>('dashboard');
@@ -143,6 +158,10 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   const [visitorSubTab, setVisitorSubTab] = useState<'ledger' | 'checkin' | 'checkout' | 'preapproved'>('ledger');
   const [parcelSubTab, setParcelSubTab] = useState<'inventory' | 'log' | 'verify' | 'history'>('inventory');
   const [anprSubTab, setAnprSubTab] = useState<'scanner' | 'directory' | 'violations' | 'bays'>('scanner');
+  const [lostFoundSubTab, setLostFoundSubTab] = useState<'all' | 'unclaimed' | 'claimed' | 'log'>('all');
+
+  // Gate Boom Barrier Hardware Simulation
+  const [barrierState, setBarrierState] = useState<'LOWERED' | 'RAISED'>('LOWERED');
 
   // Offline Sync State
   const [isOffline, setIsOffline] = useState<boolean>(false);
@@ -155,6 +174,11 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   const [showOtpValidateModal, setShowOtpValidateModal] = useState<boolean>(false);
   const [otpToValidate, setOtpToValidate] = useState<string>('');
   const [otpValidationResult, setOtpValidationResult] = useState<string | null>(null);
+
+  // Handover Claim Modal for Lost & Found
+  const [claimingItem, setClaimingItem] = useState<LostFoundItem | null>(null);
+  const [claimResidentName, setClaimResidentName] = useState<string>('Ananya Sharma');
+  const [claimResidentFlat, setClaimResidentFlat] = useState<string>('Flat B-108');
 
   // Printable Visitor Badge Modal
   const [badgeVisitor, setBadgeVisitor] = useState<VisitorEntry | null>(null);
@@ -251,17 +275,17 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // =========================================================================
   // 2. EMERGENCY SOS CONSOLE & LIVE SIREN DISPATCH
   // =========================================================================
-  const [sosActiveSiren, setSosActiveSiren] = useState<boolean>(true);
+  const [sosActiveSiren, setSosActiveSiren] = useState<boolean>(false);
   const [activeSosIncident, setActiveSosIncident] = useState<SosIncident>({
     id: 'SOS-901',
     flat: 'Flat B-108',
     resident: 'Ananya Sharma',
     tower: 'Tower B (1st Floor)',
-    triggerTime: '11:46 AM (Just Now)',
-    status: 'Active Siren',
+    triggerTime: '11:46 AM',
+    status: 'Resolved',
     dispatchedOfficer: 'Guard Suresh (Patrol Unit 1)',
-    responseTime: '1 min 15s in progress',
-    notes: 'Resident triggered mobile panic button. Intercom ringing.'
+    responseTime: '1 min 15s',
+    notes: 'Resident verified safe. Test siren resolved.'
   });
 
   const [sosHistoryList, setSosHistoryList] = useState<SosIncident[]>([
@@ -416,13 +440,20 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   ]);
 
   // =========================================================================
-  // 9. LOST & FOUND REGISTER
+  // 9. UPGRADED: LOST & FOUND PROPERTY REGISTER (6 Comprehensive Entries)
   // =========================================================================
-  const [lostFoundList, setLostFoundList] = useState([
-    { id: 'LF-101', item: 'Hyundai Car Smart Key Ring', loc: 'Swimming Pool Deck', date: 'Today 09:30 AM', status: 'Unclaimed', photo: 'KEY-101.jpg' },
-    { id: 'LF-098', item: 'Child Blue Bicycle (Hero Sprint)', loc: 'Garden Play Area', date: '21 Aug 2026', status: 'Claimed by Flat B-201', photo: 'CYCLE-98.jpg' },
-    { id: 'LF-095', item: 'Leather Wallet with ID Cards', loc: 'Clubhouse Gym', date: '18 Aug 2026', status: 'Claimed by Flat C-301', photo: 'WALLET-95.jpg' },
-    { id: 'LF-091', item: 'Ray-Ban Aviator Sunglasses', loc: 'Tennis Court 1', date: '14 Aug 2026', status: 'Unclaimed', photo: 'SUNGLASS-91.jpg' },
+  const [lfTitle, setLfTitle] = useState<string>('');
+  const [lfCategory, setLfCategory] = useState<'Keys & Smart Remotes' | 'Wallets & IDs' | 'Electronics' | 'Kids Toys & Bikes' | 'Personal Accessories'>('Keys & Smart Remotes');
+  const [lfLoc, setLfLoc] = useState<string>('Clubhouse Swimming Pool Deck');
+  const [lfLocker, setLfLocker] = useState<string>('Security Locker LF-03');
+
+  const [lostFoundList, setLostFoundList] = useState<LostFoundItem[]>([
+    { id: 'LF-101', title: 'Hyundai Creta Smart Key Ring', category: 'Keys & Smart Remotes', loc: 'Swimming Pool Deck', date: 'Today 09:30 AM', status: 'Unclaimed In Custody', locker: 'Security Locker LF-01', loggedBy: 'Guard Vikram Singh', photo: 'KEY-101.jpg' },
+    { id: 'LF-102', title: 'Apple AirPods Pro (White Case)', category: 'Electronics', loc: 'Clubhouse Gym (Treadmill 2)', date: 'Today 08:15 AM', status: 'Unclaimed In Custody', locker: 'Security Locker LF-03', loggedBy: 'Guard Ramu', photo: 'AIRPOD-102.jpg' },
+    { id: 'LF-098', title: 'Child Blue Bicycle (Hero Sprint 20T)', category: 'Kids Toys & Bikes', loc: 'Garden Play Area', date: '21 Aug 2026', status: 'Claimed & Returned', locker: 'Main Gate Storage Bay', loggedBy: 'Guard Suresh', photo: 'CYCLE-98.jpg', claimedBy: 'Rohan Deshmukh', claimedFlat: 'Flat B-201', claimedDate: '22 Aug 2026' },
+    { id: 'LF-095', title: 'Brown Leather Wallet with Driving License', category: 'Wallets & IDs', loc: 'Clubhouse Badminton Court', date: '18 Aug 2026', status: 'Claimed & Returned', locker: 'Security Locker LF-02', loggedBy: 'Guard Vikram Singh', photo: 'WALLET-95.jpg', claimedBy: 'Suresh Menon', claimedFlat: 'Flat C-301', claimedDate: '19 Aug 2026' },
+    { id: 'LF-091', title: 'Ray-Ban Aviator Sunglasses (Gold Frame)', category: 'Personal Accessories', loc: 'Tennis Court 1', date: '14 Aug 2026', status: 'Claimed & Returned', locker: 'Security Locker LF-04', loggedBy: 'Guard Dinesh', photo: 'SUNGLASS-91.jpg', claimedBy: 'Pooja Hegde', claimedFlat: 'Flat A-104', claimedDate: '15 Aug 2026' },
+    { id: 'LF-089', title: 'Noise ColorFit Smartwatch (Black Strap)', category: 'Electronics', loc: 'Tower B Lift Lobby', date: '10 Aug 2026', status: 'Claimed & Returned', locker: 'Security Locker LF-02', loggedBy: 'Guard Vikram Singh', photo: 'WATCH-89.jpg', claimedBy: 'Rahul Sharma', claimedFlat: 'Flat B-108', claimedDate: '11 Aug 2026' },
   ]);
 
   // Handlers
@@ -591,6 +622,45 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
     }
   };
 
+  const handleLogLostFoundItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lfTitle) return;
+
+    const newId = `LF-${Math.floor(100 + Math.random() * 900)}`;
+    const newItem: LostFoundItem = {
+      id: newId,
+      title: lfTitle,
+      category: lfCategory,
+      loc: lfLoc,
+      date: 'Just Now',
+      status: 'Unclaimed In Custody',
+      locker: lfLocker,
+      loggedBy: 'Guard Vikram Singh',
+      photo: 'ITEM-FOUND.jpg'
+    };
+
+    setLostFoundList([newItem, ...lostFoundList]);
+    setLfTitle('');
+    setLostFoundSubTab('unclaimed');
+    alert(`FOUND PROPERTY LOGGED (${newId}) ✓\nSecured in ${lfLocker}. Notification posted on society board.`);
+  };
+
+  const handleProcessClaimHandover = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!claimingItem) return;
+
+    setLostFoundList(prev => prev.map(item => item.id === claimingItem.id ? {
+      ...item,
+      status: 'Claimed & Returned',
+      claimedBy: claimResidentName,
+      claimedFlat: claimResidentFlat,
+      claimedDate: 'Today Just Now'
+    } : item));
+
+    setClaimingItem(null);
+    alert(`HANDOVER COMPLETED ✓\nReturned ${claimingItem.title} to ${claimResidentName} (${claimResidentFlat}). Handover logged in security register.`);
+  };
+
   const handleDispatchPatrolToSos = () => {
     setActiveSosIncident(prev => ({
       ...prev,
@@ -615,6 +685,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   const insideCount = visitorRegister.filter(v => v.status === 'Inside').length;
   const awaitingParcelsCount = deliveryParcels.filter(p => p.status === 'Awaiting Pickup').length;
   const staffInsideCount = staffList.filter(s => s.status === 'Inside Society').length;
+  const unclaimedLfCount = lostFoundList.filter(i => i.status === 'Unclaimed In Custody').length;
+  const scannedPatrolCount = patrolPoints.filter(p => p.scanned).length;
 
   const navMenuItems = [
     { id: 'dashboard', label: 'Security Command Dashboard', icon: LayoutDashboard },
@@ -625,8 +697,8 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
     { id: 'staff', label: 'Daily Staff & Attendance', icon: Users, badge: `${staffInsideCount} Active`, badgeColor: 'bg-blue-100 text-blue-800 font-bold' },
     { id: 'sos', label: 'Emergency SOS Alarm Console', icon: Flame, badge: sosActiveSiren ? '🚨 SIREN ACTIVE' : undefined, badgeColor: 'bg-red-600 text-white animate-pulse' },
     { id: 'incidents', label: 'Incident Occurrence Book', icon: FileText },
-    { id: 'patrol', label: 'Guard QR Patrol Checkpoints', icon: MapPin },
-    { id: 'lostfound', label: 'Lost & Found Register', icon: Search },
+    { id: 'patrol', label: 'Guard QR Patrol Checkpoints', icon: MapPin, badge: `${scannedPatrolCount}/5 Done`, badgeColor: 'bg-slate-100 text-slate-700' },
+    { id: 'lostfound', label: 'Lost & Found Register', icon: Search, badge: `${unclaimedLfCount} In Locker`, badgeColor: 'bg-amber-100 text-amber-900 font-bold' },
     { id: 'analytics', label: 'Gate Traffic & Analytics', icon: BarChart3 },
   ];
 
@@ -836,10 +908,10 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
         <main className="flex-1 space-y-6">
           
           {/* ========================================================================= */}
-          {/* 1. COMMAND DASHBOARD */}
+          {/* 1. UPGRADED: SECURITY COMMAND DASHBOARD */}
           {/* ========================================================================= */}
           {activeSection === 'dashboard' && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-in">
               
               {/* Top Hero Gate Command Banner */}
               <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
@@ -848,8 +920,13 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                     <Shield className="w-8 h-8" />
                   </div>
                   <div>
-                    <h2 className="font-black text-2xl text-white">Security Command & Gate Control</h2>
-                    <p className="text-xs text-slate-300 mt-1">Real-time visitor check-ins, ANPR license plate recognition, and parcel locker management</p>
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-black text-2xl text-white">Security Command & Gate Operations</h2>
+                      <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                        Gate 1 Boom Active
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-1">Real-time visitor processing, ANPR neural plate OCR, parcel shelves, and emergency dispatch</p>
                   </div>
                 </div>
 
@@ -862,7 +939,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                     className="px-5 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
                   >
                     <UserPlus className="w-4 h-4 fill-slate-950" />
-                    <span>Quick Visitor Check-In</span>
+                    <span>+ Visitor Check-In</span>
                   </button>
 
                   <button
@@ -873,55 +950,181 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                     className="px-5 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
                   >
                     <Package className="w-4 h-4 text-indigo-600" />
-                    <span>Log Parcel</span>
+                    <span>Store Parcel</span>
                   </button>
                 </div>
               </div>
 
-              {/* 4 Stat Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <UserCheck className="w-6 h-6" />
+              {/* 6 Real-Time Telemetry Stat Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                
+                {/* 1. Visitors */}
+                <div 
+                  onClick={() => setActiveSection('visitors')}
+                  className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-medium text-slate-500">Visitors Inside</span>
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <UserCheck className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium text-slate-500">Visitors Inside</div>
-                    <div className="text-2xl font-black text-slate-900">{insideCount} People</div>
-                  </div>
+                  <div className="text-2xl font-black text-slate-900">{insideCount} People</div>
+                  <div className="text-[10px] text-emerald-600 font-bold">1 Delivery • 1 Guest</div>
                 </div>
 
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                    <Package className="w-6 h-6" />
+                {/* 2. Parcels */}
+                <div 
+                  onClick={() => setActiveSection('parcels')}
+                  className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-medium text-slate-500">Gate Shelf Parcels</span>
+                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <Package className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium text-slate-500">Gate Shelf Parcels</div>
-                    <div className="text-2xl font-black text-slate-900">{awaitingParcelsCount} Awaiting</div>
-                  </div>
+                  <div className="text-2xl font-black text-slate-900">{awaitingParcelsCount} Awaiting</div>
+                  <div className="text-[10px] text-indigo-600 font-bold">1 Cold Locker</div>
                 </div>
 
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                    <Users className="w-6 h-6" />
+                {/* 3. Flagged Vehicles */}
+                <div 
+                  onClick={() => setActiveSection('anpr')}
+                  className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-medium text-slate-500">Parking Citations</span>
+                    <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                      <Car className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium text-slate-500">Daily Staff Inside</div>
-                    <div className="text-2xl font-black text-slate-900">{staffInsideCount} Staff</div>
-                  </div>
+                  <div className="text-2xl font-black text-rose-600">{parkingViolationsList.length} Flagged</div>
+                  <div className="text-[10px] text-rose-600 font-bold">Ramp Blockage Alert</div>
                 </div>
 
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                    <Car className="w-6 h-6" />
+                {/* 4. Daily Staff */}
+                <div 
+                  onClick={() => setActiveSection('staff')}
+                  className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-medium text-slate-500">Staff on Duty</span>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Users className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium text-slate-500">Flagged Vehicles</div>
-                    <div className="text-2xl font-black text-rose-600">{parkingViolationsList.length} Flagged</div>
-                  </div>
+                  <div className="text-2xl font-black text-slate-900">{staffInsideCount} Staff</div>
+                  <div className="text-[10px] text-blue-600 font-bold">Aadhaar Verified</div>
                 </div>
+
+                {/* 5. Patrol */}
+                <div 
+                  onClick={() => setActiveSection('patrol')}
+                  className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-medium text-slate-500">Patrol Status</span>
+                    <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black text-slate-900">{scannedPatrolCount}/5 Done</div>
+                  <div className="text-[10px] text-purple-600 font-bold">Shift on Schedule</div>
+                </div>
+
+                {/* 6. Lost & Found */}
+                <div 
+                  onClick={() => setActiveSection('lostfound')}
+                  className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-medium text-slate-500">Lost & Found</span>
+                    <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                      <Search className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black text-amber-800">{unclaimedLfCount} In Locker</div>
+                  <div className="text-[10px] text-amber-700 font-bold">Smart Key & AirPods</div>
+                </div>
+
               </div>
 
-              {/* Today's Active Entries Ledger */}
+              {/* Interactive Barrier Control Strip & Live ANPR Stream Card */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Gate 1 Barrier Controls */}
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="font-extrabold text-sm text-slate-900 block">Gate 1 Main Boom Barrier</span>
+                      <span className="text-xs text-slate-500">Hardware Actuator Controller</span>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                      barrierState === 'RAISED' ? 'bg-emerald-100 text-emerald-800 animate-pulse' : 'bg-slate-100 text-slate-700'
+                    }`}>
+                      {barrierState === 'RAISED' ? 'BARRIER OPEN' : 'BARRIER DOWN'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <button
+                      onClick={() => {
+                        setBarrierState('RAISED');
+                        alert('GATE 1 BOOM BARRIER RAISED (OPEN) ✓');
+                      }}
+                      className={`p-4 rounded-2xl font-bold text-xs flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        barrierState === 'RAISED' ? 'bg-emerald-600 text-white shadow-md' : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
+                      }`}
+                    >
+                      <ArrowUp className="w-5 h-5" />
+                      <span>Raise Barrier</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setBarrierState('LOWERED');
+                        alert('GATE 1 BOOM BARRIER LOWERED (CLOSED) ✓');
+                      }}
+                      className={`p-4 rounded-2xl font-bold text-xs flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        barrierState === 'LOWERED' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
+                      }`}
+                    >
+                      <ArrowDown className="w-5 h-5" />
+                      <span>Lower Barrier</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live ANPR Camera Stream Mini */}
+                <div className="lg:col-span-2 bg-slate-900 text-white p-6 rounded-3xl shadow-md flex flex-col justify-between space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                      <span className="font-bold text-xs uppercase tracking-widest text-emerald-400">Live ANPR OCR Camera Feed</span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 font-mono">CAM 1 • Entry Lane</span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Latest Plate Captured</span>
+                      <span className="font-mono font-black text-xl text-white tracking-widest">KA-03-MB-4921</span>
+                      <div className="text-[11px] text-emerald-400 mt-0.5">Whitelisted Resident • Flat B-108 (Ananya Sharma)</div>
+                    </div>
+
+                    <button
+                      onClick={() => setActiveSection('anpr')}
+                      className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs cursor-pointer"
+                    >
+                      Open Full ANPR Scanner →
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Today's Active Gate Activity Log */}
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
                   <div>
@@ -1379,7 +1582,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 3. NEW UPGRADE: RESIDENT DIRECTORY & KYC VERIFICATION */}
+          {/* 3. RESIDENT DIRECTORY & KYC VERIFICATION */}
           {/* ========================================================================= */}
           {activeSection === 'residents' && (
             <div className="space-y-6 animate-fade-in">
@@ -1580,7 +1783,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 4. UPGRADED: EMERGENCY SOS & PANIC ALARM CONSOLE */}
+          {/* 4. EMERGENCY SOS & PANIC ALARM CONSOLE */}
           {/* ========================================================================= */}
           {activeSection === 'sos' && (
             <div className="space-y-6 animate-fade-in">
@@ -1690,7 +1893,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                     <div key={sos.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-slate-500">{sos.id}</span>
+                          <span className="font-mono font-bold text-xs text-slate-500">{sos.id}</span>
                           <span className="font-bold text-sm text-slate-900">{sos.flat} ({sos.resident})</span>
                           <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
                             {sos.status}
@@ -2496,28 +2699,231 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 10. LOST & FOUND REGISTER */}
+          {/* 10. UPGRADED: LOST & FOUND PROPERTY REGISTER */}
           {/* ========================================================================= */}
           {activeSection === 'lostfound' && (
-            <div className="space-y-6">
-              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-                <span className="font-black text-xl text-slate-900 block">Lost & Found Property Register</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  {lostFoundList.map(lf => (
-                    <div key={lf.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div className="font-bold text-sm text-slate-900">{lf.item}</div>
-                        <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
-                          lf.status.includes('Claimed') ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
-                        }`}>
-                          {lf.status}
-                        </span>
-                      </div>
-                      <div className="text-slate-500">Found Location: <strong>{lf.loc}</strong> • {lf.date}</div>
-                    </div>
-                  ))}
+            <div className="space-y-6 animate-fade-in">
+              
+              {/* Top Hero Banner */}
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <Search className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-slate-900">Lost & Found Property Register</h2>
+                    <p className="text-xs text-slate-500 mt-1">Log found society items, secure in security locker custody, and verify resident handover</p>
+                  </div>
+                </div>
+
+                {/* Sub-Tab Selector */}
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl text-xs font-bold gap-1 self-stretch sm:self-center">
+                  <button
+                    onClick={() => setLostFoundSubTab('all')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      lostFoundSubTab === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📋 All Items ({lostFoundList.length})
+                  </button>
+
+                  <button
+                    onClick={() => setLostFoundSubTab('unclaimed')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      lostFoundSubTab === 'unclaimed' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🟡 In Locker Custody ({unclaimedLfCount})
+                  </button>
+
+                  <button
+                    onClick={() => setLostFoundSubTab('claimed')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      lostFoundSubTab === 'claimed' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ✅ Returned ({lostFoundList.length - unclaimedLfCount})
+                  </button>
+
+                  <button
+                    onClick={() => setLostFoundSubTab('log')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      lostFoundSubTab === 'log' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ➕ Log Found Property
+                  </button>
                 </div>
               </div>
+
+              {/* 4 Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Total Found Logged</span>
+                  <span className="text-2xl font-black text-slate-900">{lostFoundList.length} Items</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">In Security Custody</span>
+                  <span className="text-2xl font-black text-amber-700">{unclaimedLfCount} Items</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Returned to Owners</span>
+                  <span className="text-2xl font-black text-emerald-600">{lostFoundList.length - unclaimedLfCount} Claimed</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Avg Claim Turnaround</span>
+                  <span className="text-2xl font-black text-indigo-600">18.4 Hours</span>
+                </div>
+              </div>
+
+              {/* VIEW: LOG NEW FOUND PROPERTY */}
+              {lostFoundSubTab === 'log' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900">Log New Found Society Property</h3>
+                      <p className="text-xs text-slate-500">Record found item details and assign a secure locker slot at Gate 1</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleLogLostFoundItem} className="space-y-6 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">1. Item Description & Model</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Black Leather Wallet with Driving License"
+                          value={lfTitle}
+                          onChange={(e) => setLfTitle(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-medium focus:outline-none focus:border-slate-900"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">2. Item Category</label>
+                        <select
+                          value={lfCategory}
+                          onChange={(e) => setLfCategory(e.target.value as any)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        >
+                          <option value="Keys & Smart Remotes">Keys & Smart Car Remotes</option>
+                          <option value="Electronics">Electronics (AirPods, Smartwatch, Mobile)</option>
+                          <option value="Wallets & IDs">Wallets, Cards & Passports</option>
+                          <option value="Kids Toys & Bikes">Kids Bicycles & Toys</option>
+                          <option value="Personal Accessories">Personal Accessories (Glasses, Bags)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">3. Location Where Found in Campus</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Swimming Pool Deck, Clubhouse Gym, Tennis Court"
+                          value={lfLoc}
+                          onChange={(e) => setLfLoc(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">4. Secure Storage Locker Slot</label>
+                        <select
+                          value={lfLocker}
+                          onChange={(e) => setLfLocker(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        >
+                          <option value="Security Locker LF-01">Security Locker LF-01 (Small Valuables)</option>
+                          <option value="Security Locker LF-02">Security Locker LF-02</option>
+                          <option value="Security Locker LF-03">Security Locker LF-03</option>
+                          <option value="Main Gate Storage Bay">Main Gate Storage Bay (Bikes & Large Items)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span>Log Found Item & Broadcast to Resident Notice Board</span>
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* VIEW: ALL / UNCLAIMED / CLAIMED ITEMS CARDS */}
+              {lostFoundSubTab !== 'log' && (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {lostFoundList
+                      .filter(item => lostFoundSubTab === 'all' || (lostFoundSubTab === 'unclaimed' ? item.status === 'Unclaimed In Custody' : item.status === 'Claimed & Returned'))
+                      .map(item => (
+                        <div key={item.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-start">
+                              <span className="text-[10px] font-mono font-bold text-slate-400">{item.id}</span>
+                              <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                item.status === 'Unclaimed In Custody' ? 'bg-amber-100 text-amber-900 animate-pulse' : 'bg-emerald-100 text-emerald-800'
+                              }`}>
+                                {item.status}
+                              </span>
+                            </div>
+
+                            <div>
+                              <h3 className="font-extrabold text-sm text-slate-900">{item.title}</h3>
+                              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold mt-1 inline-block">
+                                {item.category}
+                              </span>
+                            </div>
+
+                            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Found At:</span>
+                                <span className="font-bold text-slate-800">{item.loc}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Storage Slot:</span>
+                                <span className="font-mono font-bold text-indigo-700">{item.locker}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Found Date:</span>
+                                <span className="text-slate-700">{item.date}</span>
+                              </div>
+                              {item.claimedBy && (
+                                <div className="flex justify-between pt-1 border-t border-slate-200/60 text-emerald-800 font-bold">
+                                  <span>Returned To:</span>
+                                  <span>{item.claimedBy} ({item.claimedFlat})</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {item.status === 'Unclaimed In Custody' ? (
+                            <button
+                              onClick={() => setClaimingItem(item)}
+                              className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                            >
+                              <Key className="w-3.5 h-3.5" />
+                              <span>Verify & Handover to Resident</span>
+                            </button>
+                          ) : (
+                            <div className="text-center text-[11px] text-slate-400 font-medium py-1">
+                              Handover verified on {item.claimedDate}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
@@ -2533,6 +2939,66 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
         </main>
 
       </div>
+
+      {/* ========================================================================= */}
+      {/* MODAL: LOST & FOUND CLAIM HANDOVER MODAL */}
+      {/* ========================================================================= */}
+      {claimingItem && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setClaimingItem(null)}
+              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h3 className="font-black text-xl text-slate-900">Verify Property Handover</h3>
+              <p className="text-xs text-slate-500">Record claimant details for {claimingItem.title} ({claimingItem.id})</p>
+            </div>
+
+            <form onSubmit={handleProcessClaimHandover} className="space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Claimant Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={claimResidentName}
+                  onChange={(e) => setClaimResidentName(e.target.value)}
+                  className="w-full p-3.5 bg-slate-50 rounded-xl border border-slate-200"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Claimant Resident Flat</label>
+                <select
+                  value={claimResidentFlat}
+                  onChange={(e) => setClaimResidentFlat(e.target.value)}
+                  className="w-full p-3.5 bg-slate-50 rounded-xl border border-slate-200 font-bold"
+                >
+                  <option value="Flat B-108">Flat B-108 (Ananya Sharma - Tower B)</option>
+                  <option value="Flat A-402">Flat A-402 (Rajesh Mehta - Tower A)</option>
+                  <option value="Flat C-301">Flat C-301 (Suresh Menon - Tower C)</option>
+                  <option value="Flat B-201">Flat B-201 (Rohan Deshmukh - Tower B)</option>
+                  <option value="Flat A-104">Flat A-104 (Pooja Hegde - Tower A)</option>
+                </select>
+              </div>
+
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-900 text-[11px] font-bold">
+                ✓ Identity & Flat verified against security resident database. Custody locker will be unlocked.
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs shadow-lg cursor-pointer"
+              >
+                Complete Handover & Release from Locker
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* MODAL: PRINTABLE VISITOR GATE BADGE MODAL */}
