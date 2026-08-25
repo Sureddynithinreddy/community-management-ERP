@@ -5,7 +5,8 @@ import {
   Settings, Building2, ArrowLeft, CheckCircle2, Download, Plus, Search,
   Clock, DollarSign, Check, ChevronRight, Sparkles, Filter, Phone, Mail, MapPin, Eye, Zap, ShieldAlert, X, Trash2, Send, AlertCircle, Key, Lock, QrCode, Menu, LogOut,
   BarChart3, RefreshCw, BadgeCheck, Bell, Smartphone, ArrowUpRight, CheckSquare,
-  HelpCircle, CreditCard, PieChart, Activity
+  HelpCircle, CreditCard, PieChart, Activity, UserPlus, Car, Home, Layers,
+  PhoneCall, ShieldQuestion
 } from 'lucide-react';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 
@@ -29,8 +30,46 @@ export type AdminPageId =
   | 'community_config'
   | 'analytics';
 
+interface ResidentRecord {
+  flat: string;
+  name: string;
+  phone: string;
+  type: 'Owner' | 'Tenant' | 'Primary Owner';
+  bhk: string;
+  tower: 'Tower A' | 'Tower B' | 'Tower C';
+  floor: string;
+  members: number;
+  vehicle: string;
+  parking: string;
+  dues: string;
+  aadhaarKyc: string;
+  email: string;
+  rfidTag: string;
+  helpersCount: number;
+}
+
 export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
   const [activePage, setActivePage] = useState<AdminPageId>('dashboard');
+
+  // Manage Residents Sub-Tab State
+  const [residentSubTab, setResidentSubTab] = useState<'directory' | 'onboard' | 'grid'>('directory');
+  const [selectedTowerFilter, setSelectedTowerFilter] = useState<'ALL' | 'Tower A' | 'Tower B' | 'Tower C'>('ALL');
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<'ALL' | 'Owner' | 'Tenant'>('ALL');
+  const [selectedDuesFilter, setSelectedDuesFilter] = useState<'ALL' | 'Due' | 'Paid'>('ALL');
+  const [selectedResidentDetail, setSelectedResidentDetail] = useState<ResidentRecord | null>(null);
+
+  // New Resident Onboarding Form State
+  const [newFlat, setNewFlat] = useState<string>('Flat B-302');
+  const [newTower, setNewTower] = useState<'Tower A' | 'Tower B' | 'Tower C'>('Tower B');
+  const [newFloor, setNewFloor] = useState<string>('3rd Floor');
+  const [newBhk, setNewBhk] = useState<string>('2BHK (1250 sqft)');
+  const [newName, setNewName] = useState<string>('');
+  const [newPhone, setNewPhone] = useState<string>('');
+  const [newEmail, setNewEmail] = useState<string>('');
+  const [newType, setNewType] = useState<'Owner' | 'Tenant'>('Owner');
+  const [newAadhaar, setNewAadhaar] = useState<string>('XXXX-XXXX-9912');
+  const [newVehicle, setNewVehicle] = useState<string>('TS-08-AB-1234');
+  const [newParking, setNewParking] = useState<string>('Slot B-52');
 
   // --- FULL EXHAUSTIVE DATASET FOR ADMIN PORTAL ---
 
@@ -50,22 +89,50 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     { id: 'GRD-108', name: 'Praveen Yadav', phone: '98777 88899', station: 'Swimming Pool Gate', shift: 'Shift B (02:00 PM - 10:00 PM)', status: 'Scheduled', rating: '4.8 ⭐', Aadhaar: 'VERIFIED ✓' },
   ]);
 
-  // 2. Manage Residents (12 Flats Directory)
+  // 2. Manage Residents (12 Complete Flat Dossiers)
   const [resSearch, setResSearch] = useState<string>('');
-  const [residentsDirectory] = useState([
-    { flat: 'Flat B-108', name: 'Ananya Sharma', phone: '98765 11111', type: 'Primary Owner', bhk: '2BHK (1250 sqft)', members: 3, vehicle: 'KA-03-MB-4921 (Honda City)', parking: 'Slot B-42', dues: '₹ 4,766 (Due)' },
-    { flat: 'Flat A-402', name: 'Rajesh Mehta', phone: '98765 12345', type: 'Owner', bhk: '3BHK (1850 sqft)', members: 3, vehicle: 'KA-05-MA-1234 (Creta)', parking: 'Slot A-12', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat C-301', name: 'Suresh Menon', phone: '98901 22334', type: 'Tenant', bhk: '3BHK (1700 sqft)', members: 4, vehicle: 'TS-09-GA-1002 (Brezza)', parking: 'Slot C-08', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat A-104', name: 'Pooja Hegde', phone: '98123 99999', type: 'Owner', bhk: '1BHK (850 sqft)', members: 1, vehicle: 'KA-01-PH-7711 (Seltos)', parking: 'Slot A-04', dues: '₹ 3,200 (Due)' },
-    { flat: 'Flat B-204', name: 'Rohan Deshmukh', phone: '98990 11223', type: 'Owner', bhk: '2BHK (1300 sqft)', members: 3, vehicle: 'KA-04-MN-9012 (Swift)', parking: 'Slot B-24', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat C-502', name: 'Dr. Alok Nath', phone: '98765 66666', type: 'Owner', bhk: 'Penthouse (2800 sqft)', members: 5, vehicle: 'KA-01-AL-0001 (BMW 3)', parking: 'Slot C-01 & C-02', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat A-201', name: 'Vikramaditya Roy', phone: '98765 77777', type: 'Owner', bhk: '3BHK (1750 sqft)', members: 4, vehicle: 'KA-03-VR-8888 (Harrier)', parking: 'Slot A-21', dues: '₹ 5,200 (Due)' },
-    { flat: 'Flat B-405', name: 'Neha Kapoor', phone: '98765 88888', type: 'Tenant', bhk: '2BHK (1200 sqft)', members: 2, vehicle: 'KA-05-NK-4321 (i20)', parking: 'Slot B-45', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat C-101', name: 'Siddharth Nair', phone: '98765 99999', type: 'Owner', bhk: '2BHK (1350 sqft)', members: 3, vehicle: 'KA-02-SN-1122 (Seltos)', parking: 'Slot C-11', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat A-303', name: 'Meenakshi Iyer', phone: '98765 00000', type: 'Owner', bhk: '3BHK (1600 sqft)', members: 4, vehicle: 'KA-03-MI-9900 (Nexon)', parking: 'Slot A-33', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat B-501', name: 'Arjun Das', phone: '98111 44332', type: 'Tenant', bhk: '3BHK (1680 sqft)', members: 3, vehicle: 'KA-01-AD-7766 (Thar)', parking: 'Slot B-51', dues: '₹ 0 (Paid)' },
-    { flat: 'Flat C-202', name: 'Kavita Menon', phone: '98222 55443', type: 'Owner', bhk: '2BHK (1280 sqft)', members: 2, vehicle: 'KA-04-KM-3322 (Kiger)', parking: 'Slot C-22', dues: '₹ 0 (Paid)' },
+  const [residentsDirectory, setResidentsDirectory] = useState<ResidentRecord[]>([
+    { flat: 'Flat B-108', name: 'Ananya Sharma', phone: '+91 98765 11111', type: 'Primary Owner', bhk: '2BHK (1250 sqft)', tower: 'Tower B', floor: '1st Floor', members: 3, vehicle: 'KA-03-MB-4921 (Honda City)', parking: 'Slot B-42', dues: '₹ 4,766 (Due)', aadhaarKyc: 'XXXX-XXXX-8902 (Verified ✓)', email: 'ananya.sharma@example.com', rfidTag: 'RFID-ANPR-8921-ACTIVE', helpersCount: 2 },
+    { flat: 'Flat A-402', name: 'Rajesh Mehta', phone: '+91 98765 12345', type: 'Owner', bhk: '3BHK (1850 sqft)', tower: 'Tower A', floor: '4th Floor', members: 3, vehicle: 'KA-05-MA-1234 (Creta)', parking: 'Slot A-12', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-4412 (Verified ✓)', email: 'rajesh.mehta@example.com', rfidTag: 'RFID-ANPR-4412-ACTIVE', helpersCount: 1 },
+    { flat: 'Flat C-301', name: 'Suresh Menon', phone: '+91 98901 22334', type: 'Tenant', bhk: '3BHK (1700 sqft)', tower: 'Tower C', floor: '3rd Floor', members: 4, vehicle: 'TS-09-GA-1002 (Brezza)', parking: 'Slot C-08', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-9901 (Verified ✓)', email: 'suresh.menon@example.com', rfidTag: 'RFID-ANPR-3319-ACTIVE', helpersCount: 1 },
+    { flat: 'Flat A-104', name: 'Pooja Hegde', phone: '+91 98123 99999', type: 'Owner', bhk: '1BHK (850 sqft)', tower: 'Tower A', floor: '1st Floor', members: 1, vehicle: 'KA-01-PH-7711 (Seltos)', parking: 'Slot A-04', dues: '₹ 3,200 (Due)', aadhaarKyc: 'XXXX-XXXX-7711 (Verified ✓)', email: 'pooja.hegde@example.com', rfidTag: 'RFID-ANPR-7711-ACTIVE', helpersCount: 1 },
+    { flat: 'Flat B-204', name: 'Rohan Deshmukh', phone: '+91 98990 11223', type: 'Owner', bhk: '2BHK (1300 sqft)', tower: 'Tower B', floor: '2nd Floor', members: 3, vehicle: 'KA-04-MN-9012 (Swift)', parking: 'Slot B-24', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-2044 (Verified ✓)', email: 'rohan.d@example.com', rfidTag: 'RFID-ANPR-2044-ACTIVE', helpersCount: 2 },
+    { flat: 'Flat C-502', name: 'Dr. Alok Nath', phone: '+91 98765 66666', type: 'Owner', bhk: 'Penthouse (2800 sqft)', tower: 'Tower C', floor: '5th Floor', members: 5, vehicle: 'KA-01-AL-0001 (BMW 3)', parking: 'Slot C-01 & C-02', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-0001 (Verified ✓)', email: 'dr.alok@example.com', rfidTag: 'RFID-ANPR-0001-ACTIVE', helpersCount: 3 },
+    { flat: 'Flat A-201', name: 'Vikramaditya Roy', phone: '+91 98765 77777', type: 'Owner', bhk: '3BHK (1750 sqft)', tower: 'Tower A', floor: '2nd Floor', members: 4, vehicle: 'KA-03-VR-8888 (Harrier)', parking: 'Slot A-21', dues: '₹ 5,200 (Due)', aadhaarKyc: 'XXXX-XXXX-8888 (Verified ✓)', email: 'vikram.roy@example.com', rfidTag: 'RFID-ANPR-8888-ACTIVE', helpersCount: 2 },
+    { flat: 'Flat B-405', name: 'Neha Kapoor', phone: '+91 98765 88888', type: 'Tenant', bhk: '2BHK (1200 sqft)', tower: 'Tower B', floor: '4th Floor', members: 2, vehicle: 'KA-05-NK-4321 (i20)', parking: 'Slot B-45', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-4321 (Verified ✓)', email: 'neha.k@example.com', rfidTag: 'RFID-ANPR-4321-ACTIVE', helpersCount: 1 },
+    { flat: 'Flat C-101', name: 'Siddharth Nair', phone: '+91 98765 99999', type: 'Owner', bhk: '2BHK (1350 sqft)', tower: 'Tower C', floor: '1st Floor', members: 3, vehicle: 'KA-02-SN-1122 (Seltos)', parking: 'Slot C-11', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-1122 (Verified ✓)', email: 'sid.nair@example.com', rfidTag: 'RFID-ANPR-1122-ACTIVE', helpersCount: 1 },
+    { flat: 'Flat A-303', name: 'Meenakshi Iyer', phone: '+91 98765 00000', type: 'Owner', bhk: '3BHK (1600 sqft)', tower: 'Tower A', floor: '3rd Floor', members: 4, vehicle: 'KA-03-MI-9900 (Nexon)', parking: 'Slot A-33', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-9900 (Verified ✓)', email: 'meenakshi.i@example.com', rfidTag: 'RFID-ANPR-9900-ACTIVE', helpersCount: 2 },
+    { flat: 'Flat B-501', name: 'Arjun Das', phone: '+91 98111 44332', type: 'Tenant', bhk: '3BHK (1680 sqft)', tower: 'Tower B', floor: '5th Floor', members: 3, vehicle: 'KA-01-AD-7766 (Thar)', parking: 'Slot B-51', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-7766 (Verified ✓)', email: 'arjun.das@example.com', rfidTag: 'RFID-ANPR-7766-ACTIVE', helpersCount: 1 },
+    { flat: 'Flat C-202', name: 'Kavita Menon', phone: '+91 98222 55443', type: 'Owner', bhk: '2BHK (1280 sqft)', tower: 'Tower C', floor: '2nd Floor', members: 2, vehicle: 'KA-04-KM-3322 (Kiger)', parking: 'Slot C-22', dues: '₹ 0 (Paid)', aadhaarKyc: 'XXXX-XXXX-3322 (Verified ✓)', email: 'kavita.m@example.com', rfidTag: 'RFID-ANPR-3322-ACTIVE', helpersCount: 1 },
   ]);
+
+  // Tower Occupancy Matrix Mock
+  const towerOccupancyGrid = [
+    { tower: 'Tower A', units: [
+      { unit: 'A-101', status: 'Owner Occupied', res: 'Siddharth Nair' },
+      { unit: 'A-104', status: 'Owner Occupied', res: 'Pooja Hegde' },
+      { unit: 'A-201', status: 'Owner Occupied', res: 'Vikramaditya Roy' },
+      { unit: 'A-303', status: 'Owner Occupied', res: 'Meenakshi Iyer' },
+      { unit: 'A-402', status: 'Owner Occupied', res: 'Rajesh Mehta' },
+      { unit: 'A-501', status: 'Vacant', res: '--' },
+    ]},
+    { tower: 'Tower B', units: [
+      { unit: 'B-108', status: 'Owner Occupied', res: 'Ananya Sharma' },
+      { unit: 'B-204', status: 'Owner Occupied', res: 'Rohan Deshmukh' },
+      { unit: 'B-302', status: 'Vacant', res: '--' },
+      { unit: 'B-405', status: 'Tenant Occupied', res: 'Neha Kapoor' },
+      { unit: 'B-501', status: 'Tenant Occupied', res: 'Arjun Das' },
+      { unit: 'B-504', status: 'Owner Occupied', res: 'Prakash Rao' },
+    ]},
+    { tower: 'Tower C', units: [
+      { unit: 'C-101', status: 'Owner Occupied', res: 'Siddharth Nair' },
+      { unit: 'C-202', status: 'Owner Occupied', res: 'Kavita Menon' },
+      { unit: 'C-301', status: 'Tenant Occupied', res: 'Suresh Menon' },
+      { unit: 'C-402', status: 'Vacant', res: '--' },
+      { unit: 'C-502', status: 'Owner Occupied', res: 'Dr. Alok Nath' },
+      { unit: 'C-504', status: 'Owner Occupied', res: 'Sunita Rao' },
+    ]},
+  ];
 
   // 3. Visitor Management Logs
   const [adminVisitorLogs] = useState([
@@ -188,10 +255,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     alert(`Credentials issued for ${staffName}!`);
   };
 
-  const handleRevokeStaffCredentials = (id: string, name: string) => {
-    setStaffCredentialsList(prev => prev.map(s => s.id === id ? { ...s, status: 'Revoked / Suspended' } : s));
-  };
-
   const handleIssueCustomBill = (e: React.FormEvent) => {
     e.preventDefault();
     const targetFlatCode = selectedTargetFlat.split(' ')[0];
@@ -211,6 +274,36 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
     setAmenityApprovals(prev => prev.map(a => a.id === id ? { ...a, status: decision } : a));
   };
 
+  const handleOnboardResident = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName || !newPhone) return;
+
+    const newRecord: ResidentRecord = {
+      flat: newFlat,
+      name: newName,
+      phone: newPhone,
+      type: newType,
+      bhk: newBhk,
+      tower: newTower,
+      floor: newFloor,
+      members: 3,
+      vehicle: `${newVehicle} (Sedan)`,
+      parking: newParking,
+      dues: '₹ 0 (Paid)',
+      aadhaarKyc: `${newAadhaar} (Verified ✓)`,
+      email: newEmail || `${newName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+      rfidTag: `RFID-ANPR-${Math.floor(1000 + Math.random() * 9000)}-ACTIVE`,
+      helpersCount: 1
+    };
+
+    setResidentsDirectory([newRecord, ...residentsDirectory]);
+    setNewName('');
+    setNewPhone('');
+    setNewEmail('');
+    setResidentSubTab('directory');
+    alert(`RESIDENT ONBOARDED SUCCESSFULLY ✓\n${newName} registered to ${newFlat} (${newTower}). FastTag RFID tag & login credentials activated!`);
+  };
+
   const unpaidCount = flatsBillingStatus.filter(f => f.status === 'Unpaid').length;
   const pendingAmenityCount = amenityApprovals.filter(a => a.status === 'Pending Approval').length;
   const activeGuardsCount = guardsList.filter(g => g.status.includes('Active')).length;
@@ -218,7 +311,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
   const navMenuItems = [
     { id: 'dashboard', label: 'Executive Command Dashboard', icon: LayoutDashboard },
     { id: 'manage_guards', label: 'Manage Guards & Rosters', icon: ShieldCheck, badge: `${activeGuardsCount} On Shift`, badgeColor: 'bg-emerald-100 text-emerald-800' },
-    { id: 'manage_residents', label: 'Residents & Flats Directory', icon: Users, badge: `${residentsDirectory.length} Flats`, badgeColor: 'bg-slate-100 text-slate-700' },
+    { id: 'manage_residents', label: 'Residents & Flats Directory', icon: Users, badge: `${residentsDirectory.length} Units`, badgeColor: 'bg-indigo-100 text-indigo-800 font-bold' },
     { id: 'billing_fees', label: 'Billing & Maintenance Fees', icon: Receipt, badge: `${unpaidCount} Overdue`, badgeColor: 'bg-amber-100 text-amber-900 font-bold' },
     { id: 'notices', label: 'Notice Board & Circulars', icon: Megaphone, badge: `${publishedNotices.length} Live`, badgeColor: 'bg-indigo-100 text-indigo-800' },
     { id: 'amenity_mgmt', label: 'Amenity & Hall Bookings', icon: Calendar, badge: `${pendingAmenityCount} Pending`, badgeColor: 'bg-rose-100 text-rose-800 font-bold' },
@@ -331,22 +424,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
             <button
               onClick={() => {
-                setActivePage('notices');
+                setActivePage('manage_residents');
+                setResidentSubTab('onboard');
               }}
               className="w-full p-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
-              <Megaphone className="w-4 h-4" />
-              <span>+ Post Community Notice</span>
+              <UserPlus className="w-4 h-4" />
+              <span>+ Onboard New Resident</span>
             </button>
 
             <button
               onClick={() => {
-                setActivePage('billing_fees');
+                setActivePage('notices');
               }}
               className="w-full p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl flex items-center justify-center gap-2 border border-slate-200 transition-transform active:scale-95 cursor-pointer"
             >
-              <Receipt className="w-4 h-4 text-indigo-600" />
-              <span>+ Issue Monthly Invoices</span>
+              <Megaphone className="w-4 h-4 text-indigo-600" />
+              <span>+ Post Society Notice</span>
             </button>
           </div>
 
@@ -687,75 +781,380 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 3. MANAGE RESIDENTS & FLATS DIRECTORY */}
+          {/* 3. UPGRADED: MANAGE RESIDENTS & FLATS DIRECTORY */}
           {/* ========================================================================= */}
           {activePage === 'manage_residents' && (
             <div className="space-y-6 animate-fade-in">
+              
+              {/* Top Hero Banner */}
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                     <Users className="w-8 h-8" />
                   </div>
                   <div>
-                    <h2 className="font-black text-2xl text-slate-900">Society Resident & Flat Ownership Directory</h2>
-                    <p className="text-xs text-slate-500 mt-1">Complete unit directory, registered owners, vehicle whitelist, parking slots, and dues status</p>
+                    <h2 className="font-black text-2xl text-slate-900">Manage Residents & Flats Directory</h2>
+                    <p className="text-xs text-slate-500 mt-1">Complete unit ownership register, Aadhaar KYC verifications, parking allocations, and dues</p>
                   </div>
                 </div>
 
-                <div className="w-full sm:w-72 relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search flat, name, vehicle..."
-                    value={resSearch}
-                    onChange={(e) => setResSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
-                  />
+                {/* Sub-Tab Selector */}
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl text-xs font-bold gap-1 self-stretch sm:self-center">
+                  <button
+                    onClick={() => setResidentSubTab('directory')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      residentSubTab === 'directory' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📋 Units Directory ({residentsDirectory.length})
+                  </button>
+
+                  <button
+                    onClick={() => setResidentSubTab('onboard')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      residentSubTab === 'onboard' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ➕ Onboard Resident
+                  </button>
+
+                  <button
+                    onClick={() => setResidentSubTab('grid')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      residentSubTab === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🏢 Tower Matrix Grid
+                  </button>
                 </div>
               </div>
 
-              <div className="overflow-x-auto bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 font-bold">
-                      <th className="py-3">Flat & Tower</th>
-                      <th className="py-3">Primary Owner / Tenant</th>
-                      <th className="py-3">Configuration</th>
-                      <th className="py-3">Registered Vehicle</th>
-                      <th className="py-3">Allocated Parking</th>
-                      <th className="py-3 text-right">Maintenance Dues</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {residentsDirectory
-                      .filter(r => r.flat.toLowerCase().includes(resSearch.toLowerCase()) || r.name.toLowerCase().includes(resSearch.toLowerCase()) || r.vehicle.toLowerCase().includes(resSearch.toLowerCase()))
-                      .map(r => (
-                        <tr key={r.flat} className="hover:bg-slate-50">
-                          <td className="py-3.5 font-bold text-slate-900">{r.flat}</td>
-                          <td className="py-3.5">
-                            <div className="font-bold text-slate-900">{r.name}</div>
-                            <div className="text-[11px] text-slate-500">{r.phone} • {r.type}</div>
-                          </td>
-                          <td className="py-3.5 text-slate-600">{r.bhk}</td>
-                          <td className="py-3.5 font-mono text-slate-700">{r.vehicle}</td>
-                          <td className="py-3.5 font-bold text-indigo-700">{r.parking}</td>
-                          <td className="py-3.5 text-right">
-                            <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
-                              r.dues.includes('Paid') ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                            }`}>
-                              {r.dues}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+              {/* 4 Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Total Society Units</span>
+                  <span className="text-2xl font-black text-slate-900">250 Flats</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Registered Residents</span>
+                  <span className="text-2xl font-black text-indigo-600">740 People</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">Aadhaar KYC Verified</span>
+                  <span className="text-2xl font-black text-emerald-600">98.4% Verified</span>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <span className="text-xs text-slate-500 font-medium block">FastTag Active Cars</span>
+                  <span className="text-2xl font-black text-slate-900">310 Vehicles</span>
+                </div>
               </div>
+
+              {/* VIEW 1: DIRECTORY TABLE & SEARCH */}
+              {residentSubTab === 'directory' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5 animate-fade-in">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+                    
+                    {/* Filters */}
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {(['ALL', 'Tower A', 'Tower B', 'Tower C'] as const).map(t => (
+                        <button
+                          key={t}
+                          onClick={() => setSelectedTowerFilter(t)}
+                          className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer transition-all ${
+                            selectedTowerFilter === t ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+
+                      {(['ALL', 'Owner', 'Tenant'] as const).map(typ => (
+                        <button
+                          key={typ}
+                          onClick={() => setSelectedTypeFilter(typ)}
+                          className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer transition-all ${
+                            selectedTypeFilter === typ ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-800'
+                          }`}
+                        >
+                          {typ === 'ALL' ? 'All Types' : `${typ}s`}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search Input */}
+                    <div className="w-full sm:w-72 relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search flat, name, vehicle plate..."
+                        value={resSearch}
+                        onChange={(e) => setResSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                          <th className="py-3">Flat & Tower</th>
+                          <th className="py-3">Primary Resident</th>
+                          <th className="py-3">Configuration</th>
+                          <th className="py-3">Registered Vehicle</th>
+                          <th className="py-3">Parking Slot</th>
+                          <th className="py-3">Aadhaar KYC</th>
+                          <th className="py-3">Dues</th>
+                          <th className="py-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {residentsDirectory
+                          .filter(r => selectedTowerFilter === 'ALL' || r.tower === selectedTowerFilter)
+                          .filter(r => selectedTypeFilter === 'ALL' || (selectedTypeFilter === 'Owner' ? r.type.includes('Owner') : r.type === 'Tenant'))
+                          .filter(r => r.flat.toLowerCase().includes(resSearch.toLowerCase()) || r.name.toLowerCase().includes(resSearch.toLowerCase()) || r.vehicle.toLowerCase().includes(resSearch.toLowerCase()))
+                          .map(r => (
+                            <tr key={r.flat} className="hover:bg-slate-50">
+                              <td className="py-3.5 font-bold text-slate-900">
+                                <div>{r.flat}</div>
+                                <div className="text-[10px] text-slate-400 font-normal">{r.tower} • {r.floor}</div>
+                              </td>
+                              <td className="py-3.5">
+                                <div className="font-bold text-slate-900">{r.name}</div>
+                                <div className="text-[11px] text-slate-500">{r.phone} • <span className="font-bold text-indigo-600">{r.type}</span></div>
+                              </td>
+                              <td className="py-3.5 text-slate-600">{r.bhk}</td>
+                              <td className="py-3.5 font-mono text-slate-700">{r.vehicle}</td>
+                              <td className="py-3.5 font-bold text-indigo-700">{r.parking}</td>
+                              <td className="py-3.5">
+                                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">
+                                  Verified ✓
+                                </span>
+                              </td>
+                              <td className="py-3.5">
+                                <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                  r.dues.includes('Paid') ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                                }`}>
+                                  {r.dues}
+                                </span>
+                              </td>
+                              <td className="py-3.5 text-right">
+                                <button
+                                  onClick={() => setSelectedResidentDetail(r)}
+                                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-[11px] cursor-pointer shadow-xs"
+                                >
+                                  View Dossier
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 2: ONBOARD NEW RESIDENT FORM */}
+              {residentSubTab === 'onboard' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900">Onboard & Register New Society Resident</h3>
+                      <p className="text-xs text-slate-500">Record unit ownership, Aadhaar KYC verification, allocated parking, and issue digital portal credentials</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleOnboardResident} className="space-y-6 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">1. Unit / Flat Number</label>
+                        <input
+                          type="text"
+                          required
+                          value={newFlat}
+                          onChange={(e) => setNewFlat(e.target.value)}
+                          placeholder="e.g. Flat B-302"
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">2. Tower</label>
+                        <select
+                          value={newTower}
+                          onChange={(e) => setNewTower(e.target.value as any)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        >
+                          <option value="Tower A">Tower A</option>
+                          <option value="Tower B">Tower B</option>
+                          <option value="Tower C">Tower C</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">3. Floor Level</label>
+                        <input
+                          type="text"
+                          value={newFloor}
+                          onChange={(e) => setNewFloor(e.target.value)}
+                          placeholder="e.g. 3rd Floor"
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">4. BHK Configuration</label>
+                        <select
+                          value={newBhk}
+                          onChange={(e) => setNewBhk(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        >
+                          <option value="1BHK (850 sqft)">1BHK (850 sqft)</option>
+                          <option value="2BHK (1250 sqft)">2BHK (1250 sqft)</option>
+                          <option value="3BHK (1850 sqft)">3BHK (1850 sqft)</option>
+                          <option value="Penthouse (2800 sqft)">Penthouse (2800 sqft)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">5. Primary Resident Full Name</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Varun Teja"
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">6. Contact Mobile Number</label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="e.g. +91 98765 44332"
+                          value={newPhone}
+                          onChange={(e) => setNewPhone(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-mono font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">7. Resident Classification</label>
+                        <select
+                          value={newType}
+                          onChange={(e) => setNewType(e.target.value as any)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        >
+                          <option value="Owner">Primary Registered Owner</option>
+                          <option value="Tenant">Verified Tenant</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">8. Aadhaar KYC Number</label>
+                        <input
+                          type="text"
+                          value={newAadhaar}
+                          onChange={(e) => setNewAadhaar(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-mono font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">9. Registered Vehicle Plate</label>
+                        <input
+                          type="text"
+                          value={newVehicle}
+                          onChange={(e) => setNewVehicle(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-mono font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">10. Allocated Parking Slot</label>
+                        <input
+                          type="text"
+                          value={newParking}
+                          onChange={(e) => setNewParking(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 font-bold focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span>Complete Resident Onboarding & Activate App Credentials</span>
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* VIEW 3: TOWER OCCUPANCY MATRIX GRID */}
+              {residentSubTab === 'grid' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div>
+                    <h3 className="font-black text-lg text-slate-900">Visual Tower Occupancy & Possession Map</h3>
+                    <p className="text-xs text-slate-500">Live floor-by-floor unit map for Towers A, B, and C</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {towerOccupancyGrid.map(t => (
+                      <div key={t.tower} className="p-6 rounded-3xl bg-slate-50 border border-slate-200 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="font-black text-base text-slate-900">{t.tower}</span>
+                          <span className="text-xs bg-slate-200 text-slate-800 font-bold px-2.5 py-0.5 rounded-full">
+                            {t.units.length} Units Monitored
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          {t.units.map(u => (
+                            <div
+                              key={u.unit}
+                              className={`p-3.5 rounded-2xl border flex flex-col justify-between space-y-2 transition-all ${
+                                u.status === 'Owner Occupied'
+                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                                  : u.status === 'Tenant Occupied'
+                                  ? 'bg-indigo-50 border-indigo-200 text-indigo-950'
+                                  : 'bg-slate-100 border-slate-200 text-slate-500'
+                              }`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <span className="font-bold text-sm">{u.unit}</span>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                  u.status === 'Owner Occupied' ? 'bg-emerald-200 text-emerald-900' : u.status === 'Tenant Occupied' ? 'bg-indigo-200 text-indigo-900' : 'bg-slate-200 text-slate-600'
+                                }`}>
+                                  {u.status === 'Owner Occupied' ? 'Owner' : u.status === 'Tenant Occupied' ? 'Tenant' : 'Vacant'}
+                                </span>
+                              </div>
+                              <div className="text-[11px] font-medium truncate">{u.res}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
           {/* ========================================================================= */}
           {/* 4. BILLING & MAINTENANCE FEES ENGINE */}
+          {/* ========================================================================= */}
           {activePage === 'billing_fees' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -906,6 +1305,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 5. NOTICES & ANNOUNCEMENTS */}
+          {/* ========================================================================= */}
           {activePage === 'notices' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -1001,6 +1401,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 6. AMENITY MANAGEMENT */}
+          {/* ========================================================================= */}
           {activePage === 'amenity_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -1056,6 +1457,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 7. MAINTENANCE & AMC ASSET TRACKER */}
+          {/* ========================================================================= */}
           {activePage === 'maintenance_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1081,6 +1483,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 8. GATE VISITOR MANAGEMENT LOGS */}
+          {/* ========================================================================= */}
           {activePage === 'visitor_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1121,6 +1524,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 9. INCIDENT INVESTIGATION DESK */}
+          {/* ========================================================================= */}
           {activePage === 'incident_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1160,6 +1564,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 10. EMERGENCY MANAGEMENT & DRILLS */}
+          {/* ========================================================================= */}
           {activePage === 'emergency_mgmt' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1200,6 +1605,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 11. STAFF & VENDOR CREDENTIALS */}
+          {/* ========================================================================= */}
           {activePage === 'staff_vendor' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1223,6 +1629,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 12. AUDIT LOGS */}
+          {/* ========================================================================= */}
           {activePage === 'audit_logs' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
@@ -1244,6 +1651,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 13. COMMUNITY CONFIGURATION */}
+          {/* ========================================================================= */}
           {activePage === 'community_config' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
@@ -1270,6 +1678,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
           {/* ========================================================================= */}
           {/* 14. SOCIETY ANALYTICS SUITE */}
+          {/* ========================================================================= */}
           {activePage === 'analytics' && (
             <div className="space-y-6 animate-fade-in">
               <AnalyticsDashboard />
@@ -1279,6 +1688,95 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
         </main>
 
       </div>
+
+      {/* ========================================================================= */}
+      {/* MODAL: RESIDENT DETAILED KYC DOSSIER MODAL */}
+      {/* ========================================================================= */}
+      {selectedResidentDetail && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-xl space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setSelectedResidentDetail(null)}
+              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-950 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+                👩‍💼
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-2xl text-slate-900">{selectedResidentDetail.name}</h3>
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                    KYC Verified
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  {selectedResidentDetail.flat} • {selectedResidentDetail.tower} ({selectedResidentDetail.floor}) • {selectedResidentDetail.bhk}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Contact Phone</span>
+                <span className="font-bold text-slate-900">{selectedResidentDetail.phone}</span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Email Address</span>
+                <span className="font-bold text-slate-900 truncate block">{selectedResidentDetail.email}</span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Allocated Parking</span>
+                <span className="font-bold text-indigo-700">{selectedResidentDetail.parking}</span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Vehicle & FastTag</span>
+                <span className="font-mono font-bold text-slate-900 truncate block">{selectedResidentDetail.vehicle}</span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-indigo-50/60 rounded-2xl border border-indigo-200 text-xs space-y-1.5">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Aadhaar KYC Token:</span>
+                <span className="font-mono font-bold text-slate-900">{selectedResidentDetail.aadhaarKyc}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Maintenance Dues Status:</span>
+                <span className={`font-bold ${selectedResidentDetail.dues.includes('Paid') ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {selectedResidentDetail.dues}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Household Staff Registered:</span>
+                <span className="font-bold text-indigo-900">{selectedResidentDetail.helpersCount} Helpers Active</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                onClick={() => {
+                  alert(`Payment reminder dispatched to ${selectedResidentDetail.name} via SMS & App Push!`);
+                }}
+                className="py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs cursor-pointer shadow-xs"
+              >
+                Send Dues Notice
+              </button>
+
+              <button
+                onClick={() => {
+                  alert(`Password reset link sent to ${selectedResidentDetail.email}!`);
+                }}
+                className="py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs"
+              >
+                Reset App Password
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
