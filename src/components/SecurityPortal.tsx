@@ -6,7 +6,7 @@ import {
   ShieldAlert, LogOut, Menu, X, Bell, UserPlus, PhoneCall, ChevronRight,
   TrendingUp, BarChart3, Radio, FileText, CheckCheck, RefreshCw, KeyRound,
   Lock, Eye, Shield, Users, Building2, MapPin, Truck, AlertOctagon, UserX,
-  BadgeCheck, Hammer, Sparkle
+  BadgeCheck, Hammer, Sparkle, Printer, Share2, ArrowUpRight, ShieldQuestion
 } from 'lucide-react';
 import { SecurityAnalytics } from './SecurityAnalytics';
 
@@ -32,16 +32,21 @@ interface VisitorEntry {
   name: string;
   phone: string;
   flat: string;
+  residentName: string;
   purpose: 'Delivery' | 'Guest' | 'Cab' | 'Service Tech' | 'Daily Staff';
   company?: string;
+  orderNo?: string;
   vehicle: string;
   entryTime: string;
   exitTime: string;
+  dwellTime?: string;
   status: 'Inside' | 'Departed';
   photo: string;
   gate: string;
   guardName: string;
   passOtp?: string;
+  badgeNo: string;
+  overstay?: boolean;
 }
 
 interface ParcelEntry {
@@ -73,6 +78,9 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // Navigation State
   const [activeSection, setActiveSection] = useState<SecurityNavSection>('dashboard');
 
+  // Visitor Workspace Sub-Tab State
+  const [visitorSubTab, setVisitorSubTab] = useState<'checkin' | 'checkout' | 'ledger' | 'preapproved'>('ledger');
+
   // Offline Sync State
   const [isOffline, setIsOffline] = useState<boolean>(false);
   const [offlineQueue, setOfflineQueue] = useState<number>(0);
@@ -85,28 +93,45 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   const [otpToValidate, setOtpToValidate] = useState<string>('');
   const [otpValidationResult, setOtpValidationResult] = useState<string | null>(null);
 
+  // Printable Visitor Badge Modal
+  const [badgeVisitor, setBadgeVisitor] = useState<VisitorEntry | null>(null);
+
   // =========================================================================
-  // 1. VISITOR REGISTER STATE (6 Active Entries)
+  // 1. VISITOR CHECK-IN STATE & FORM
   // =========================================================================
   const [vName, setVName] = useState<string>('Rajesh Kumar');
   const [vPhone, setVPhone] = useState<string>('98765 12099');
   const [vFlat, setVFlat] = useState<string>('Flat B-108');
   const [vPurpose, setVPurpose] = useState<'Delivery' | 'Guest' | 'Cab' | 'Service Tech' | 'Daily Staff'>('Delivery');
   const [vCompany, setVCompany] = useState<string>('Blinkit 10-Min Delivery');
+  const [vOrderNo, setVOrderNo] = useState<string>('#BK-90214');
   const [vVehicle, setVVehicle] = useState<string>('TS-08-EM-4921 (EV Bike)');
+  const [hasCameraSnapshot, setHasCameraSnapshot] = useState<boolean>(true);
+
+  // Resident Lookup Map
+  const residentDatabase: Record<string, { owner: string; phone: string; type: string; autoApprove: string }> = {
+    'Flat B-108': { owner: 'Ananya Sharma', phone: '+91 98765 11111', type: 'Primary Owner (Tower B)', autoApprove: 'Deliveries & Cabs Auto-Approved' },
+    'Flat A-402': { owner: 'Rajesh Mehta', phone: '+91 98765 12345', type: 'Primary Owner (Tower A)', autoApprove: 'Manual Verification Required' },
+    'Flat C-301': { owner: 'Suresh Menon', phone: '+91 98901 22334', type: 'Tenant (Tower C)', autoApprove: 'Deliveries Auto-Approved' },
+    'Flat A-104': { owner: 'Pooja Hegde', phone: '+91 98123 99999', type: 'Owner (Tower A)', autoApprove: 'Pre-Approved Guests Only' },
+    'Flat B-204': { owner: 'Rohan Deshmukh', phone: '+91 98990 11223', type: 'Owner (Tower B)', autoApprove: 'Manual Verification' }
+  };
 
   const [visitorRegister, setVisitorRegister] = useState<VisitorEntry[]>([
-    { id: 'VIS-901', name: 'Rajesh Kumar', phone: '98765 12099', flat: 'Flat B-108', purpose: 'Delivery', company: 'Blinkit', vehicle: 'TS-08-EM-4921 (EV Bike)', entryTime: '11:45 AM', exitTime: '--', status: 'Inside', photo: 'CAM-101.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh' },
-    { id: 'VIS-900', name: 'Sunita Devi (Maid)', phone: '98765 99887', flat: 'Flat B-108, Flat A-402', purpose: 'Daily Staff', vehicle: 'Walk-in', entryTime: '09:15 AM', exitTime: '--', status: 'Inside', photo: 'CAM-099.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh' },
-    { id: 'VIS-899', name: 'Siddharth Verma', phone: '98765 43210', flat: 'Flat B-108', purpose: 'Guest', vehicle: 'KA-05-MA-1234', entryTime: '10:30 AM', exitTime: '--', status: 'Inside', photo: 'CAM-098.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh', passOtp: '892-104' },
-    { id: 'VIS-898', name: 'Ramesh Plumber', phone: '98123 99887', flat: 'Flat B-108', purpose: 'Service Tech', vehicle: 'KA-04-PL-1102', entryTime: '10:15 AM', exitTime: '--', status: 'Inside', photo: 'CAM-095.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh' },
-    { id: 'VIS-897', name: 'Rahul Sharma (Swiggy)', phone: '98901 22334', flat: 'Flat C-301', purpose: 'Delivery', company: 'Swiggy', vehicle: 'KA-05-SW-4912', entryTime: '11:05 AM', exitTime: '11:15 AM', status: 'Departed', photo: 'CAM-092.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh' },
-    { id: 'VIS-896', name: 'Driver Alok (Uber)', phone: '98123 99999', flat: 'Flat A-104', purpose: 'Cab', vehicle: 'KA-01-PH-7711 (White Dzire)', entryTime: '11:20 AM', exitTime: '11:32 AM', status: 'Departed', photo: 'CAM-090.jpg', gate: 'Gate 2 Rear', guardName: 'Guard Ramu' },
+    { id: 'VIS-901', name: 'Rajesh Kumar', phone: '98765 12099', flat: 'Flat B-108', residentName: 'Ananya Sharma', purpose: 'Delivery', company: 'Blinkit', orderNo: '#BK-90214', vehicle: 'TS-08-EM-4921 (EV Bike)', entryTime: '11:45 AM', exitTime: '--', dwellTime: '15 mins in campus', status: 'Inside', photo: 'CAM-101.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh', badgeNo: 'BDG-901', overstay: false },
+    { id: 'VIS-900', name: 'Sunita Devi (Maid)', phone: '98765 99887', flat: 'Flat B-108', residentName: 'Ananya Sharma', purpose: 'Daily Staff', vehicle: 'Walk-in', entryTime: '09:15 AM', exitTime: '--', dwellTime: '2h 45m in campus', status: 'Inside', photo: 'CAM-099.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh', badgeNo: 'BDG-900', overstay: false },
+    { id: 'VIS-899', name: 'Siddharth Verma', phone: '98765 43210', flat: 'Flat B-108', residentName: 'Ananya Sharma', purpose: 'Guest', vehicle: 'KA-05-MA-1234 (Creta)', entryTime: '10:30 AM', exitTime: '--', dwellTime: '1h 30m in campus', status: 'Inside', photo: 'CAM-098.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh', passOtp: '892-104', badgeNo: 'BDG-899', overstay: false },
+    { id: 'VIS-898', name: 'Ramesh Plumber', phone: '98123 99887', flat: 'Flat B-108', residentName: 'Ananya Sharma', purpose: 'Service Tech', vehicle: 'KA-04-PL-1102', entryTime: '10:15 AM', exitTime: '--', dwellTime: '1h 45m in campus', status: 'Inside', photo: 'CAM-095.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh', badgeNo: 'BDG-898', overstay: false },
+    { id: 'VIS-897', name: 'Rahul Sharma (Swiggy)', phone: '98901 22334', flat: 'Flat C-301', residentName: 'Suresh Menon', purpose: 'Delivery', company: 'Swiggy', orderNo: '#SW-4912', vehicle: 'KA-05-SW-4912', entryTime: '11:05 AM', exitTime: '11:15 AM', dwellTime: '10 Mins (Departed)', status: 'Departed', photo: 'CAM-092.jpg', gate: 'Gate 1 Main', guardName: 'Guard Vikram Singh', badgeNo: 'BDG-897', overstay: false },
+    { id: 'VIS-896', name: 'Driver Alok (Uber)', phone: '98123 99999', flat: 'Flat A-104', residentName: 'Pooja Hegde', purpose: 'Cab', vehicle: 'KA-01-PH-7711 (White Dzire)', entryTime: '11:20 AM', exitTime: '11:32 AM', dwellTime: '12 Mins (Departed)', status: 'Departed', photo: 'CAM-090.jpg', gate: 'Gate 2 Rear', guardName: 'Guard Ramu', badgeNo: 'BDG-896', overstay: false },
   ]);
 
-  // Visitor Filter
-  const [visitorFilterTab, setVisitorFilterTab] = useState<'all' | 'inside' | 'departed'>('all');
+  // Visitor Filter & Search
+  const [visitorFilterTab, setVisitorFilterTab] = useState<'all' | 'inside' | 'departed'>('inside');
   const [visitorSearch, setVisitorSearch] = useState<string>('');
+
+  // Exit Search
+  const [exitSearchQuery, setExitSearchQuery] = useState<string>('');
 
   // =========================================================================
   // 2. PARCEL LOCKER REGISTER STATE (5 Parcels)
@@ -159,9 +184,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // =========================================================================
   // 5. INCIDENTS & OCCURRENCE BOOK
   // =========================================================================
-  const [incCategory, setIncCategory] = useState<string>('Parking Dispute');
-  const [incFlat, setIncFlat] = useState<string>('Flat B-108');
-  const [incDesc, setIncDesc] = useState<string>('Visitor car parked blocking Tower B basement ramp.');
   const [incidentsList, setIncidentsList] = useState([
     { id: 'INC-8921', category: 'Parking Dispute', flat: 'Flat B-102', desc: 'Visitor car parked blocking basement ramp', loggedBy: 'Guard Vikram Singh', status: 'Under Investigation', time: '10:45 AM', priority: 'High' },
     { id: 'INC-8810', category: 'Noise Disturbance', flat: 'Flat C-401', desc: 'Loud music past 11 PM reported by neighbors', loggedBy: 'Guard Suresh', status: 'Resolved', time: 'Yesterday', priority: 'Medium' },
@@ -182,8 +204,6 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
   // =========================================================================
   // 7. LOST & FOUND REGISTER
   // =========================================================================
-  const [foundItemName, setFoundItemName] = useState<string>('Hyundai Car Smart Key Ring');
-  const [foundLoc, setFoundLoc] = useState<string>('Swimming Pool Deck');
   const [lostFoundList, setLostFoundList] = useState([
     { id: 'LF-101', item: 'Hyundai Car Smart Key Ring', loc: 'Swimming Pool Deck', date: 'Today 09:30 AM', status: 'Unclaimed', photo: 'KEY-101.jpg' },
     { id: 'LF-098', item: 'Child Blue Bicycle (Hero Sprint)', loc: 'Garden Play Area', date: '21 Aug 2026', status: 'Claimed by Flat B-201', photo: 'CYCLE-98.jpg' },
@@ -200,29 +220,43 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
     if (!vName) return;
 
     const newId = `VIS-${Math.floor(900 + Math.random() * 100)}`;
+    const badgeNumber = `BDG-${Math.floor(100 + Math.random() * 900)}`;
+    const residentInfo = residentDatabase[vFlat] || { owner: 'Resident', phone: 'Ext: 101' };
+
     const newEntry: VisitorEntry = {
       id: newId,
       name: vName,
       phone: vPhone,
       flat: vFlat,
+      residentName: residentInfo.owner,
       purpose: vPurpose,
       company: vCompany,
+      orderNo: vOrderNo,
       vehicle: vVehicle || 'Walk-in',
-      entryTime: 'Just Now (11:50 AM)',
+      entryTime: 'Just Now (11:55 AM)',
       exitTime: '--',
+      dwellTime: 'Just Entered',
       status: 'Inside',
-      photo: `CAM-${Math.floor(100 + Math.random() * 100)}.jpg`,
+      photo: `CAM-SNAP-${Math.floor(100 + Math.random() * 100)}.jpg`,
       gate: 'Gate 1 Main',
-      guardName: 'Guard Vikram Singh'
+      guardName: 'Guard Vikram Singh',
+      badgeNo: badgeNumber,
+      overstay: false
     };
 
     setVisitorRegister([newEntry, ...visitorRegister]);
     setShowCheckInModal(false);
-    alert(`VISITOR ENTRY LOGGED (${newId}) ✓\nGate barrier lifted for ${vName} heading to ${vFlat}!\nResident notified on mobile app.`);
+    setVisitorSubTab('ledger');
+    alert(`VISITOR ENTRY LOGGED (${newId}) ✓\nGate barrier lifted for ${vName} heading to ${vFlat} (${residentInfo.owner})!\nPasscode / Gate Badge #${badgeNumber} generated.`);
   };
 
   const handleCheckOutVisitor = (id: string) => {
-    setVisitorRegister(prev => prev.map(v => v.id === id ? { ...v, status: 'Departed', exitTime: 'Just Now' } : v));
+    setVisitorRegister(prev => prev.map(v => v.id === id ? { 
+      ...v, 
+      status: 'Departed', 
+      exitTime: 'Just Now',
+      dwellTime: '42 Mins (Departed)'
+    } : v));
     alert(`CHECK-OUT LOGGED ✓\nExit barrier lifted. Visitor marked as Departed.`);
   };
 
@@ -313,8 +347,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
   const navMenuItems = [
     { id: 'dashboard', label: 'Security Command Dashboard', icon: LayoutDashboard },
-    { id: 'visitors', label: 'Visitor Check-In & Approvals', icon: ShieldCheck, badge: `${insideCount} Inside`, badgeColor: 'bg-emerald-100 text-emerald-800 font-bold' },
-    { id: 'checkout', label: 'Check-Out & Exit Scanner', icon: LogOut },
+    { id: 'visitors', label: 'Check-In / Out Visitors', icon: ShieldCheck, badge: `${insideCount} Inside`, badgeColor: 'bg-emerald-100 text-emerald-800 font-bold' },
     { id: 'parcels', label: 'Gate Shelf Parcel Lockers', icon: Package, badge: `${awaitingParcelsCount} Awaiting`, badgeColor: 'bg-amber-100 text-amber-900 font-bold' },
     { id: 'anpr', label: 'ANPR AI Plate & Parking', icon: Car },
     { id: 'staff', label: 'Daily Staff & Attendance', icon: Users, badge: `${staffInsideCount} Active`, badgeColor: 'bg-blue-100 text-blue-800 font-bold' },
@@ -448,7 +481,10 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
             </span>
 
             <button
-              onClick={() => setShowCheckInModal(true)}
+              onClick={() => {
+                setActiveSection('visitors');
+                setVisitorSubTab('checkin');
+              }}
               className="w-full p-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
@@ -456,11 +492,14 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
             </button>
 
             <button
-              onClick={() => setShowParcelModal(true)}
+              onClick={() => {
+                setActiveSection('visitors');
+                setVisitorSubTab('checkout');
+              }}
               className="w-full p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl flex items-center justify-center gap-2 border border-slate-200 transition-transform active:scale-95 cursor-pointer"
             >
-              <Package className="w-4 h-4 text-indigo-600" />
-              <span>+ Log Gate Shelf Parcel</span>
+              <LogOut className="w-4 h-4 text-slate-600" />
+              <span>Fast Exit / Check-Out</span>
             </button>
           </div>
 
@@ -542,7 +581,10 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
                 <div className="flex flex-wrap items-center gap-3 relative z-10">
                   <button
-                    onClick={() => setShowCheckInModal(true)}
+                    onClick={() => {
+                      setActiveSection('visitors');
+                      setVisitorSubTab('checkin');
+                    }}
                     className="px-5 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
                   >
                     <UserPlus className="w-4 h-4 fill-slate-950" />
@@ -645,7 +687,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                               {v.company || v.purpose}
                             </span>
                           </td>
-                          <td className="py-3.5 font-bold text-indigo-600">{v.flat}</td>
+                          <td className="py-3.5 font-bold text-indigo-600">{v.flat} ({v.residentName})</td>
                           <td className="py-3.5 font-mono text-slate-600">{v.vehicle}</td>
                           <td className="py-3.5 text-slate-500">{v.entryTime}</td>
                           <td className="py-3.5">
@@ -678,149 +720,416 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 2. VISITOR CHECK-IN & APPROVALS WORKSPACE */}
+          {/* 2. UPGRADED: VISITOR CHECK-IN & CHECK-OUT WORKSPACE */}
           {/* ========================================================================= */}
           {activeSection === 'visitors' && (
             <div className="space-y-6">
               
+              {/* Top Hero Banner */}
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                     <UserCheck className="w-8 h-8" />
                   </div>
                   <div>
-                    <h2 className="font-black text-2xl text-slate-900">Visitor Check-In & Gate Register</h2>
-                    <p className="text-xs text-slate-500 mt-1">Log unannounced visitors, verify pre-approved guest QR passes, and dispatch approvals</p>
+                    <h2 className="font-black text-2xl text-slate-900">Visitor Check-In & Exit Management</h2>
+                    <p className="text-xs text-slate-500 mt-1">Complete gate passage control, instant resident notification, badge generator, and fast exit scan</p>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setShowCheckInModal(true)}
-                  className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
-                >
-                  + New Visitor Check-In
-                </button>
+                {/* 4 Unified Sub-Tab Switcher */}
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl text-xs font-bold gap-1 self-stretch sm:self-center">
+                  <button
+                    onClick={() => setVisitorSubTab('ledger')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      visitorSubTab === 'ledger' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📋 Live Inside ({insideCount})
+                  </button>
+
+                  <button
+                    onClick={() => setVisitorSubTab('checkin')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      visitorSubTab === 'checkin' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🟢 New Entry Check-In
+                  </button>
+
+                  <button
+                    onClick={() => setVisitorSubTab('checkout')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      visitorSubTab === 'checkout' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🔴 Fast Exit / Exit Scan
+                  </button>
+
+                  <button
+                    onClick={() => setVisitorSubTab('preapproved')}
+                    className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      visitorSubTab === 'preapproved' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🎫 Pass Validator
+                  </button>
+                </div>
               </div>
 
-              {/* Filter Tabs & Search Bar */}
-              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="flex gap-2 text-xs">
-                    <button
-                      onClick={() => setVisitorFilterTab('all')}
-                      className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
-                    >
-                      All ({visitorRegister.length})
-                    </button>
-                    <button
-                      onClick={() => setVisitorFilterTab('inside')}
-                      className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'inside' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
-                    >
-                      Inside Society ({insideCount})
-                    </button>
-                    <button
-                      onClick={() => setVisitorFilterTab('departed')}
-                      className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'departed' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
-                    >
-                      Departed ({visitorRegister.length - insideCount})
-                    </button>
+              {/* ========================================================================= */}
+              {/* SUB-TAB 1: LIVE IN-CAMPUS VISITORS LEDGER */}
+              {/* ========================================================================= */}
+              {visitorSubTab === 'ledger' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+                    <div className="flex gap-2 text-xs">
+                      <button
+                        onClick={() => setVisitorFilterTab('inside')}
+                        className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'inside' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                      >
+                        Currently Inside ({insideCount})
+                      </button>
+                      <button
+                        onClick={() => setVisitorFilterTab('all')}
+                        className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                      >
+                        All Entries ({visitorRegister.length})
+                      </button>
+                      <button
+                        onClick={() => setVisitorFilterTab('departed')}
+                        className={`px-4 py-2 rounded-xl font-bold cursor-pointer ${visitorFilterTab === 'departed' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                      >
+                        Departed ({visitorRegister.length - insideCount})
+                      </button>
+                    </div>
+
+                    <div className="w-full sm:w-72 relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search name, phone, flat..."
+                        value={visitorSearch}
+                        onChange={(e) => setVisitorSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
+                      />
+                    </div>
                   </div>
 
-                  <div className="w-full sm:w-72 relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Search visitor, phone, flat..."
-                      value={visitorSearch}
-                      onChange={(e) => setVisitorSearch(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none"
-                    />
+                  <div className="space-y-3">
+                    {visitorRegister
+                      .filter(v => visitorFilterTab === 'all' || (visitorFilterTab === 'inside' ? v.status === 'Inside' : v.status === 'Departed'))
+                      .filter(v => v.name.toLowerCase().includes(visitorSearch.toLowerCase()) || v.flat.toLowerCase().includes(visitorSearch.toLowerCase()) || v.phone.includes(visitorSearch))
+                      .map(v => (
+                        <div key={v.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-xl shadow-xs border border-slate-200 shrink-0">
+                              {v.purpose === 'Delivery' ? '⚡' : v.purpose === 'Cab' ? '🚗' : v.purpose === 'Service Tech' ? '👨‍🔧' : '👤'}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm text-slate-900">{v.name}</span>
+                                <span className="bg-slate-200 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                                  {v.company || v.purpose}
+                                </span>
+                                <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                  v.status === 'Inside' ? 'bg-emerald-100 text-emerald-800 animate-pulse' : 'bg-slate-200 text-slate-600'
+                                }`}>
+                                  {v.status}
+                                </span>
+                                <span className="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
+                                  {v.badgeNo}
+                                </span>
+                              </div>
+                              <div className="text-xs text-slate-500 mt-1">
+                                Flat: <strong className="text-slate-900">{v.flat} ({v.residentName})</strong> • Phone: {v.phone} • Vehicle: <strong className="font-mono">{v.vehicle}</strong>
+                              </div>
+                              <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                                <span>Entry: <strong>{v.entryTime}</strong></span>
+                                <span>•</span>
+                                <span className="text-indigo-600 font-bold">{v.dwellTime}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
+                            {v.status === 'Inside' && (
+                              <button
+                                onClick={() => handleCheckOutVisitor(v.id)}
+                                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs"
+                              >
+                                Log Exit
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => setBadgeVisitor(v)}
+                              className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Gate Badge</span>
+                            </button>
+
+                            <button
+                              onClick={() => alert(`Calling resident ${v.residentName} (${v.flat}) on intercom...`)}
+                              className="p-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl cursor-pointer"
+                              title="Call Resident"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </div>
+              )}
 
-                <div className="space-y-3">
-                  {visitorRegister
-                    .filter(v => visitorFilterTab === 'all' || (visitorFilterTab === 'inside' ? v.status === 'Inside' : v.status === 'Departed'))
-                    .filter(v => v.name.toLowerCase().includes(visitorSearch.toLowerCase()) || v.flat.toLowerCase().includes(visitorSearch.toLowerCase()) || v.phone.includes(visitorSearch))
-                    .map(v => (
-                      <div key={v.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-xl shadow-xs border border-slate-200 shrink-0">
-                            {v.purpose === 'Delivery' ? '⚡' : v.purpose === 'Cab' ? '🚗' : v.purpose === 'Service Tech' ? '👨‍🔧' : '👤'}
-                          </div>
+              {/* ========================================================================= */}
+              {/* SUB-TAB 2: NEW ENTRY CHECK-IN FORM */}
+              {/* ========================================================================= */}
+              {visitorSubTab === 'checkin' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900">Log New Visitor Entry & Dispatch Approval</h3>
+                      <p className="text-xs text-slate-500">Record visitor details, capture camera snapshot, and notify resident flat</p>
+                    </div>
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+                      Gate 1 Main Barrier
+                    </span>
+                  </div>
+
+                  <form onSubmit={handleCheckInVisitor} className="space-y-6 text-xs">
+                    
+                    {/* Category Selector */}
+                    <div className="space-y-2">
+                      <label className="font-bold text-slate-700 block">1. Select Visitor Category:</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        {[
+                          { id: 'Delivery', label: '⚡ Delivery (Blinkit/Swiggy)', desc: '10-min / Food Delivery' },
+                          { id: 'Cab', label: '🚗 Cab Pickup (Uber/Ola)', desc: 'Taxi / Airport Ride' },
+                          { id: 'Guest', label: '👨‍👩‍👧 Family Guest', desc: 'Pre-Approved / Walk-in' },
+                          { id: 'Service Tech', label: '👨‍🔧 Service Technician', desc: 'Plumber / Electrician' },
+                          { id: 'Daily Staff', label: '👷 Daily Staff', desc: 'Maid / Cook / Driver' },
+                        ].map(cat => (
+                          <button
+                            type="button"
+                            key={cat.id}
+                            onClick={() => setVPurpose(cat.id as any)}
+                            className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all ${
+                              vPurpose === cat.id ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            <div className="font-bold text-xs">{cat.label}</div>
+                            <div className={`text-[10px] mt-0.5 ${vPurpose === cat.id ? 'text-slate-300' : 'text-slate-500'}`}>{cat.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">2. Visitor Full Name</label>
+                        <input
+                          type="text"
+                          required
+                          value={vName}
+                          onChange={(e) => setVName(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-slate-900"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">3. Visitor Mobile Number</label>
+                        <input
+                          type="tel"
+                          required
+                          value={vPhone}
+                          onChange={(e) => setVPhone(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-mono font-medium focus:outline-none focus:border-slate-900"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Destination Flat & Resident Preview */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">4. Destination Flat Number</label>
+                        <select
+                          value={vFlat}
+                          onChange={(e) => setVFlat(e.target.value)}
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold focus:outline-none"
+                        >
+                          <option value="Flat B-108">Flat B-108 (Ananya Sharma - Tower B)</option>
+                          <option value="Flat A-402">Flat A-402 (Rajesh Mehta - Tower A)</option>
+                          <option value="Flat C-301">Flat C-301 (Suresh Menon - Tower C)</option>
+                          <option value="Flat A-104">Flat A-104 (Pooja Hegde - Tower A)</option>
+                          <option value="Flat B-204">Flat B-204 (Rohan Deshmukh - Tower B)</option>
+                        </select>
+                      </div>
+
+                      {/* Resident Info Preview Box */}
+                      <div className="p-3.5 bg-indigo-50/60 border border-indigo-200 rounded-2xl space-y-1">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-slate-900">{residentDatabase[vFlat]?.owner}</span>
+                          <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">Resident Info</span>
+                        </div>
+                        <div className="text-[11px] text-slate-600">{residentDatabase[vFlat]?.phone} • {residentDatabase[vFlat]?.type}</div>
+                        <div className="text-[10px] font-bold text-emerald-700 mt-1">{residentDatabase[vFlat]?.autoApprove}</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">5. Company / Delivery App / Purpose</label>
+                        <input
+                          type="text"
+                          value={vCompany}
+                          onChange={(e) => setVCompany(e.target.value)}
+                          placeholder="e.g. Blinkit, Swiggy, Uber, Zomato"
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-medium focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700 block">6. Vehicle Plate Number</label>
+                        <input
+                          type="text"
+                          value={vVehicle}
+                          onChange={(e) => setVVehicle(e.target.value)}
+                          placeholder="e.g. TS-08-EM-4921 or Walk-in"
+                          className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-mono font-medium focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Camera Snapshot Toggle */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Camera className="w-5 h-5 text-indigo-600" />
+                        <div>
+                          <div className="font-bold text-xs text-slate-900">Gate AI Camera Snapshot Capture</div>
+                          <div className="text-[11px] text-slate-500">Live facial photo capture attached to visitor gate badge.</div>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+                        ✓ Snapshot Ready (CAM-101.jpg)
+                      </span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                    >
+                      <UserCheck className="w-4 h-4" />
+                      <span>Log Visitor Entry & Lift Gate 1 Barrier</span>
+                    </button>
+
+                  </form>
+                </div>
+              )}
+
+              {/* ========================================================================= */}
+              {/* SUB-TAB 3: FAST EXIT / CHECK-OUT SCANNER */}
+              {/* ========================================================================= */}
+              {visitorSubTab === 'checkout' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div>
+                    <h3 className="font-black text-lg text-slate-900">Fast Exit / Check-Out Scanner</h3>
+                    <p className="text-xs text-slate-500">Search by plate number or mobile to record visitor exit and raise exit barrier</p>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search Vehicle Plate or Visitor Mobile (e.g. TS-08-EM-4921, 98765 12099)..."
+                      value={exitSearchQuery}
+                      onChange={(e) => setExitSearchQuery(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold uppercase focus:outline-none focus:border-slate-900"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    {visitorRegister
+                      .filter(v => v.status === 'Inside')
+                      .filter(v => v.vehicle.toLowerCase().includes(exitSearchQuery.toLowerCase()) || v.name.toLowerCase().includes(exitSearchQuery.toLowerCase()) || v.phone.includes(exitSearchQuery))
+                      .map(v => (
+                        <div key={v.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-sm text-slate-900">{v.name}</span>
-                              <span className="bg-slate-200 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded">
-                                {v.company || v.purpose}
-                              </span>
-                              <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
-                                v.status === 'Inside' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
-                              }`}>
-                                {v.status}
+                              <span className="font-mono font-black text-base text-slate-900">{v.vehicle}</span>
+                              <span className="font-bold text-xs text-slate-600">({v.name})</span>
+                              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                Inside
                               </span>
                             </div>
                             <div className="text-xs text-slate-500 mt-1">
-                              Flat: <strong className="text-slate-900">{v.flat}</strong> • Phone: {v.phone} • Vehicle: <strong className="font-mono">{v.vehicle}</strong> • Entry: {v.entryTime}
+                              Visited: <strong>{v.flat} ({v.residentName})</strong> • Phone: {v.phone} • Entered at: {v.entryTime}
+                            </div>
+                            <div className="text-[11px] font-bold text-indigo-600 mt-0.5">
+                              Dwell Time: {v.dwellTime}
                             </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-2 self-end sm:self-center">
-                          {v.status === 'Inside' && (
-                            <button
-                              onClick={() => handleCheckOutVisitor(v.id)}
-                              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
-                            >
-                              Log Check-Out
-                            </button>
-                          )}
                           <button
-                            onClick={() => alert(`Calling resident of ${v.flat} on intercom...`)}
-                            className="p-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl cursor-pointer"
+                            onClick={() => handleCheckOutVisitor(v.id)}
+                            className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-md transition-transform active:scale-95 cursor-pointer shrink-0"
                           >
-                            <Phone className="w-4 h-4" />
+                            Raise Exit Barrier & Check-Out
                           </button>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-            </div>
-          )}
+              {/* ========================================================================= */}
+              {/* SUB-TAB 4: PRE-APPROVED FAST PASS SCANNER */}
+              {/* ========================================================================= */}
+              {visitorSubTab === 'preapproved' && (
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 animate-fade-in">
+                  <div>
+                    <h3 className="font-black text-lg text-slate-900">Pre-Approved Guest Pass & QR Validator</h3>
+                    <p className="text-xs text-slate-500">Scan resident-generated QR codes or enter 6-digit gate OTP passcodes</p>
+                  </div>
 
-          {/* ========================================================================= */}
-          {/* 3. CHECK-OUT & EXIT SCANNER */}
-          {activeSection === 'checkout' && (
-            <div className="space-y-6">
-              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-                <span className="font-black text-xl text-slate-900 block">Gate Exit Scanner & Barrier Release</span>
-                <p className="text-xs text-slate-500">Scan license plate or select visitor currently inside society to record checkout and lift exit barrier.</p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  {visitorRegister.filter(v => v.status === 'Inside').map(v => (
-                    <div key={v.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-4">
-                      <div>
-                        <div className="font-bold text-sm text-slate-900">{v.name}</div>
-                        <div className="text-xs text-slate-500">Flat: {v.flat} • {v.vehicle}</div>
-                        <div className="text-[11px] text-emerald-700 font-bold mt-1">Entered at {v.entryTime}</div>
-                      </div>
-                      <button
-                        onClick={() => handleCheckOutVisitor(v.id)}
-                        className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shrink-0"
-                      >
-                        Raise Exit Barrier
-                      </button>
+                  <form onSubmit={handleValidateOtp} className="space-y-4 max-w-md">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1 text-xs">Enter 6-Digit Gate OTP Passcode:</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. 892-104"
+                        value={otpToValidate}
+                        onChange={(e) => setOtpToValidate(e.target.value)}
+                        className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-mono text-center text-2xl font-black tracking-widest uppercase focus:outline-none focus:border-slate-900"
+                      />
                     </div>
-                  ))}
+
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-lg cursor-pointer"
+                    >
+                      Validate Guest Passcode & Allow Entry
+                    </button>
+                  </form>
+
+                  {otpValidationResult && (
+                    <div className={`p-5 rounded-2xl border text-xs font-bold ${
+                      otpValidationResult.includes('VALID:') ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'
+                    }`}>
+                      {otpValidationResult}
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
+
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 4. GATE SHELF PARCEL LOCKERS */}
+          {/* 3. GATE SHELF PARCEL LOCKERS */}
           {activeSection === 'parcels' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -883,7 +1192,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 5. ANPR AI CAMERA & VEHICLE SCANNER */}
+          {/* 4. ANPR AI CAMERA & VEHICLE SCANNER */}
           {activeSection === 'anpr' && (
             <div className="space-y-6">
               
@@ -947,7 +1256,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 6. DAILY STAFF ATTENDANCE */}
+          {/* 5. DAILY STAFF ATTENDANCE */}
           {activeSection === 'staff' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -999,7 +1308,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 7. EMERGENCY SOS CONSOLE */}
+          {/* 6. EMERGENCY SOS CONSOLE */}
           {activeSection === 'sos' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -1035,7 +1344,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 8. INCIDENT OCCURRENCE BOOK */}
+          {/* 7. INCIDENT OCCURRENCE BOOK */}
           {activeSection === 'incidents' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -1064,7 +1373,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 9. GUARD QR PATROL CHECKPOINTS */}
+          {/* 8. GUARD QR PATROL CHECKPOINTS */}
           {activeSection === 'patrol' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -1096,7 +1405,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 10. LOST & FOUND REGISTER */}
+          {/* 9. LOST & FOUND REGISTER */}
           {activeSection === 'lostfound' && (
             <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
@@ -1121,7 +1430,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 11. SECURITY ANALYTICS */}
+          {/* 10. SECURITY ANALYTICS */}
           {activeSection === 'analytics' && (
             <div className="space-y-6">
               <SecurityAnalytics />
@@ -1133,104 +1442,67 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
       </div>
 
       {/* ========================================================================= */}
-      {/* MODAL: NEW VISITOR CHECK-IN MODAL */}
+      {/* MODAL: PRINTABLE VISITOR GATE BADGE MODAL */}
       {/* ========================================================================= */}
-      {showCheckInModal && (
+      {badgeVisitor && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg space-y-5 shadow-2xl relative">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm space-y-5 shadow-2xl relative text-center">
             <button
-              onClick={() => setShowCheckInModal(false)}
+              onClick={() => setBadgeVisitor(null)}
               className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div>
-              <h3 className="font-black text-xl text-slate-900">New Visitor Entry Check-In</h3>
-              <p className="text-xs text-slate-500">Gate 1 Entry Barrier • Auto-dispatch approval to resident app</p>
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-950 text-white flex items-center justify-center mx-auto text-2xl shadow-md">
+              🛡️
             </div>
 
-            <form onSubmit={handleCheckInVisitor} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Visitor Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={vName}
-                    onChange={(e) => setVName(e.target.value)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Mobile Number</label>
-                  <input
-                    type="tel"
-                    required
-                    value={vPhone}
-                    onChange={(e) => setVPhone(e.target.value)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  />
-                </div>
-              </div>
+            <div>
+              <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                Visitor Gate Pass
+              </span>
+              <h3 className="font-black text-2xl text-slate-900 mt-1">{badgeVisitor.name}</h3>
+              <p className="text-xs text-slate-500">{badgeVisitor.company || badgeVisitor.purpose} • {badgeVisitor.phone}</p>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Destination Flat</label>
-                  <input
-                    type="text"
-                    required
-                    value={vFlat}
-                    onChange={(e) => setVFlat(e.target.value)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Purpose Category</label>
-                  <select
-                    value={vPurpose}
-                    onChange={(e) => setVPurpose(e.target.value as any)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  >
-                    <option value="Delivery">Delivery (Blinkit / Swiggy)</option>
-                    <option value="Guest">Personal Guest</option>
-                    <option value="Cab">Cab Pickup (Uber / Ola)</option>
-                    <option value="Service Tech">Service Technician</option>
-                    <option value="Daily Staff">Daily Staff</option>
-                  </select>
-                </div>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-left text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Badge No:</span>
+                <span className="font-mono font-bold text-slate-900">{badgeVisitor.badgeNo}</span>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Company / Delivery App</label>
-                  <input
-                    type="text"
-                    value={vCompany}
-                    onChange={(e) => setVCompany(e.target.value)}
-                    placeholder="e.g. Blinkit, Swiggy, Uber"
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Vehicle Plate No</label>
-                  <input
-                    type="text"
-                    value={vVehicle}
-                    onChange={(e) => setVVehicle(e.target.value)}
-                    placeholder="e.g. TS-08-EM-4921"
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  />
-                </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Destination:</span>
+                <span className="font-bold text-slate-900">{badgeVisitor.flat} ({badgeVisitor.residentName})</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Vehicle:</span>
+                <span className="font-mono text-slate-900">{badgeVisitor.vehicle}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Issued At:</span>
+                <span className="text-slate-900">{badgeVisitor.entryTime}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Authorized By:</span>
+                <span className="text-slate-900">{badgeVisitor.guardName}</span>
+              </div>
+            </div>
 
-              <button
-                type="submit"
-                className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs shadow-lg mt-2 cursor-pointer"
-              >
-                Dispatch Entry Approval & Lift Barrier
-              </button>
-            </form>
+            <div className="w-32 h-32 bg-white p-2 border border-slate-200 rounded-2xl mx-auto flex items-center justify-center">
+              <QrCode className="w-28 h-28 text-slate-900" />
+            </div>
+
+            <button
+              onClick={() => {
+                alert(`Printing Visitor Gate Badge #${badgeVisitor.badgeNo} on thermal receipt printer...`);
+                setBadgeVisitor(null);
+              }}
+              className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print Visitor Badge</span>
+            </button>
           </div>
         </div>
       )}
