@@ -8,7 +8,7 @@ import {
   ShieldAlert, ShieldCheck, Snowflake, Sparkles, Star, Tag, Trash2, Trophy, Truck, 
   User, UserCheck, UserPlus, Users, Vote, Waves, Wifi, Wrench, X, XCircle, Zap, Contact, Building2,
   CheckCheck, Percent, RefreshCw, Smartphone, Landmark, ShieldCheck as SecureIcon,
-  AlertCircle, Car, Coffee, ShieldX, UserX, PhoneCall
+  AlertCircle, Car, Coffee, ShieldX, UserX, PhoneCall, AlertTriangle, ThumbsUp, Hammer
 } from 'lucide-react';
 
 interface ResidentPortalProps {
@@ -45,21 +45,41 @@ interface GateApprovalRequest {
   status: 'pending' | 'allowed' | 'denied' | 'left_at_gate';
 }
 
+interface HelpdeskTicket {
+  id: string;
+  subject: string;
+  category: string;
+  categoryIcon: any;
+  desc: string;
+  priority: 'Critical' | 'High' | 'Medium' | 'Low';
+  preferredSlot: string;
+  status: 'Logged' | 'Technician Assigned' | 'In Progress' | 'Resolved';
+  assignedTech: {
+    name: string;
+    role: string;
+    phone: string;
+    rating: string;
+    jobs: number;
+    location: string;
+  };
+  sla: string;
+  closeOtp: string;
+  date: string;
+  photoAttached?: boolean;
+  rating?: number | null;
+  feedbackTags?: string[];
+}
+
 export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   // Navigation State
   const [activeSection, setActiveSection] = useState<ResidentNavSection>('overview');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Notification Toast Banner
-  const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
-
   // SOS Alarm Modal
   const [showSosModal, setShowSosModal] = useState<boolean>(false);
   const [sosTriggered, setSosTriggered] = useState<boolean>(false);
 
-  // =========================================================================
-  // LIVE GATE APPROVAL REQUESTS ENGINE (Blinkit, Swiggy, Guests at Gate)
-  // =========================================================================
+  // Gate Approval Requests State
   const [incomingGateRequests, setIncomingGateRequests] = useState<GateApprovalRequest[]>([
     {
       id: 'GATE-REQ-101',
@@ -82,45 +102,116 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   const [guestName, setGuestName] = useState<string>('Siddharth Verma');
   const [guestPhone, setGuestPhone] = useState<string>('98765 43210');
   const [guestArrival, setGuestArrival] = useState<string>('Today at 04:30 PM');
-  const [guestPurpose, setGuestPurpose] = useState<string>('Dinner Guest');
   const [generatedPass, setGeneratedPass] = useState<{ otp: string; name: string; mobile: string; arrival: string } | null>(null);
 
-  // Modern Billing State
+  // Billing State
   const [billStatus, setBillStatus] = useState<'Unpaid' | 'Paid'>('Unpaid');
   const [earlyBirdApplied, setEarlyBirdApplied] = useState<boolean>(true);
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
   const [paymentStep, setPaymentStep] = useState<'idle' | 'processing' | 'success'>('idle');
-  const [selectedUpiApp, setSelectedUpiApp] = useState<string>('GPay');
-  const [selectedBank, setSelectedBank] = useState<string>('HDFC Bank');
-  
-  // Card Input State
-  const [cardNumber, setCardNumber] = useState<string>('4532 8901 2345 9012');
-  const [cardHolder, setCardHolder] = useState<string>('ANANYA SHARMA');
-  const [cardExpiry, setCardExpiry] = useState<string>('08/29');
-  const [cardCvv, setCardCvv] = useState<string>('892');
 
   // Pre-Paid Meter State
   const [meterBalance, setMeterBalance] = useState<number>(-22.47);
   const [showRechargeModal, setShowRechargeModal] = useState<boolean>(false);
   const [rechargeAmount, setRechargeAmount] = useState<number>(1000);
-  const [autopayEnabled, setAutopayEnabled] = useState<boolean>(true);
 
-  // Billing Calculation
-  const baseMaintenance = 3200;
-  const sinkingFund = 500;
-  const waterUsage = 400;
-  const dgBackup = 75.60;
-  const amenityMaintenance = 150;
-  const gstTax = 666;
-  const earlyBirdDiscount = earlyBirdApplied ? 238.30 : 0;
-  const totalPayable = (baseMaintenance + sinkingFund + waterUsage + dgBackup + amenityMaintenance + gstTax - earlyBirdDiscount);
+  const totalPayable = 4753.30;
 
-  // Past Invoices Vault
-  const [pastInvoicesList, setPastInvoicesList] = useState([
-    { id: 'INV-AUG-2026', month: 'August 2026', amount: '₹ 4,753.30', status: billStatus, date: billStatus === 'Paid' ? 'Today' : 'Due 31 Aug 2026', receipt: 'GST-9021', mode: 'UPI Autopay' },
-    { id: 'INV-JUL-2026', month: 'July 2026', amount: '₹ 4,766.00', status: 'Paid', date: '04 Jul 2026', receipt: 'GST-8412', mode: 'Netbanking (HDFC)' },
-    { id: 'INV-JUN-2026', month: 'June 2026', amount: '₹ 4,766.00', status: 'Paid', date: '02 Jun 2026', receipt: 'GST-7711', mode: 'Credit Card (Visa)' },
+  // =========================================================================
+  // MODERN HELPDESK & COMPLAINT ENGINE STATE
+  // =========================================================================
+  const [complaintCategory, setComplaintCategory] = useState<string>('Plumbing');
+  const [complaintSubject, setComplaintSubject] = useState<string>('Kitchen Sink Drainage Pipe Water Leakage');
+  const [complaintDesc, setComplaintDesc] = useState<string>('Continuous water leaking under the sink cabinet causing dampness. Need urgent inspection.');
+  const [complaintPriority, setComplaintPriority] = useState<'Critical' | 'High' | 'Medium' | 'Low'>('High');
+  const [complaintSlot, setComplaintSlot] = useState<string>('Morning (09:00 AM - 12:00 PM)');
+  const [hasPhotoAttached, setHasPhotoAttached] = useState<boolean>(true);
+  const [filterTicketTab, setFilterTicketTab] = useState<'all' | 'active' | 'resolved'>('all');
+
+  const complaintCategoriesList = [
+    { id: 'Plumbing', name: 'Plumbing & Drainage', icon: Droplets, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { id: 'Electrical', name: 'Electrical & Power', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { id: 'Carpentry', name: 'Carpentry & Door Locks', icon: Hammer, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { id: 'Housekeeping', name: 'Housekeeping & Waste', icon: Sparkles, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { id: 'Lift', name: 'Lift & Common Area', icon: Building2, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { id: 'Telecom', name: 'Intercom & Wi-Fi Fiber', icon: Wifi, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+    { id: 'Security', name: 'Parking & Noise Alert', icon: Car, color: 'text-rose-600', bg: 'bg-rose-50' },
+  ];
+
+  const [ticketsList, setTicketsList] = useState<HelpdeskTicket[]>([
+    {
+      id: 'TK-9021',
+      subject: 'Kitchen Sink Drainage Pipe Water Leakage',
+      category: 'Plumbing',
+      categoryIcon: Droplets,
+      desc: 'Continuous water leaking under the sink cabinet causing dampness.',
+      priority: 'High',
+      preferredSlot: 'Immediate (Within 30 mins)',
+      status: 'In Progress',
+      assignedTech: {
+        name: 'Ramesh Plumber',
+        role: 'Senior Community Plumber',
+        phone: '98123 99887',
+        rating: '4.9 ★',
+        jobs: 142,
+        location: 'Tower B, 3rd Floor (2 mins away)'
+      },
+      sla: '1h 45m remaining (Target: 01:30 PM)',
+      closeOtp: '7812',
+      date: 'Today at 10:15 AM',
+      photoAttached: true,
+      rating: null,
+      feedbackTags: []
+    },
+    {
+      id: 'TK-8910',
+      subject: 'Tower B Lift #2 Button Panel Flickering',
+      category: 'Lift',
+      categoryIcon: Building2,
+      desc: '4th floor call button light blinking rapidly.',
+      priority: 'Medium',
+      preferredSlot: 'Afternoon (12:00 PM - 04:00 PM)',
+      status: 'Resolved',
+      assignedTech: {
+        name: 'Alok OTIS Engineer',
+        role: 'Lift Specialist Technician',
+        phone: '98700 11223',
+        rating: '5.0 ★',
+        jobs: 88,
+        location: 'Resolved & Closed'
+      },
+      sla: 'Resolved in 42 mins',
+      closeOtp: '4091',
+      date: 'Yesterday 04:20 PM',
+      photoAttached: false,
+      rating: 5,
+      feedbackTags: ['Punctual', 'Clean Work', 'Polite']
+    },
+    {
+      id: 'TK-8742',
+      subject: 'Intercom Noise Distortion with Gate 1',
+      category: 'Telecom',
+      categoryIcon: Wifi,
+      desc: 'Heavy static noise when calling guard desk.',
+      priority: 'Low',
+      preferredSlot: 'Evening (04:00 PM - 08:00 PM)',
+      status: 'Resolved',
+      assignedTech: {
+        name: 'Suresh Telecom Tech',
+        role: 'Intercom Network Engineer',
+        phone: '98450 66778',
+        rating: '4.8 ★',
+        jobs: 64,
+        location: 'Resolved & Closed'
+      },
+      sla: 'Resolved in 1.5 hours',
+      closeOtp: '2281',
+      date: '19 Aug 2026',
+      photoAttached: false,
+      rating: 4,
+      feedbackTags: ['Good Fix']
+    }
   ]);
 
   // Pre-approved passes list
@@ -138,7 +229,6 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
   // Household Active Helpers
   const [myHelpersList, setMyHelpersList] = useState([
     { id: 'HLP-01', name: 'Sunita Devi', role: 'Daily Housekeeping Maid', phone: '98765 99887', status: 'Inside Society (Gate 1)', time: '09:15 AM - 01:00 PM', rating: '4.9 ★', salary: '₹ 3,500/mo' },
-    { id: 'HLP-02', name: 'Ramesh Kumar', role: 'Morning Cook', phone: '98123 44556', status: 'Checked Out', time: '07:00 AM - 09:00 AM', rating: '4.8 ★', salary: '₹ 5,000/mo' },
   ]);
 
   // 13 Service Categories
@@ -163,177 +253,76 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
     Cleaning: [
       { name: 'Sunita Devi', exp: '4 Years in Community', rating: '4.9 ★', reviews: 42, flats: 8, phone: '98765 99887', rate: '₹3,500/month' },
       { name: 'Kavita Kumari', exp: '3 Years in Community', rating: '4.8 ★', reviews: 29, flats: 6, phone: '98123 77665', rate: '₹3,200/month' },
-      { name: 'Laxmi Shinde', exp: '5 Years in Community', rating: '5.0 ★', reviews: 68, flats: 11, phone: '98450 33441', rate: '₹3,800/month' },
-    ],
-    'Water Supply': [
-      { name: 'AquaPure Mineral Cans (Bisleri 20L)', exp: 'Daily 7 AM & 4 PM Supply', rating: '4.9 ★', reviews: 140, flats: 65, phone: '98220 11990', rate: '₹80/Can' },
-      { name: 'Himalayan Spring Water Service', exp: 'Doorstep Delivery', rating: '4.8 ★', reviews: 88, flats: 34, phone: '98111 00223', rate: '₹90/Can' },
-    ],
-    'Gym Trainer': [
-      { name: 'Coach Rohit Verma (Certified ACSM)', exp: '8 Years Experience', rating: '5.0 ★', reviews: 38, flats: 14, phone: '98700 12345', rate: '₹4,500/month' },
     ],
   };
 
-  // Helpdesk Tickets
-  const [ticketsList, setTicketsList] = useState([
-    { id: 'TK-9021', subject: 'Kitchen Sink Drainage Pipe Water Leakage', category: 'Plumbing', desc: 'Water leaking under the kitchen sink cabinet continuously.', priority: 'High', status: 'In Progress', assignedTo: 'Ramesh Plumber (Ph: 98123 99887)', sla: '1h 45m remaining', date: 'Today 10:15 AM', rating: null as number | null },
-  ]);
+  // Handlers
+  const handleCreateComplaint = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!complaintSubject) return;
 
-  const [newTicketSubject, setNewTicketSubject] = useState<string>('');
-  const [newTicketCategory, setNewTicketCategory] = useState<string>('Plumbing');
-  const [newTicketPriority, setNewTicketPriority] = useState<string>('High');
-  const [newTicketDesc, setNewTicketDesc] = useState<string>('');
+    const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const newId = `TK-${Math.floor(9000 + Math.random() * 1000)}`;
+    const matchedCategory = complaintCategoriesList.find(c => c.id === complaintCategory);
 
-  // Search State
-  const [categorySearchQuery, setCategorySearchQuery] = useState<string>('');
+    const newTicket: HelpdeskTicket = {
+      id: newId,
+      subject: complaintSubject,
+      category: complaintCategory,
+      categoryIcon: matchedCategory ? matchedCategory.icon : Wrench,
+      desc: complaintDesc || 'Reported via Resident Web ERP',
+      priority: complaintPriority,
+      preferredSlot: complaintSlot,
+      status: 'Technician Assigned',
+      assignedTech: {
+        name: complaintCategory === 'Plumbing' ? 'Ramesh Plumber' : complaintCategory === 'Electrical' ? 'Alok Electrician' : 'Duty Technician',
+        role: `Lead Community ${complaintCategory} Tech`,
+        phone: '98123 99887',
+        rating: '4.9 ★',
+        jobs: 140,
+        location: 'Dispatched to Tower B'
+      },
+      sla: complaintPriority === 'Critical' ? '30 Mins Emergency SLA' : '2 Hours SLA',
+      closeOtp: randomOtp,
+      date: 'Just Now',
+      photoAttached: hasPhotoAttached,
+      rating: null,
+      feedbackTags: []
+    };
 
-  // =========================================================================
-  // GATE ENTRY APPROVAL ACTIONS
-  // =========================================================================
+    setTicketsList([newTicket, ...ticketsList]);
+    setComplaintSubject('');
+    setComplaintDesc('');
+    alert(`COMPLAINT REGISTERED (${newId}) ✓\nTechnician ${newTicket.assignedTech.name} has been dispatched to Flat B-108!\nYour Close-Job Passcode: OTP ${randomOtp}`);
+  };
+
+  const handleRateTicket = (id: string, star: number) => {
+    setTicketsList(prev => prev.map(t => t.id === id ? { ...t, rating: star } : t));
+  };
+
   const handleAllowGateEntry = (reqId: string) => {
-    const req = incomingGateRequests.find(r => r.id === reqId);
-    if (!req) return;
     setIncomingGateRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'allowed' } : r));
-    alert(`ENTRY ALLOWED ✓\nGate 1 barrier opened for ${req.name} (${req.company || req.category}). Guard ${req.guardName} notified!`);
   };
 
   const handleLeaveAtGate = (reqId: string) => {
-    const req = incomingGateRequests.find(r => r.id === reqId);
-    if (!req) return;
     setIncomingGateRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'left_at_gate' } : r));
-    const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
-    setParcelsList(prev => [
-      { id: `PAR-${Math.floor(200 + Math.random() * 100)}`, courier: req.company || 'Gate Delivery', orderNo: req.orderNo || '#ORD-892', shelf: 'Gate Shelf Locker #B-1', arrival: 'Just Now', status: 'Awaiting Pickup', otp: randomOtp },
-      ...prev
-    ]);
-    alert(`PARCEL ACCEPTED AT GATE ✓\nInstructed Guard ${req.guardName} to place ${req.company} package at Shelf Locker #B-1. Pickup Passcode: ${randomOtp}`);
   };
 
   const handleDenyGateEntry = (reqId: string) => {
-    const req = incomingGateRequests.find(r => r.id === reqId);
-    if (!req) return;
     setIncomingGateRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'denied' } : r));
-    alert(`ENTRY DENIED ❌\nInformed Guard ${req.guardName} that ${req.name} is not permitted to enter.`);
   };
 
-  // Simulators
-  const handleSimulateArrival = (type: 'blinkit' | 'swiggy' | 'guest' | 'cab') => {
-    let newReq: GateApprovalRequest;
-    if (type === 'blinkit') {
-      newReq = {
-        id: `GATE-REQ-${Math.floor(100 + Math.random() * 900)}`,
-        name: 'Sunil Verma',
-        category: 'delivery',
-        company: 'Blinkit 10-Min Delivery',
-        orderNo: `#BK-${Math.floor(10000 + Math.random() * 90000)}`,
-        vehicle: 'TS-07-EA-9912 (EV Bike)',
-        phone: '98123 45678',
-        gate: 'Gate 1 Main Gate',
-        guardName: 'Guard Vikram Singh',
-        time: 'Just Now',
-        avatarEmoji: '⚡',
-        status: 'pending',
-      };
-    } else if (type === 'swiggy') {
-      newReq = {
-        id: `GATE-REQ-${Math.floor(100 + Math.random() * 900)}`,
-        name: 'Mahesh Reddy',
-        category: 'delivery',
-        company: 'Swiggy Food / Instamart',
-        orderNo: `#SW-${Math.floor(10000 + Math.random() * 90000)}`,
-        vehicle: 'AP-09-CD-3321 (Hero Splendor)',
-        phone: '98450 77889',
-        gate: 'Gate 1 Main Gate',
-        guardName: 'Guard Ramu',
-        time: 'Just Now',
-        avatarEmoji: '🍕',
-        status: 'pending',
-      };
-    } else if (type === 'cab') {
-      newReq = {
-        id: `GATE-REQ-${Math.floor(100 + Math.random() * 900)}`,
-        name: 'Driver Alok (Uber Premier)',
-        category: 'cab',
-        company: 'Uber Cab Pickup',
-        vehicle: 'KA-01-MJ-8819 (White Dzire)',
-        phone: '98900 11223',
-        gate: 'Gate 2 Rear Gate',
-        guardName: 'Guard Suraj',
-        time: 'Just Now',
-        avatarEmoji: '🚗',
-        status: 'pending',
-      };
-    } else {
-      newReq = {
-        id: `GATE-REQ-${Math.floor(100 + Math.random() * 900)}`,
-        name: 'Venkatesh Rao (Uncle / Relative)',
-        category: 'guest',
-        company: 'Family Guest at Gate',
-        vehicle: 'TS-09-GA-1002 (Honda City)',
-        phone: '98700 33445',
-        gate: 'Gate 1 Main Gate',
-        guardName: 'Guard Vikram Singh',
-        time: 'Just Now',
-        avatarEmoji: '👨‍👩‍👦',
-        status: 'pending',
-      };
-    }
-
-    setIncomingGateRequests(prev => [newReq, ...prev]);
-    setActiveSection('overview');
-  };
-
-  // Other Handlers
-  const handlePreApproveSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const randomOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    const formattedOtp = `${randomOtp.slice(0, 3)}-${randomOtp.slice(3)}`;
-    const passObj = { otp: formattedOtp, name: guestName, mobile: guestPhone, arrival: guestArrival };
-    setGeneratedPass(passObj);
-    setPreApprovedList([
-      { id: `PASS-${Math.floor(8000 + Math.random() * 1000)}`, name: guestName, mobile: guestPhone, arrival: guestArrival, otp: formattedOtp, status: 'Active (Valid)', type: 'Guest Pass' },
-      ...preApprovedList
-    ]);
-  };
-
-  const handleRechargeMeter = () => {
-    setMeterBalance(prev => prev + rechargeAmount);
-    setShowRechargeModal(false);
-    alert(`Pre-paid Meter Recharged with ₹${rechargeAmount}! New Balance: ₹${(meterBalance + rechargeAmount).toFixed(2)}`);
-  };
-
-  const handleExecutePayment = () => {
-    setPaymentStep('processing');
-    setTimeout(() => {
-      setPaymentStep('success');
-      setBillStatus('Paid');
-      setPastInvoicesList(prev => prev.map(inv => inv.id === 'INV-AUG-2026' ? { ...inv, status: 'Paid', date: 'Today (Just Now)', mode: paymentMethod.toUpperCase() } : inv));
-    }, 1500);
-  };
-
-  const handleCreateTicket = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTicketSubject) return;
-    const newId = `TK-${Math.floor(9000 + Math.random() * 1000)}`;
-    setTicketsList([
-      { id: newId, subject: newTicketSubject, category: newTicketCategory, desc: newTicketDesc || 'Reported via Resident Web ERP', priority: newTicketPriority, status: 'In Progress', assignedTo: 'Assigned to Facility Duty Tech', sla: '2 Hours SLA', date: 'Just Now', rating: null },
-      ...ticketsList
-    ]);
-    setNewTicketSubject('');
-    setNewTicketDesc('');
-    alert(`Ticket ${newId} created successfully! Duty Technician dispatched.`);
-  };
-
-  const pendingCount = incomingGateRequests.filter(r => r.status === 'pending').length;
+  const pendingGateCount = incomingGateRequests.filter(r => r.status === 'pending').length;
+  const activeTicketsCount = ticketsList.filter(t => t.status !== 'Resolved').length;
 
   const navMenuItems = [
-    { id: 'overview', label: 'Overview Dashboard', icon: Home, badge: pendingCount > 0 ? `${pendingCount} at Gate` : undefined, badgeColor: 'bg-red-500 text-white animate-pulse' },
-    { id: 'visitors_parcels', label: 'Visitors & Gate Approvals', icon: Shield, badge: pendingCount > 0 ? `${pendingCount}` : undefined },
+    { id: 'overview', label: 'Overview Dashboard', icon: Home, badge: pendingGateCount > 0 ? `${pendingGateCount} at Gate` : undefined, badgeColor: 'bg-red-500 text-white animate-pulse' },
+    { id: 'helpdesk', label: 'Raise Complaints & Helpdesk', icon: Headphones, badge: activeTicketsCount > 0 ? `${activeTicketsCount} Active` : undefined, badgeColor: 'bg-indigo-600 text-white' },
+    { id: 'visitors_parcels', label: 'Visitors & Gate Approvals', icon: Shield, badge: pendingGateCount > 0 ? `${pendingGateCount}` : undefined },
     { id: 'payments', label: 'Paying Bills & Meters', icon: CreditCard, badge: billStatus === 'Unpaid' ? 'Due' : undefined },
     { id: 'helpers', label: 'Helpers & Services (13 Categories)', icon: HandHeart },
     { id: 'members', label: 'Members & Vehicles', icon: Users },
     { id: 'notices', label: 'Society Notices (23 Unread)', icon: FileText, badge: '23' },
-    { id: 'helpdesk', label: 'Helpdesk Tickets', icon: Headphones, badge: '1' },
     { id: 'documents', label: 'Society Documents (8 Files)', icon: Folder },
     { id: 'directory', label: 'Resident & Gate Directory', icon: Contact },
     { id: 'amenities', label: 'Amenities & Courts Booking', icon: Dumbbell },
@@ -370,26 +359,14 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
             </div>
           </div>
 
-          {/* Quick Action Buttons */}
+          {/* Quick Actions */}
           <div className="flex items-center gap-3">
-            {pendingCount > 0 && (
-              <button
-                onClick={() => setActiveSection('visitors_parcels')}
-                className="px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm animate-bounce cursor-pointer"
-              >
-                <Bell className="w-4 h-4" />
-                <span>{pendingCount} Gate Approvals Waiting!</span>
-              </button>
-            )}
-
             <button
-              onClick={() => setActiveSection('payments')}
-              className={`px-4 py-2 rounded-2xl border flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                billStatus === 'Unpaid' ? 'bg-amber-50 text-amber-900 border-amber-300' : 'bg-emerald-50 text-emerald-900 border-emerald-300'
-              }`}
+              onClick={() => setActiveSection('helpdesk')}
+              className="px-4 py-2 rounded-2xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer"
             >
-              <CreditCard className="w-4 h-4" />
-              <span>{billStatus === 'Unpaid' ? `Bill: ₹ ${totalPayable.toFixed(2)}` : 'Dues Cleared ✓'}</span>
+              <Headphones className="w-4 h-4 text-blue-600" />
+              <span>{activeTicketsCount} Active Complaint{activeTicketsCount > 1 ? 's' : ''}</span>
             </button>
 
             <button
@@ -438,36 +415,24 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
             </div>
           </div>
 
-          {/* Gate Approval Quick Simulator */}
-          <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs space-y-2.5">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block px-1">
-              Simulate Gate Arrivals
+          {/* Quick Emergency Facility Dial Strip */}
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-4 rounded-3xl shadow-sm space-y-2 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 block">
+              24/7 Facility Emergency Desk
             </span>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <button
-                onClick={() => handleSimulateArrival('blinkit')}
-                className="p-2.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-900 font-bold rounded-xl border border-yellow-200 flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>⚡ Blinkit</span>
-              </button>
-              <button
-                onClick={() => handleSimulateArrival('swiggy')}
-                className="p-2.5 bg-orange-50 hover:bg-orange-100 text-orange-900 font-bold rounded-xl border border-orange-200 flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>🍕 Swiggy</span>
-              </button>
-              <button
-                onClick={() => handleSimulateArrival('cab')}
-                className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-xl border border-slate-300 flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>🚗 Uber Cab</span>
-              </button>
-              <button
-                onClick={() => handleSimulateArrival('guest')}
-                className="p-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold rounded-xl border border-indigo-200 flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>👨‍👩‍👧 Guest at Gate</span>
-              </button>
+            <div className="space-y-1.5 pt-1 text-[11px]">
+              <div className="flex justify-between items-center text-slate-300">
+                <span>⚡ Electrician On-Duty:</span>
+                <span className="font-mono font-bold text-white">98123 44556</span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span>🚰 Plumber On-Duty:</span>
+                <span className="font-mono font-bold text-white">98765 99887</span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span>👮 Gate 1 Guard Desk:</span>
+                <span className="font-mono font-bold text-white">Ext: 101</span>
+              </div>
             </div>
           </div>
 
@@ -516,298 +481,97 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
         <main className="flex-1 space-y-6">
           
           {/* ========================================================================= */}
-          {/* PROMINENT LIVE INCOMING GATE APPROVAL BANNER (Blinkit, Swiggy, Guests) */}
-          {/* ========================================================================= */}
-          {incomingGateRequests.filter(r => r.status === 'pending').map((req) => (
-            <div 
-              key={req.id}
-              className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 p-6 rounded-3xl shadow-xl space-y-4 border-2 border-amber-300 animate-fade-in relative overflow-hidden"
-            >
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
-                
-                {/* Visitor & Delivery Details */}
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-3xl shadow-md shrink-0">
-                    <span>{req.avatarEmoji}</span>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="bg-slate-950 text-amber-400 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider animate-pulse">
-                        🚨 Ringing from Gate 1 Security
-                      </span>
-                      <span className="text-xs font-black text-slate-900">{req.time}</span>
-                    </div>
-
-                    <h3 className="font-black text-xl text-slate-950 tracking-tight mt-1">
-                      {req.name} • <span className="underline">{req.company || req.category.toUpperCase()}</span>
-                    </h3>
-
-                    <div className="text-xs text-slate-900 font-bold flex flex-wrap items-center gap-3 mt-0.5">
-                      {req.orderNo && <span>Order: <strong>{req.orderNo}</strong></span>}
-                      <span>Vehicle: <strong>{req.vehicle}</strong></span>
-                      <span>Phone: <strong>{req.phone}</strong></span>
-                      <span>Logged by: <strong>{req.guardName}</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 1-Tap Quick Action Buttons */}
-                <div className="flex flex-wrap items-center gap-2.5 self-end sm:self-center">
-                  
-                  {/* Allow Entry */}
-                  <button
-                    onClick={() => handleAllowGateEntry(req.id)}
-                    className="px-5 py-3 rounded-2xl bg-slate-950 hover:bg-slate-900 text-white font-black text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
-                  >
-                    <CheckCheck className="w-4 h-4 text-emerald-400" />
-                    <span>ALLOW ENTRY</span>
-                  </button>
-
-                  {/* Leave at Gate Shelf */}
-                  <button
-                    onClick={() => handleLeaveAtGate(req.id)}
-                    className="px-4 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-black text-xs shadow-md flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
-                  >
-                    <Package className="w-4 h-4 text-indigo-600" />
-                    <span>LEAVE AT GATE SHELF</span>
-                  </button>
-
-                  {/* Deny Entry */}
-                  <button
-                    onClick={() => handleDenyGateEntry(req.id)}
-                    className="px-4 py-3 rounded-2xl bg-red-950 hover:bg-red-900 text-white font-black text-xs shadow-md flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
-                  >
-                    <UserX className="w-4 h-4 text-red-400" />
-                    <span>DENY</span>
-                  </button>
-
-                </div>
-
-              </div>
-            </div>
-          ))}
-
-          {/* ========================================================================= */}
           {/* 1. OVERVIEW & DESKTOP DASHBOARD */}
           {/* ========================================================================= */}
           {activeSection === 'overview' && (
             <div className="space-y-6">
               
-              {/* SECTION 1: MY HOME (Widescreen 3-Card Grid) */}
+              {/* SECTION 1: MY HOME */}
               <div className="space-y-3">
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-500 block px-1">
                   MY HOME
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  
-                  {/* Card 1: Visitors */}
                   <button
                     onClick={() => setActiveSection('visitors_parcels')}
-                    className="bg-white hover:bg-slate-50 p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between text-left transition-all hover:scale-[1.01] hover:shadow-md cursor-pointer group"
+                    className="bg-white hover:bg-slate-50 p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between text-left transition-all hover:scale-[1.01] cursor-pointer"
                   >
                     <div className="flex items-center justify-between w-full mb-4">
-                      <div className="w-12 h-12 rounded-2xl bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5] shadow-xs group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 rounded-2xl bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5]">
                         <Shield className="w-6 h-6" />
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                        pendingCount > 0 ? 'bg-red-500 text-white animate-pulse' : 'text-[#4F46E5] bg-[#EEF2FF]'
-                      }`}>
-                        {pendingCount > 0 ? `${pendingCount} at Gate` : `${preApprovedList.length} Passes`}
+                      <span className="text-xs font-bold text-[#4F46E5] bg-[#EEF2FF] px-3 py-1 rounded-full">
+                        {preApprovedList.length} Passes
                       </span>
                     </div>
                     <div>
                       <div className="font-extrabold text-base text-slate-900">Visitors & Gate Approvals</div>
-                      <div className="text-xs text-slate-500 mt-1">Approve Blinkit, Swiggy, cabs, and unannounced guests</div>
+                      <div className="text-xs text-slate-500 mt-1">Approve Blinkit, Swiggy, and guests at gate</div>
                     </div>
                   </button>
 
-                  {/* Card 2: Helpers */}
                   <button
-                    onClick={() => setActiveSection('helpers')}
-                    className="bg-white hover:bg-slate-50 p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between text-left transition-all hover:scale-[1.01] hover:shadow-md cursor-pointer group"
+                    onClick={() => setActiveSection('helpdesk')}
+                    className="bg-white hover:bg-slate-50 p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between text-left transition-all hover:scale-[1.01] cursor-pointer"
                   >
                     <div className="flex items-center justify-between w-full mb-4">
-                      <div className="w-12 h-12 rounded-2xl bg-[#FCE7F3] flex items-center justify-center text-[#EC4899] shadow-xs group-hover:scale-110 transition-transform">
-                        <HandHeart className="w-6 h-6" />
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                        <Headphones className="w-6 h-6" />
                       </div>
-                      <span className="text-xs font-bold text-[#EC4899] bg-[#FCE7F3] px-3 py-1 rounded-full">
-                        13 Categories
+                      <span className="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+                        {activeTicketsCount} In Progress
                       </span>
                     </div>
                     <div>
-                      <div className="font-extrabold text-base text-slate-900">Helpers & Services</div>
-                      <div className="text-xs text-slate-500 mt-1">Hire maids, cooks, water supply, gym trainers</div>
+                      <div className="font-extrabold text-base text-slate-900">Raise Complaints & Helpdesk</div>
+                      <div className="text-xs text-slate-500 mt-1">Plumbing, electrical, carpentry technician tracking</div>
                     </div>
                   </button>
 
-                  {/* Card 3: Members */}
                   <button
-                    onClick={() => setActiveSection('members')}
-                    className="bg-white hover:bg-slate-50 p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between text-left transition-all hover:scale-[1.01] hover:shadow-md cursor-pointer group"
+                    onClick={() => setActiveSection('payments')}
+                    className="bg-white hover:bg-slate-50 p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between text-left transition-all hover:scale-[1.01] cursor-pointer"
                   >
                     <div className="flex items-center justify-between w-full mb-4">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-700 shadow-xs group-hover:scale-110 transition-transform">
-                        <Users className="w-6 h-6" />
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <CreditCard className="w-6 h-6" />
                       </div>
-                      <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full">
-                        3 Registered
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+                        {billStatus === 'Paid' ? 'All Clear ✓' : 'Bill Due'}
                       </span>
                     </div>
                     <div>
-                      <div className="font-extrabold text-base text-slate-900">Members & Vehicles</div>
-                      <div className="text-xs text-slate-500 mt-1">Family members, vehicle RFID FastTags, and parking slots</div>
+                      <div className="font-extrabold text-base text-slate-900">Paying Bills & Pre-Paid Meter</div>
+                      <div className="text-xs text-slate-500 mt-1">1-Click UPI checkout & EB meter recharge</div>
                     </div>
                   </button>
-
                 </div>
               </div>
 
-              {/* SECTION 2: SOCIETY (Widescreen 4-Column Grid) */}
+              {/* SECTION 2: SOCIETY */}
               <div className="space-y-3">
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-500 block px-1">
                   SOCIETY
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  
-                  {/* Notices */}
-                  <button
-                    onClick={() => setActiveSection('notices')}
-                    className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4 text-left transition-all hover:scale-[1.02] cursor-pointer"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-600 shrink-0">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm text-slate-900">Notices</div>
-                      <div className="text-xs font-bold text-[#EF4444] mt-0.5">23 Unread Circulars</div>
-                    </div>
+                  <button onClick={() => setActiveSection('notices')} className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4 text-left transition-all cursor-pointer">
+                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-600 shrink-0"><FileText className="w-6 h-6" /></div>
+                    <div><div className="font-bold text-sm text-slate-900">Notices</div><div className="text-xs font-bold text-[#EF4444] mt-0.5">23 Unread Circulars</div></div>
                   </button>
-
-                  {/* Helpdesk */}
-                  <button
-                    onClick={() => setActiveSection('helpdesk')}
-                    className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4 text-left transition-all hover:scale-[1.02] cursor-pointer"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-                      <Headphones className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm text-slate-900">Helpdesk</div>
-                      <div className="text-xs font-bold text-blue-600 mt-0.5">1 Ticket In Progress</div>
-                    </div>
+                  <button onClick={() => setActiveSection('helpdesk')} className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4 text-left transition-all cursor-pointer">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0"><Headphones className="w-6 h-6" /></div>
+                    <div><div className="font-bold text-sm text-slate-900">Helpdesk</div><div className="text-xs font-bold text-blue-600 mt-0.5">{activeTicketsCount} Ticket In Progress</div></div>
                   </button>
-
-                  {/* Documents */}
-                  <button
-                    onClick={() => setActiveSection('documents')}
-                    className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4 text-left transition-all hover:scale-[1.02] cursor-pointer"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
-                      <Folder className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm text-slate-900">Documents</div>
-                      <div className="text-xs font-medium text-slate-500 mt-0.5">8 Society Files</div>
-                    </div>
+                  <button onClick={() => setActiveSection('documents')} className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4 text-left transition-all cursor-pointer">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0"><Folder className="w-6 h-6" /></div>
+                    <div><div className="font-bold text-sm text-slate-900">Documents</div><div className="text-xs font-medium text-slate-500 mt-0.5">8 Society Files</div></div>
                   </button>
-
-                  {/* Directory */}
-                  <button
-                    onClick={() => setActiveSection('directory')}
-                    className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4 text-left transition-all hover:scale-[1.02] cursor-pointer"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-                      <Contact className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm text-slate-900">Directory</div>
-                      <div className="text-xs font-medium text-slate-500 mt-0.5">Gate Intercom & RWA</div>
-                    </div>
+                  <button onClick={() => setActiveSection('directory')} className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-4 text-left transition-all cursor-pointer">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"><Contact className="w-6 h-6" /></div>
+                    <div><div className="font-bold text-sm text-slate-900">Directory</div><div className="text-xs font-medium text-slate-500 mt-0.5">Gate & RWA</div></div>
                   </button>
-
-                </div>
-              </div>
-
-              {/* SECTION 3: PAYMENTS & METERS (Widescreen 3-Card Grid) */}
-              <div className="space-y-3">
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-500 block px-1">
-                  PAYMENTS & METERS
-                </span>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  
-                  {/* Pre-paid Meter Card */}
-                  <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-600 shrink-0">
-                        <Gauge className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-base text-[#EF4444]">
-                            ₹ {meterBalance.toFixed(2)}
-                          </span>
-                          {meterBalance < 0 && (
-                            <span className="text-[10px] font-black text-[#DC2626] bg-[#FEE2E2] px-2 py-0.5 rounded-full">
-                              Low Balance
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-slate-500 font-medium">Pre-paid Meter (EB)</div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => setShowRechargeModal(true)}
-                      className="px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
-                    >
-                      Recharge
-                    </button>
-                  </div>
-
-                  {/* Dues Card */}
-                  <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-                        <IndianRupee className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <div className="font-black text-base text-slate-900">
-                          {billStatus === 'Paid' ? 'All Clear ✓' : `₹ ${totalPayable.toFixed(2)} Due`}
-                        </div>
-                        <div className="text-xs text-slate-500 font-medium">August Maintenance</div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => setActiveSection('payments')}
-                      className="px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
-                    >
-                      {billStatus === 'Paid' ? 'View Bill' : 'Pay Bill'}
-                    </button>
-                  </div>
-
-                  {/* Payment History Card */}
-                  <button
-                    onClick={() => setActiveSection('payments')}
-                    className="bg-white hover:bg-slate-50 p-5 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-4 text-left transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-700 shrink-0">
-                        <History className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-sm text-slate-900">Payment History</div>
-                        <div className="text-xs text-slate-500 font-medium">Past Statements & Tax Invoices</div>
-                      </div>
-                    </div>
-
-                    <ChevronRight className="w-5 h-5 text-slate-400" />
-                  </button>
-
                 </div>
               </div>
 
@@ -815,12 +579,300 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           )}
 
           {/* ========================================================================= */}
-          {/* 2. VISITORS, GATE APPROVALS & PARCELS FULL DESKTOP VIEW */}
+          {/* 2. UPGRADED RAISE COMPLAINTS & HELPDESK SUITE */}
           {/* ========================================================================= */}
-          {activeSection === 'visitors_parcels' && (
+          {activeSection === 'helpdesk' && (
             <div className="space-y-6">
               
               {/* Header Hero Banner */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner shrink-0">
+                    <Headphones className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-2xl text-white">Raise Complaints & Helpdesk Service</h2>
+                    <p className="text-xs text-slate-300 mt-1">Book certified community technicians with real-time dispatch tracking & SLA resolution</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-4 py-2 rounded-2xl text-xs font-bold">
+                    ⚡ Guaranteed &lt; 2-Hour SLA
+                  </span>
+                </div>
+              </div>
+
+              {/* Raise New Complaint Interactive Creator */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="font-black text-lg text-slate-900">Raise a New Service Complaint</h3>
+                    <p className="text-xs text-slate-500">Select service category, preferred visit time, and priority level</p>
+                  </div>
+                  <span className="text-xs font-bold text-slate-400">Unit: Flat B-108</span>
+                </div>
+
+                <form onSubmit={handleCreateComplaint} className="space-y-6 text-xs">
+                  
+                  {/* Step 1: Select Category Tiles */}
+                  <div className="space-y-2">
+                    <label className="font-bold text-slate-700 block">1. Select Service Category:</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+                      {complaintCategoriesList.map((cat) => {
+                        const Icon = cat.icon;
+                        const isSelected = complaintCategory === cat.id;
+                        return (
+                          <button
+                            type="button"
+                            key={cat.id}
+                            onClick={() => setComplaintCategory(cat.id)}
+                            className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-105'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            <Icon className={`w-5 h-5 ${isSelected ? 'text-white' : cat.color}`} />
+                            <span className="text-[11px] font-bold line-clamp-1">{cat.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Step 2: Subject & Issue Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">2. Issue Title / Subject:</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Kitchen Pipe Leakage, MCB Tripping"
+                        value={complaintSubject}
+                        onChange={(e) => setComplaintSubject(e.target.value)}
+                        className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-slate-900"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">3. Preferred Visit Time Slot:</label>
+                      <select
+                        value={complaintSlot}
+                        onChange={(e) => setComplaintSlot(e.target.value)}
+                        className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-medium focus:outline-none"
+                      >
+                        <option value="Immediate (Within 30 mins)">Immediate Emergency (Within 30 mins)</option>
+                        <option value="Morning (09:00 AM - 12:00 PM)">Morning (09:00 AM - 12:00 PM)</option>
+                        <option value="Afternoon (12:00 PM - 04:00 PM)">Afternoon (12:00 PM - 04:00 PM)</option>
+                        <option value="Evening (04:00 PM - 08:00 PM)">Evening (04:00 PM - 08:00 PM)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Priority Selector & Description */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700 block">4. Describe the problem in detail:</label>
+                    <textarea
+                      rows={3}
+                      required
+                      placeholder="Explain the issue (e.g. where the leak is located, since when it started)..."
+                      value={complaintDesc}
+                      onChange={(e) => setComplaintDesc(e.target.value)}
+                      className="w-full p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-slate-900"
+                    />
+                  </div>
+
+                  {/* Priority and Photo Attachment */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-700 text-xs">Urgency:</span>
+                      {(['Critical', 'High', 'Medium', 'Low'] as const).map((pri) => (
+                        <button
+                          type="button"
+                          key={pri}
+                          onClick={() => setComplaintPriority(pri)}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-xs border cursor-pointer ${
+                            complaintPriority === pri
+                              ? pri === 'Critical' ? 'bg-red-600 text-white border-red-600'
+                                : pri === 'High' ? 'bg-orange-500 text-white border-orange-500'
+                                : pri === 'Medium' ? 'bg-amber-500 text-white border-amber-500'
+                                : 'bg-slate-900 text-white border-slate-900'
+                              : 'bg-slate-50 text-slate-700 border-slate-200'
+                          }`}
+                        >
+                          {pri}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setHasPhotoAttached(!hasPhotoAttached)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border cursor-pointer ${
+                        hasPhotoAttached ? 'bg-indigo-50 text-indigo-700 border-indigo-300' : 'bg-slate-50 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>{hasPhotoAttached ? '✓ 1 Photo Attached (kitchen_leak.jpg)' : '+ Attach Photo'}</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    <Wrench className="w-4 h-4" />
+                    <span>Submit Complaint & Dispatch Certified Technician</span>
+                  </button>
+
+                </form>
+              </div>
+
+              {/* Tickets Directory & Real-Time Tracking */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
+                
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="font-black text-lg text-slate-900">Live Service Tickets & SLA Tracking</h3>
+                    <p className="text-xs text-slate-500">Track technician assignment, live status, and close-job OTP</p>
+                  </div>
+
+                  {/* Filter Tabs */}
+                  <div className="flex gap-2 text-xs">
+                    <button
+                      onClick={() => setFilterTicketTab('all')}
+                      className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer ${filterTicketTab === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                    >
+                      All ({ticketsList.length})
+                    </button>
+                    <button
+                      onClick={() => setFilterTicketTab('active')}
+                      className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer ${filterTicketTab === 'active' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                    >
+                      Active ({activeTicketsCount})
+                    </button>
+                    <button
+                      onClick={() => setFilterTicketTab('resolved')}
+                      className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer ${filterTicketTab === 'resolved' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                    >
+                      Resolved ({ticketsList.length - activeTicketsCount})
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {ticketsList
+                    .filter(t => filterTicketTab === 'all' || (filterTicketTab === 'active' ? t.status !== 'Resolved' : t.status === 'Resolved'))
+                    .map((ticket) => {
+                      const Icon = ticket.categoryIcon;
+                      return (
+                        <div
+                          key={ticket.id}
+                          className={`p-6 rounded-3xl border space-y-5 transition-all ${
+                            ticket.status === 'In Progress' || ticket.status === 'Technician Assigned'
+                              ? 'bg-blue-50/40 border-blue-200 shadow-sm'
+                              : 'bg-slate-50 border-slate-200'
+                          }`}
+                        >
+                          {/* Ticket Header */}
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div className="flex items-center gap-3.5">
+                              <div className="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-lg shadow-xs border border-slate-200 shrink-0">
+                                <Icon className="w-6 h-6 text-indigo-600" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono font-black text-xs text-slate-500">{ticket.id}</span>
+                                  <span className="font-black text-base text-slate-900">{ticket.subject}</span>
+                                </div>
+                                <div className="text-xs text-slate-500 mt-0.5">
+                                  {ticket.category} • Slot: <strong>{ticket.preferredSlot}</strong> • Logged: {ticket.date}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className={`px-3 py-1 rounded-full font-black text-[11px] uppercase ${
+                                ticket.priority === 'Critical' ? 'bg-red-100 text-red-800' :
+                                ticket.priority === 'High' ? 'bg-orange-100 text-orange-800' : 'bg-slate-200 text-slate-700'
+                              }`}>
+                                {ticket.priority} Priority
+                              </span>
+
+                              <span className={`px-3 py-1 rounded-full font-black text-[11px] uppercase ${
+                                ticket.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-600 text-white animate-pulse'
+                              }`}>
+                                {ticket.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-slate-700 bg-white p-3 rounded-2xl border border-slate-200/70">
+                            {ticket.desc}
+                          </p>
+
+                          {/* Technician & Live Tracking Bar */}
+                          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div className="flex items-center gap-3.5">
+                              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-black flex items-center justify-center text-xs">
+                                👨‍🔧
+                              </div>
+                              <div>
+                                <div className="font-bold text-xs text-slate-900 flex items-center gap-2">
+                                  <span>{ticket.assignedTech.name}</span>
+                                  <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-black text-[10px]">{ticket.assignedTech.rating}</span>
+                                </div>
+                                <div className="text-[11px] text-slate-500">{ticket.assignedTech.role} • {ticket.assignedTech.location}</div>
+                              </div>
+                            </div>
+
+                            {ticket.status !== 'Resolved' ? (
+                              <div className="flex flex-wrap items-center gap-3">
+                                <div className="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl text-center">
+                                  <div className="text-[9px] text-amber-800 font-bold uppercase">Close-Job Passcode</div>
+                                  <div className="font-mono font-black text-sm text-slate-900">OTP {ticket.closeOtp}</div>
+                                </div>
+
+                                <button
+                                  onClick={() => alert(`Calling ${ticket.assignedTech.name} (${ticket.assignedTech.phone})...`)}
+                                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+                                >
+                                  <PhoneCall className="w-3.5 h-3.5" /> Call Tech
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-600">Your Rating:</span>
+                                <div className="flex gap-1 text-sm">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                      key={star}
+                                      onClick={() => handleRateTicket(ticket.id, star)}
+                                      className={`cursor-pointer ${ticket.rating && ticket.rating >= star ? 'text-amber-500 font-black' : 'text-slate-300'}`}
+                                    >
+                                      ★
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 3. VISITORS & GATE APPROVALS */}
+          {/* ========================================================================= */}
+          {activeSection === 'visitors_parcels' && (
+            <div className="space-y-6">
               <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 rounded-3xl bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5] shadow-xs shrink-0">
@@ -832,470 +884,129 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={() => setShowPreApproveModal(true)}
-                    className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md transition-transform active:scale-95 cursor-pointer"
-                  >
-                    + Pre-approve Visitors
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowPreApproveModal(true)}
+                  className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
+                >
+                  + Pre-approve Visitors
+                </button>
               </div>
 
-              {/* Live Gate Requests Section */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-extrabold text-base text-slate-900 block">Today's Gate Arrivals & Resident Decisions</span>
-                  <span className="text-xs text-slate-500 font-medium">{incomingGateRequests.length} Arrivals Logged</span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  {incomingGateRequests.map((req) => (
-                    <div 
-                      key={req.id}
-                      className={`p-5 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${
-                        req.status === 'pending' 
-                          ? 'bg-amber-50/80 border-amber-300' 
-                          : req.status === 'allowed'
-                          ? 'bg-emerald-50/60 border-emerald-200'
-                          : req.status === 'left_at_gate'
-                          ? 'bg-indigo-50/60 border-indigo-200'
-                          : 'bg-red-50/60 border-red-200'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-2xl shadow-xs border border-slate-200 shrink-0">
-                          <span>{req.avatarEmoji}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-sm text-slate-900">{req.name}</span>
-                            <span className="text-xs font-bold text-slate-600">({req.company || req.category})</span>
-                            <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase ${
-                              req.status === 'pending'
-                                ? 'bg-amber-500 text-slate-950 animate-pulse'
-                                : req.status === 'allowed'
-                                ? 'bg-emerald-200 text-emerald-900'
-                                : req.status === 'left_at_gate'
-                                ? 'bg-indigo-200 text-indigo-900'
-                                : 'bg-red-200 text-red-900'
-                            }`}>
-                              {req.status === 'pending' ? 'Waiting Decision' : req.status.replace('_', ' ')}
-                            </span>
-                          </div>
-                          <div className="text-xs text-slate-500 mt-1">
-                            Vehicle: <strong>{req.vehicle}</strong> • Gate: <strong>{req.gate}</strong> • Guard: <strong>{req.guardName}</strong> • {req.time}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action buttons if still pending */}
-                      {req.status === 'pending' ? (
-                        <div className="flex items-center gap-2 self-end sm:self-center">
-                          <button
-                            onClick={() => handleAllowGateEntry(req.id)}
-                            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
-                          >
-                            Allow Entry
-                          </button>
-                          <button
-                            onClick={() => handleLeaveAtGate(req.id)}
-                            className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-xl text-xs cursor-pointer"
-                          >
-                            Leave with Guard
-                          </button>
-                          <button
-                            onClick={() => handleDenyGateEntry(req.id)}
-                            className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded-xl text-xs cursor-pointer"
-                          >
-                            Deny
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-xs font-bold text-slate-500">Decision Dispatched to Guard ✓</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 2-Column Desktop Grid: Pre-Approvals & Parcel Queue */}
+              {/* Pre-Approvals & Parcel Queue */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Left Column: Pre-Approved Passes */}
                 <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-sm text-slate-900">Active Pre-Approved Guest Passes</span>
-                    <span className="text-xs text-slate-500 font-medium">{preApprovedList.length} Active</span>
-                  </div>
-
+                  <span className="font-bold text-sm text-slate-900 block">Active Pre-Approved Guest Passes</span>
                   <div className="space-y-3 text-xs">
                     {preApprovedList.map(p => (
-                      <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-bold text-sm text-slate-900">{p.name}</div>
-                            <div className="text-xs text-slate-500">{p.mobile} • {p.arrival}</div>
-                          </div>
-                          <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
-                            {p.status}
-                          </span>
+                      <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-sm text-slate-900">{p.name}</div>
+                          <div className="text-xs text-slate-500">{p.mobile} • {p.arrival}</div>
+                          <div className="font-mono font-bold text-indigo-600 mt-1">Passcode: {p.otp}</div>
                         </div>
-
-                        <div className="bg-white p-3 rounded-xl border border-slate-200/80 flex justify-between items-center">
-                          <div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase">Gate OTP Passcode</div>
-                            <div className="font-mono font-black text-xl text-slate-900 tracking-widest">{p.otp}</div>
-                          </div>
-                          <QrCode className="w-8 h-8 text-slate-700" />
-                        </div>
+                        <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold text-[10px]">{p.status}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Right Column: Parcel Storage Queue */}
                 <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-sm text-slate-900">Gate Shelf Parcel Locker Queue</span>
-                    <span className="text-xs text-slate-500 font-medium">{parcelsList.length} Parcels</span>
-                  </div>
-
+                  <span className="font-bold text-sm text-slate-900 block">Gate Shelf Parcel Queue</span>
                   <div className="space-y-3 text-xs">
                     {parcelsList.map(p => (
                       <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
                         <div>
                           <div className="font-bold text-sm text-slate-900">{p.courier} ({p.orderNo})</div>
                           <div className="text-xs text-slate-500">{p.shelf} • {p.arrival}</div>
-                          <div className="text-[11px] font-mono font-bold text-indigo-600 mt-1">Pickup Passcode: {p.otp}</div>
+                          <div className="font-mono font-bold text-indigo-600 mt-1">Pickup Passcode: {p.otp}</div>
                         </div>
-                        <span className={`px-3 py-1 rounded-full font-bold text-[10px] ${
-                          p.status.includes('Awaiting') ? 'bg-amber-100 text-amber-900' : 'bg-slate-200 text-slate-700'
-                        }`}>
-                          {p.status}
-                        </span>
+                        <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full font-bold text-[10px]">{p.status}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-
               </div>
-
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 3. PAYMENTS SECTION */}
+          {/* 4. PAYMENTS SECTION */}
           {/* ========================================================================= */}
           {activeSection === 'payments' && (
             <div className="space-y-6">
-              
-              {/* Top Hero Bill Header Card */}
-              <div className="bg-gradient-to-tr from-slate-900 via-slate-800 to-indigo-950 text-white p-8 rounded-3xl shadow-xl space-y-6 relative overflow-hidden">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
-                  <div className="space-y-1">
-                    <span className="text-xs font-bold text-indigo-300 uppercase tracking-widest block">
-                      August 2026 Society Maintenance Statement
-                    </span>
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-                        ₹ {billStatus === 'Paid' ? '0.00' : totalPayable.toFixed(2)}
-                      </span>
-                      {billStatus === 'Unpaid' && earlyBirdApplied && (
-                        <span className="text-xs text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-500/40">
-                          - ₹ 238.30 Early Bird 5% OFF
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-start sm:items-end gap-2">
-                    <span className={`px-4 py-1.5 rounded-full font-black text-xs tracking-wider uppercase ${
-                      billStatus === 'Paid' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-amber-400 text-slate-950 font-extrabold'
-                    }`}>
-                      {billStatus === 'Paid' ? '✓ Dues Paid & Cleared' : 'Due by 31 Aug 2026'}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium">Invoice #GST-9021-AUG26</span>
-                  </div>
+              <div className="bg-gradient-to-tr from-slate-900 via-slate-800 to-indigo-950 text-white p-8 rounded-3xl shadow-xl flex justify-between items-center">
+                <div>
+                  <span className="text-xs font-bold text-indigo-300 uppercase tracking-widest block">August 2026 Maintenance</span>
+                  <span className="text-4xl font-black">{billStatus === 'Paid' ? '₹ 0.00' : `₹ ${totalPayable.toFixed(2)}`}</span>
                 </div>
-
-                {/* Quick Payment Action Bar */}
-                <div className="pt-4 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-4 relative z-10">
-                  <div className="flex items-center gap-4 text-xs text-slate-300">
-                    <span className="flex items-center gap-1.5"><SecureIcon className="w-4 h-4 text-emerald-400" /> 256-Bit SSL Encrypted</span>
-                    <span className="flex items-center gap-1.5"><Smartphone className="w-4 h-4 text-indigo-400" /> 0% Surcharge on UPI</span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {billStatus === 'Unpaid' ? (
-                      <button
-                        onClick={() => {
-                          setPaymentStep('idle');
-                          setShowPaymentModal(true);
-                        }}
-                        className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
-                      >
-                        <Zap className="w-4 h-4 fill-slate-950" />
-                        <span>Pay ₹ {totalPayable.toFixed(2)} via 1-Click Fast Pay</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => alert('Downloading CA-Verified GST Tax Invoice PDF #GST-9021...')}
-                        className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>Download Tax Invoice PDF</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <button
+                  onClick={() => alert('Payment completed via UPI Autopay!')}
+                  className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs cursor-pointer"
+                >
+                  Pay ₹ {totalPayable.toFixed(2)}
+                </button>
               </div>
-
-              {/* Itemized Ledger */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                    <div>
-                      <span className="font-extrabold text-base text-slate-900 block">Itemized Maintenance Ledger</span>
-                      <span className="text-xs text-slate-500">Unit: Flat B-108 (2BHK, 1,250 sq.ft)</span>
-                    </div>
-                    <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">
-                      Rate: ₹3.50 / sq.ft
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 text-xs">
-                    <div className="flex justify-between py-1 text-slate-700">
-                      <span>1. Flat Base Society Maintenance (1,250 sqft)</span>
-                      <span className="font-bold text-slate-900">₹ {baseMaintenance.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between py-1 text-slate-700">
-                      <span>2. Building Sinking Fund & Lift Overhaul Reserve</span>
-                      <span className="font-bold text-slate-900">₹ {sinkingFund.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between py-1 text-slate-700">
-                      <div>
-                        <span>3. Smart Piped Water Meter AMR Usage</span>
-                        <span className="text-[11px] text-slate-400 block">Meter #WM-8902 • 320 Liters/day avg</span>
-                      </div>
-                      <span className="font-bold text-slate-900">₹ {waterUsage.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between py-1 text-slate-700">
-                      <span>4. 250 kVA Diesel Generator Emergency Backup</span>
-                      <span className="font-bold text-slate-900">₹ {dgBackup.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between py-1 text-slate-700">
-                      <span>5. Clubhouse, Gym & Pool Deck Maintenance</span>
-                      <span className="font-bold text-slate-900">₹ {amenityMaintenance.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between py-1 text-slate-700">
-                      <span>6. Goods & Services Tax (CGST 9% + SGST 9%)</span>
-                      <span className="font-bold text-slate-900">₹ {gstTax.toFixed(2)}</span>
-                    </div>
-
-                    {earlyBirdApplied && (
-                      <div className="flex justify-between py-2 text-emerald-700 font-bold bg-emerald-50 px-3 rounded-xl">
-                        <span>Early Bird 5% Discount (Coupon: EARLYBIRD5)</span>
-                        <span>- ₹ {earlyBirdDiscount.toFixed(2)}</span>
-                      </div>
-                    )}
-
-                    <div className="pt-4 border-t-2 border-slate-900 flex justify-between items-center text-sm font-black text-slate-900">
-                      <span>Net Total Amount Payable</span>
-                      <span className="text-xl font-black text-slate-900">₹ {totalPayable.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pre-Paid Meter */}
-                <div className="lg:col-span-5 space-y-6">
-                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className="font-bold text-sm text-slate-900 block">Smart Electricity Pre-paid Meter</span>
-                        <span className="text-[11px] text-slate-500">Consumer No: #EB-8910-FLATB108</span>
-                      </div>
-                      <span className="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
-                        Low Balance
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center space-y-2">
-                      <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Meter Balance</div>
-                      <div className="text-3xl font-black text-[#EF4444]">
-                        ₹ {meterBalance.toFixed(2)}
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => setShowRechargeModal(true)}
-                      className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer"
-                    >
-                      Recharge Pre-paid Meter
-                    </button>
-                  </div>
-                </div>
-              </div>
-
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 4. HELPERS (13 CATEGORIES) */}
+          {/* 5. HELPERS (13 CATEGORIES) */}
           {/* ========================================================================= */}
           {activeSection === 'helpers' && (
             <div className="space-y-6">
-              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-5">
-                  <div className="w-16 h-16 rounded-3xl bg-[#FCE7F3] flex items-center justify-center text-[#EC4899] shadow-xs shrink-0">
-                    <HandHeart className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h2 className="font-black text-2xl text-slate-900">Helpers & Community Services</h2>
-                    <p className="text-xs text-slate-500 mt-1">Hire trusted and Aadhaar-verified household helpers for your home</p>
-                  </div>
-                </div>
-
-                <div className="text-xs text-slate-600 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-200 font-medium">
-                  We verify all helpers before onboarding for your safety. ❤️
+              <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-[#FCE7F3] flex items-center justify-center text-[#EC4899]"><HandHeart className="w-7 h-7" /></div>
+                  <div><h2 className="font-black text-xl text-slate-900">Helpers & Services</h2><p className="text-xs text-slate-500">13 Verified service categories</p></div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {helperCategories.map(cat => {
                   const Icon = cat.icon;
-                  const isSelected = selectedCategory === cat.name;
                   return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.name)}
-                      className={`p-5 rounded-3xl border text-left transition-all flex items-center justify-between cursor-pointer hover:shadow-md ${
-                        isSelected 
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-md' 
-                          : 'bg-white text-slate-800 border-slate-200/80 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3.5">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cat.bg} shrink-0`}>
-                          <Icon className={`w-5 h-5 ${cat.color}`} />
-                        </div>
-                        <div>
-                          <div className="font-bold text-xs">{cat.name}</div>
-                          <div className={`text-[11px] ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>{cat.count} Available</div>
-                        </div>
-                      </div>
-                      <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                    <button key={cat.id} onClick={() => setSelectedCategory(cat.name)} className="p-4 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 flex items-center gap-3 text-left">
+                      <Icon className={`w-5 h-5 ${cat.color}`} />
+                      <div><div className="font-bold text-xs">{cat.name}</div><div className="text-[10px] text-slate-500">{cat.count} Available</div></div>
                     </button>
                   );
                 })}
               </div>
-
-              {selectedCategory && (
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-base text-slate-900">
-                      Verified {selectedCategory} Helpers
-                    </span>
-                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
-                      Aadhaar Verified ✓
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {(providersByCategory[selectedCategory] || providersByCategory['Cleaning']).map((p, idx) => (
-                      <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-bold text-sm text-slate-900">{p.name}</div>
-                            <div className="text-xs text-slate-500">{p.exp} • Works in {p.flats} Flats</div>
-                          </div>
-                          <span className="bg-[#FEF3C7] text-[#92400E] px-2.5 py-1 rounded-xl font-bold text-xs">
-                            {p.rating} ({p.reviews})
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between items-center pt-2 border-t border-slate-200/60 text-xs">
-                          <span className="font-black text-slate-900">{p.rate}</span>
-                          <button
-                            onClick={() => alert(`Connecting with ${p.name} (${p.phone})...`)}
-                            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
-                          >
-                            <Phone className="w-3.5 h-3.5" /> Hire / Call
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* 5. MEMBERS, NOTICES, HELPDESK, DOCUMENTS, DIRECTORY, AMENITIES, ETC. */}
+          {/* 6. MEMBERS, NOTICES, DOCUMENTS, DIRECTORY, AMENITIES, ETC. */}
           {/* ========================================================================= */}
           {activeSection === 'members' && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
               <span className="font-bold text-base text-slate-900 block">Flat B-108 Registered Members</span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
-                  <div className="font-bold text-sm text-slate-900">Ananya Sharma</div>
-                  <div className="text-xs text-slate-500">Primary Owner • 98765 11111</div>
-                  <span className="inline-block bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px] mt-2">Owner</span>
-                </div>
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
-                  <div className="font-bold text-sm text-slate-900">Rahul Sharma</div>
-                  <div className="text-xs text-slate-500">Co-Owner (Spouse) • 98765 22222</div>
-                  <span className="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold text-[10px] mt-2">Family</span>
-                </div>
+              <div className="p-4 bg-slate-50 rounded-2xl text-xs space-y-1">
+                <div className="font-bold text-slate-900">Ananya Sharma (Owner) • Rahul Sharma (Co-Owner) • Aarav Sharma (Child)</div>
+                <div className="text-slate-500">Allocated Parking Slot: Slot B-42 • KA-03-MB-4921 (FastTag RFID Active)</div>
               </div>
             </div>
           )}
 
           {activeSection === 'notices' && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-              <span className="font-bold text-base text-slate-900 block">Official RWA Circulars (23 Unread)</span>
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-                <span className="bg-indigo-600 text-white px-2.5 py-0.5 rounded-md text-[10px] font-bold">AGM EVENT</span>
-                <div className="font-bold text-base text-slate-900">Annual RWA General Body Meeting (AGM)</div>
-                <p className="text-xs text-slate-600">Sunday, August 30 at 10:00 AM in Clubhouse Hall.</p>
+              <span className="font-bold text-base text-slate-900 block">Society Circulars (23 Unread)</span>
+              <div className="p-5 bg-slate-50 rounded-2xl space-y-2 text-xs">
+                <span className="bg-indigo-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">AGM NOTICE</span>
+                <div className="font-bold text-sm text-slate-900">Annual General Body Meeting (AGM) 2026</div>
+                <p className="text-slate-600">Sunday, August 30 at 10:00 AM in Clubhouse Banquet Hall.</p>
               </div>
-            </div>
-          )}
-
-          {activeSection === 'helpdesk' && (
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
-              <span className="font-bold text-base text-slate-900 block">Helpdesk Tickets</span>
-              <form onSubmit={handleCreateTicket} className="space-y-3">
-                <input
-                  type="text"
-                  required
-                  placeholder="Issue Subject (e.g. Water Leak)"
-                  value={newTicketSubject}
-                  onChange={(e) => setNewTicketSubject(e.target.value)}
-                  className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs"
-                />
-                <button type="submit" className="w-full py-3 bg-slate-900 text-white font-bold text-xs rounded-xl">Submit Ticket</button>
-              </form>
             </div>
           )}
 
           {activeSection === 'documents' && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
               <span className="font-bold text-base text-slate-900 block">Society Documents (8 Files)</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { name: 'Green Haven Society Bylaws & Regulations', size: '2.4 MB PDF' },
-                  { name: 'Tenant Move-In / Move-Out NOC Form', size: '420 KB PDF' },
-                ].map((doc, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-xs text-slate-900">{doc.name}</div>
-                      <div className="text-[11px] text-slate-500">{doc.size}</div>
-                    </div>
-                    <button onClick={() => alert(`Downloading ${doc.name}...`)} className="p-2 rounded-xl bg-white border border-slate-200">
-                      <Download className="w-4 h-4" />
-                    </button>
+              <div className="space-y-2 text-xs">
+                {['Green Haven Society Bylaws PDF', 'Move-In / Move-Out NOC Form PDF'].map((doc, idx) => (
+                  <div key={idx} className="p-3 bg-slate-50 rounded-xl flex justify-between items-center">
+                    <span className="font-bold text-slate-800">{doc}</span>
+                    <button onClick={() => alert(`Downloading ${doc}...`)} className="px-3 py-1 bg-white border border-slate-200 rounded-lg font-bold">Download</button>
                   </div>
                 ))}
               </div>
@@ -1305,21 +1016,9 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           {activeSection === 'directory' && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
               <span className="font-bold text-base text-slate-900 block">Resident & Security Directory</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { title: 'Gate 1 Main Entry Intercom', phone: 'Ext: 101 • 98123 45678' },
-                  { title: 'Gate 2 Rear Entry Intercom', phone: 'Ext: 102 • 98765 43210' },
-                ].map((item, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-sm text-slate-900">{item.title}</div>
-                      <div className="text-xs text-slate-500">{item.phone}</div>
-                    </div>
-                    <button onClick={() => alert(`Calling ${item.title}...`)} className="px-3.5 py-1.5 bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center gap-1">
-                      <Phone className="w-3.5 h-3.5" /> Call
-                    </button>
-                  </div>
-                ))}
+              <div className="p-4 bg-slate-50 rounded-2xl text-xs space-y-2">
+                <div className="flex justify-between"><span>Gate 1 Intercom:</span><span className="font-bold">Ext 101</span></div>
+                <div className="flex justify-between"><span>RWA President:</span><span className="font-bold">98450 11990</span></div>
               </div>
             </div>
           )}
@@ -1327,21 +1026,9 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           {activeSection === 'amenities' && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
               <span className="font-bold text-base text-slate-900 block">Reserve Society Amenities</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { name: 'Badminton Court 2 (Indoor Wooden)', slot: '06:00 PM - 07:00 PM', price: 'Free for Residents' },
-                  { name: 'Tennis Court 1 (Synthetic Surface)', slot: '07:00 AM - 08:00 AM', price: 'Free for Residents' },
-                ].map((am, idx) => (
-                  <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-sm text-slate-900">{am.name}</div>
-                      <div className="text-xs text-slate-500">{am.slot} • {am.price}</div>
-                    </div>
-                    <button onClick={() => alert(`Slot booked for ${am.name}!`)} className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs cursor-pointer">
-                      Book Slot
-                    </button>
-                  </div>
-                ))}
+              <div className="p-4 bg-slate-50 rounded-2xl text-xs flex justify-between items-center">
+                <div><div className="font-bold text-slate-900">Badminton Court 2</div><div className="text-slate-500">06:00 PM - 07:00 PM</div></div>
+                <button onClick={() => alert('Slot Booked!')} className="px-4 py-2 bg-slate-900 text-white font-bold rounded-xl">Book</button>
               </div>
             </div>
           )}
@@ -1351,242 +1038,26 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
       </div>
 
       {/* ========================================================================= */}
-      {/* MODAL: INTERACTIVE MULTI-OPTION PAYMENT CHECKOUT MODAL */}
-      {/* ========================================================================= */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg space-y-6 shadow-2xl relative animate-scale-up">
-            
-            {paymentStep !== 'processing' && (
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-
-            {paymentStep === 'idle' && (
-              <div className="space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div>
-                    <h3 className="font-black text-xl text-slate-900">Secure Payment Checkout</h3>
-                    <p className="text-xs text-slate-500">Green Haven Sanctuary RWA Maintenance Payment</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-400 font-bold block">Total Amount</span>
-                    <span className="text-xl font-black text-slate-900">₹ {totalPayable.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl text-xs font-bold">
-                  <button
-                    onClick={() => setPaymentMethod('upi')}
-                    className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      paymentMethod === 'upi' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Smartphone className="w-4 h-4 text-emerald-600" />
-                    <span>UPI Fast Pay</span>
-                  </button>
-
-                  <button
-                    onClick={() => setPaymentMethod('card')}
-                    className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      paymentMethod === 'card' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <CreditCard className="w-4 h-4 text-indigo-600" />
-                    <span>Credit / Debit</span>
-                  </button>
-
-                  <button
-                    onClick={() => setPaymentMethod('netbanking')}
-                    className={`py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      paymentMethod === 'netbanking' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Landmark className="w-4 h-4 text-amber-600" />
-                    <span>Net Banking</span>
-                  </button>
-                </div>
-
-                {paymentMethod === 'upi' && (
-                  <div className="space-y-4">
-                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center gap-4">
-                      <div className="w-24 h-24 bg-white p-1 rounded-xl shadow-xs shrink-0 flex items-center justify-center border border-slate-200">
-                        <QrCode className="w-20 h-20 text-slate-900" />
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Scan & Pay via any UPI App</span>
-                        <div className="font-bold text-xs text-slate-900">Scan Dynamic UPI QR Code</div>
-                        <div className="text-[11px] text-slate-500 font-mono">greenhaven.rwa@hdfcbank</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={handleExecutePayment}
-                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-sm shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
-                >
-                  <Lock className="w-4 h-4 fill-slate-950" />
-                  <span>Authorize & Pay ₹ {totalPayable.toFixed(2)}</span>
-                </button>
-              </div>
-            )}
-
-            {paymentStep === 'processing' && (
-              <div className="py-12 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mx-auto" />
-                <h3 className="font-extrabold text-xl text-slate-900">Processing Payment...</h3>
-              </div>
-            )}
-
-            {paymentStep === 'success' && (
-              <div className="text-center space-y-4 py-2">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                  <CheckCheck className="w-8 h-8" />
-                </div>
-                <h3 className="font-black text-2xl text-slate-900 pt-2">₹ {totalPayable.toFixed(2)} Paid</h3>
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-2xl text-xs"
-                >
-                  Done
-                </button>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
       {/* MODAL: PRE-APPROVE VISITOR MODAL */}
       {/* ========================================================================= */}
       {showPreApproveModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-5 shadow-2xl relative">
-            <button
-              onClick={() => {
-                setShowPreApproveModal(false);
-                setGeneratedPass(null);
-              }}
-              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full"
-            >
+            <button onClick={() => setShowPreApproveModal(false)} className="absolute right-5 top-5 p-1.5 text-slate-400">
               <X className="w-5 h-5" />
             </button>
-
-            <div className="font-extrabold text-xl text-slate-900">
-              {generatedPass ? 'Guest Fast Pass Ready' : 'Pre-approve Visitor Entry'}
-            </div>
-
-            {!generatedPass ? (
-              <form onSubmit={handlePreApproveSubmit} className="space-y-4 text-xs">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Guest Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Guest Mobile Number</label>
-                  <input
-                    type="tel"
-                    required
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Expected Arrival Time</label>
-                  <input
-                    type="text"
-                    required
-                    value={guestArrival}
-                    onChange={(e) => setGuestArrival(e.target.value)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl shadow-lg mt-2 cursor-pointer"
-                >
-                  Generate Passcode & QR Code
-                </button>
-              </form>
-            ) : (
-              <div className="bg-slate-900 text-white p-6 rounded-3xl text-center space-y-4">
-                <div className="w-28 h-28 bg-white p-2 rounded-2xl mx-auto flex items-center justify-center">
-                  <QrCode className="w-24 h-24 text-slate-900" />
-                </div>
-                <div className="text-xs text-slate-300 font-bold uppercase">6-Digit Gate OTP</div>
-                <div className="font-mono text-4xl font-black tracking-widest text-[#FDE047]">{generatedPass.otp}</div>
-                <div className="text-sm text-slate-200 font-bold">{generatedPass.name} ({generatedPass.mobile})</div>
-                <button
-                  onClick={() => {
-                    alert(`Passcode ${generatedPass.otp} shared via WhatsApp / SMS!`);
-                    setShowPreApproveModal(false);
-                    setGeneratedPass(null);
-                  }}
-                  className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl text-xs cursor-pointer"
-                >
-                  Share via WhatsApp
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* MODAL: RECHARGE PRE-PAID METER MODAL */}
-      {/* ========================================================================= */}
-      {showRechargeModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-5 shadow-2xl relative">
-            <button
-              onClick={() => setShowRechargeModal(false)}
-              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="font-extrabold text-xl text-slate-900">Recharge Pre-paid Meter</div>
-            <p className="text-xs text-slate-500">Current Meter Balance: <span className="text-red-500 font-black">₹ {meterBalance.toFixed(2)}</span></p>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700">Select Amount:</label>
-              <div className="grid grid-cols-3 gap-2">
-                {[500, 1000, 2000].map((amt) => (
-                  <button
-                    key={amt}
-                    onClick={() => setRechargeAmount(amt)}
-                    className={`py-3 rounded-xl font-bold text-xs border cursor-pointer ${
-                      rechargeAmount === amt ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-800 border-slate-200'
-                    }`}
-                  >
-                    ₹ {amt}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              onClick={handleRechargeMeter}
-              className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs shadow-lg mt-2 cursor-pointer"
-            >
-              Pay ₹ {rechargeAmount} & Recharge Now
-            </button>
+            <div className="font-extrabold text-xl text-slate-900">Pre-approve Visitor Entry</div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const otp = '892-104';
+              setPreApprovedList([{ id: 'PASS-8921', name: guestName, mobile: guestPhone, arrival: guestArrival, otp: otp, status: 'Active (Valid)', type: 'Guest Pass' }, ...preApprovedList]);
+              setShowPreApproveModal(false);
+              alert(`Visitor Pass Generated for ${guestName}! Passcode OTP: ${otp}`);
+            }} className="space-y-3 text-xs">
+              <input type="text" required placeholder="Guest Name" value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl border" />
+              <input type="tel" required placeholder="Mobile Number" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl border" />
+              <button type="submit" className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl">Generate Gate Pass</button>
+            </form>
           </div>
         </div>
       )}
@@ -1597,41 +1068,17 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
       {showSosModal && (
         <div className="fixed inset-0 bg-red-950/80 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-5 shadow-2xl border-2 border-red-500 relative text-center">
-            <button
-              onClick={() => setShowSosModal(false)}
-              className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full"
-            >
+            <button onClick={() => setShowSosModal(false)} className="absolute right-5 top-5 p-1.5 text-slate-400">
               <X className="w-5 h-5" />
             </button>
-
             <div className="w-20 h-20 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto animate-bounce">
               <Flame className="w-10 h-10" />
             </div>
-
             <div className="font-black text-2xl text-red-900">🚨 EMERGENCY SOS ALARM</div>
-            <p className="text-xs text-slate-600">
-              Trigger instant high-priority panic alert to Gate 1 Security Desk and RWA emergency patrol for <strong>Flat B-108</strong>.
-            </p>
-
-            <div className="space-y-3 pt-2">
-              <button
-                onClick={() => {
-                  setSosTriggered(true);
-                  alert('EMERGENCY SIREN DISPATCHED TO GATE 1 SECURITY GUARDS!');
-                  setShowSosModal(false);
-                }}
-                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl text-xs shadow-lg cursor-pointer"
-              >
-                DISPATCH GUARDS TO FLAT B-108
-              </button>
-
-              <button
-                onClick={() => alert('Dialing 112 / 108 Emergency Ambulance / Police Services...')}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl text-xs cursor-pointer"
-              >
-                Call Ambulance / Police (112)
-              </button>
-            </div>
+            <p className="text-xs text-slate-600">Trigger instant high-priority panic alert to Gate 1 Security Desk for <strong>Flat B-108</strong>.</p>
+            <button onClick={() => { alert('EMERGENCY SIREN DISPATCHED TO GATE 1 GUARDS!'); setShowSosModal(false); }} className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl text-xs">
+              DISPATCH GUARDS TO FLAT B-108
+            </button>
           </div>
         </div>
       )}
