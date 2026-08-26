@@ -567,11 +567,11 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
             <div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight">Flat B-108</span>
-                <span className="bg-slate-100 text-slate-700 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-bold">2BHK • Tower B</span>
+                <span className="font-bold text-lg sm:text-xl text-slate-900 tracking-tight">Flat B-108</span>
+                <span className="bg-slate-100 text-slate-700 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-medium">2BHK • Tower B</span>
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[160px] sm:max-w-none">
-                ASBL Springs • <span className="text-indigo-600 font-bold underline">Ananya Sharma</span>
+              <div className="text-[11px] sm:text-xs text-slate-500 font-normal truncate max-w-[160px] sm:max-w-none">
+                ASBL Springs • <span className="text-indigo-600 font-semibold underline">Ananya Sharma</span>
               </div>
             </div>
           </button>
@@ -584,7 +584,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                   setActiveSection('visitors_parcels');
                   setMobileMenuOpen(false);
                 }}
-                className="hidden sm:flex px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs items-center gap-2 shadow-sm animate-bounce cursor-pointer"
+                className="hidden sm:flex px-4 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs items-center gap-2 shadow-sm animate-bounce cursor-pointer"
               >
                 <Bell className="w-4 h-4" />
                 <span>{pendingGateCount} Gate Approvals!</span>
@@ -596,7 +596,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
                 setActiveSection('payments');
                 setMobileMenuOpen(false);
               }}
-              className={`hidden sm:flex px-4 py-2 rounded-2xl border items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+              className={`hidden sm:flex px-4 py-2 rounded-2xl border items-center gap-2 text-xs font-semibold transition-all cursor-pointer ${
                 billStatus === 'Unpaid' ? 'bg-amber-50 text-amber-900 border-amber-300' : 'bg-emerald-50 text-emerald-900 border-emerald-300'
               }`}
             >
@@ -606,11 +606,11 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
             <button
               onClick={() => setShowSosModal(true)}
-              className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-1.5 sm:gap-2 text-xs font-black shadow-sm transition-transform active:scale-95 cursor-pointer"
+              className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-1.5 sm:gap-2 text-xs font-semibold shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <Flame className="w-4 h-4 text-[#DC2626] animate-pulse" />
               <span className="hidden sm:inline">🚨 SOS PANIC</span>
-              <span className="sm:hidden font-black">SOS</span>
+              <span className="sm:hidden font-semibold">SOS</span>
             </button>
 
             {/* Mobile Hamburger Drawer Button */}

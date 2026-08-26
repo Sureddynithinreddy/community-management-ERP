@@ -723,11 +723,11 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
 
             <div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight">Gate 1 Desk</span>
-                <span className="bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-bold">Shift: 8AM-8PM</span>
+                <span className="font-bold text-lg sm:text-xl text-slate-900 tracking-tight">Gate 1 Desk</span>
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-medium">Shift: 8AM-8PM</span>
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[160px] sm:max-w-none">
-                ASBL Springs • <span className="text-emerald-700 font-bold">Guard Vikram Singh</span>
+              <div className="text-[11px] sm:text-xs text-slate-500 font-normal truncate max-w-[160px] sm:max-w-none">
+                ASBL Springs • <span className="text-emerald-700 font-semibold">Guard Vikram Singh</span>
               </div>
             </div>
           </div>
@@ -736,7 +736,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           <div className="flex items-center gap-2 sm:gap-3">
             
             {/* Live Camera Feed Indicator */}
-            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold text-slate-700">
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-medium text-slate-700">
               <Camera className="w-4 h-4 text-emerald-600 animate-pulse" />
               <span>ANPR CAM 1 LIVE</span>
             </div>
@@ -752,7 +752,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                   alert('OFFLINE QUEUE SYNCED: 3 entries pushed to society cloud database ✓');
                 }
               }}
-              className={`hidden sm:flex px-3.5 py-2 rounded-2xl border text-xs font-bold items-center gap-1.5 cursor-pointer transition-all ${
+              className={`hidden sm:flex px-3.5 py-2 rounded-2xl border text-xs font-medium items-center gap-1.5 cursor-pointer transition-all ${
                 isOffline ? 'bg-amber-100 border-amber-300 text-amber-900' : 'bg-slate-50 border-slate-200 text-slate-700'
               }`}
             >
@@ -767,7 +767,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                 setOtpToValidate('');
                 setShowOtpValidateModal(true);
               }}
-              className="hidden sm:flex px-4 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-bold text-xs items-center gap-1.5 cursor-pointer"
+              className="hidden sm:flex px-4 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-medium text-xs items-center gap-1.5 cursor-pointer"
             >
               <KeyRound className="w-4 h-4 text-indigo-600" />
               <span>Verify Code</span>
@@ -779,11 +779,11 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
                 setActiveSection('sos');
                 setSosActiveSiren(true);
               }}
-              className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-1.5 sm:gap-2 text-xs font-black shadow-sm transition-transform active:scale-95 cursor-pointer"
+              className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border border-[#FCA5A5]/80 flex items-center gap-1.5 sm:gap-2 text-xs font-semibold shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <Flame className="w-4 h-4 text-[#DC2626] animate-pulse" />
               <span className="hidden sm:inline">🚨 SECURITY SOS</span>
-              <span className="sm:hidden font-black">SOS</span>
+              <span className="sm:hidden font-semibold">SOS</span>
             </button>
 
             {/* Mobile Hamburger Drawer Button */}

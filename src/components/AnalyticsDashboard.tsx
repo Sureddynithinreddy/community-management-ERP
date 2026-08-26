@@ -20,14 +20,14 @@ export const AnalyticsDashboard: React.FC = () => {
             <TrendingUp className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="font-black text-2xl text-slate-900">Executive Society Analytics & Statistics</h2>
+            <h2 className="font-bold text-xl text-slate-900">Executive Society Analytics & Statistics</h2>
             <p className="text-xs text-slate-500 mt-1">Real-time telemetry across financial, security, helpdesk, and amenity operations</p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Time Range Selector */}
-          <div className="bg-slate-100 p-1.5 rounded-2xl flex text-xs font-bold gap-1">
+          <div className="bg-slate-100 p-1.5 rounded-2xl flex text-xs font-medium gap-1">
             <button
               onClick={() => setTimeRange('month')}
               className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
@@ -56,7 +56,7 @@ export const AnalyticsDashboard: React.FC = () => {
 
           <button
             onClick={() => alert('Exporting Full Analytics Executive Summary (PDF & Excel)...')}
-            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-2xl shadow-xs flex items-center gap-2 cursor-pointer transition-transform active:scale-95"
+            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-2xl shadow-xs flex items-center gap-2 cursor-pointer transition-transform active:scale-95"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export Report</span>
@@ -65,7 +65,7 @@ export const AnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* Category Tab Selector */}
-      <div className="flex flex-wrap gap-2 text-xs font-bold">
+      <div className="flex flex-wrap gap-2 text-xs font-medium">
         {[
           { id: 'financial', label: '1. Financial & Dues Statistics', icon: DollarSign },
           { id: 'visitors', label: '2. Gate Traffic & Delivery Metrics', icon: ShieldCheck },
@@ -101,40 +101,40 @@ export const AnalyticsDashboard: React.FC = () => {
           {/* Top Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Monthly Demand</span>
-              <div className="text-3xl font-black text-slate-900">₹ 16,25,000</div>
-              <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider block">Total Monthly Demand</span>
+              <div className="text-2xl font-bold text-slate-900">₹ 16,25,000</div>
+              <span className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
                 <ArrowUpRight className="w-3.5 h-3.5" /> 250 Units Billed @ ₹3.50/sqft
               </span>
             </div>
 
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Collected Amount</span>
-              <div className="text-3xl font-black text-emerald-600">₹ 14,80,450</div>
-              <span className="text-[11px] text-indigo-600 font-bold flex items-center gap-1">
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider block">Collected Amount</span>
+              <div className="text-2xl font-bold text-emerald-600">₹ 14,80,450</div>
+              <span className="text-[11px] text-indigo-600 font-medium flex items-center gap-1">
                 <Check className="w-3.5 h-3.5" /> 92.4% Compliance Rate
               </span>
             </div>
 
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Outstanding Dues</span>
-              <div className="text-3xl font-black text-rose-600">₹ 1,44,550</div>
-              <span className="text-[11px] text-slate-500 font-medium">18 Units Pending Payment</span>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider block">Outstanding Dues</span>
+              <div className="text-2xl font-bold text-rose-600">₹ 1,44,550</div>
+              <span className="text-[11px] text-slate-500 font-normal">18 Units Pending Payment</span>
             </div>
 
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Sinking Reserve Fund</span>
-              <div className="text-3xl font-black text-indigo-900">₹ 42,50,000</div>
-              <span className="text-[11px] text-emerald-600 font-bold">HDFC Bank Fixed Deposit</span>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider block">Sinking Reserve Fund</span>
+              <div className="text-2xl font-bold text-indigo-900">₹ 42,50,000</div>
+              <span className="text-[11px] text-emerald-600 font-medium">HDFC Bank Fixed Deposit</span>
             </div>
           </div>
 
           {/* Collection Progress & Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-              <span className="font-black text-base text-slate-900 block">August 2026 Monthly Collection Progress</span>
+              <span className="font-semibold text-base text-slate-900 block">August 2026 Monthly Collection Progress</span>
               <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold">
+                <div className="flex justify-between text-xs font-medium">
                   <span className="text-slate-600">Collected: ₹ 14.80 L (232 Flats)</span>
                   <span className="text-emerald-700">92.4%</span>
                 </div>
@@ -145,16 +145,16 @@ export const AnalyticsDashboard: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3 pt-2 text-xs">
                 <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Tower A</span>
-                  <span className="font-black text-slate-900 text-sm">96% Paid</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-medium">Tower A</span>
+                  <span className="font-semibold text-slate-900 text-sm">96% Paid</span>
                 </div>
                 <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Tower B</span>
-                  <span className="font-black text-slate-900 text-sm">91% Paid</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-medium">Tower B</span>
+                  <span className="font-semibold text-slate-900 text-sm">91% Paid</span>
                 </div>
                 <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Tower C</span>
-                  <span className="font-black text-slate-900 text-sm">90% Paid</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-medium">Tower C</span>
+                  <span className="font-semibold text-slate-900 text-sm">90% Paid</span>
                 </div>
               </div>
             </div>

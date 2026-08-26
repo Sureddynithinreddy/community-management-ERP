@@ -405,11 +405,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
             <div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight">RWA Admin</span>
-                <span className="bg-indigo-100 text-indigo-800 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-bold">Committee ERP</span>
+                <span className="font-bold text-lg sm:text-xl text-slate-900 tracking-tight">RWA Admin</span>
+                <span className="bg-indigo-100 text-indigo-800 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-medium">Committee ERP</span>
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[160px] sm:max-w-none">
-                ASBL Springs • <span className="text-indigo-700 font-bold">Ramesh Chandra (Treasurer)</span>
+              <div className="text-[11px] sm:text-xs text-slate-500 font-normal truncate max-w-[160px] sm:max-w-none">
+                ASBL Springs • <span className="text-indigo-700 font-semibold">Ramesh Chandra (Treasurer)</span>
               </div>
             </div>
           </div>
@@ -423,7 +423,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
                 setActivePage('notices');
                 setMobileMenuOpen(false);
               }}
-              className="hidden sm:flex px-4 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-bold text-xs items-center gap-1.5 cursor-pointer"
+              className="hidden sm:flex px-4 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-medium text-xs items-center gap-1.5 cursor-pointer"
             >
               <Megaphone className="w-4 h-4 text-indigo-600" />
               <span>+ Notice</span>
@@ -435,7 +435,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
                 setActivePage('billing_fees');
                 setMobileMenuOpen(false);
               }}
-              className="hidden sm:flex px-4 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-xs items-center gap-1.5 cursor-pointer"
+              className="hidden sm:flex px-4 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-medium text-xs items-center gap-1.5 cursor-pointer"
             >
               <Receipt className="w-4 h-4 text-emerald-600" />
               <span>Dues</span>
@@ -444,7 +444,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
             {/* Mobile Hamburger Drawer Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-2xl bg-slate-900 text-white font-bold flex items-center justify-center cursor-pointer shadow-sm"
+              className="md:hidden p-2 rounded-2xl bg-slate-900 text-white font-medium flex items-center justify-center cursor-pointer shadow-sm"
               aria-label="Toggle Admin Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -452,7 +452,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
 
             <button
               onClick={onExit}
-              className="hidden sm:flex px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white items-center gap-2 text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
+              className="hidden sm:flex px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white items-center gap-2 text-xs font-medium shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Exit</span>
