@@ -104,7 +104,7 @@ export const App: React.FC = () => {
                   <span>Next-Generation Gated Community Operating System</span>
                 </div>
 
-                <h1 className="font-bold text-3xl sm:text-5xl text-slate-900 leading-[1.15] tracking-tight">
+                <h1 className="font-bold text-2xl sm:text-4xl text-slate-900 leading-[1.2] tracking-tight">
                   ASBL Springs <br />
                   <span className="bg-gradient-to-r from-indigo-600 via-indigo-800 to-slate-900 bg-clip-text text-transparent">
                     Community ERP
@@ -187,7 +187,7 @@ export const App: React.FC = () => {
                 <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider block">
                   Select User Gateway
                 </span>
-                <h2 className="font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+                <h2 className="font-bold text-xl sm:text-2xl text-slate-900 tracking-tight">
                   Choose Your Dedicated Portal
                 </h2>
                 <p className="text-xs text-slate-500 font-normal">
@@ -208,7 +208,7 @@ export const App: React.FC = () => {
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 block">
                         Resident Living Suite
                       </span>
-                      <h3 className="font-bold text-xl text-slate-900 mt-0.5">Residents Portal</h3>
+                      <h3 className="font-semibold text-lg text-slate-900 mt-0.5">Residents Portal</h3>
                     </div>
 
                     <p className="text-xs text-slate-600 leading-relaxed font-normal">
@@ -247,7 +247,7 @@ export const App: React.FC = () => {
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 block">
                         Gate Control & Security Desk
                       </span>
-                      <h3 className="font-bold text-xl text-slate-900 mt-0.5">Security Portal</h3>
+                      <h3 className="font-semibold text-lg text-slate-900 mt-0.5">Security Portal</h3>
                     </div>
 
                     <p className="text-xs text-slate-600 leading-relaxed font-normal">
@@ -286,7 +286,7 @@ export const App: React.FC = () => {
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 block">
                         Management Committee Hub
                       </span>
-                      <h3 className="font-bold text-xl text-slate-900 mt-0.5">Admin Portal</h3>
+                      <h3 className="font-semibold text-lg text-slate-900 mt-0.5">Admin Portal</h3>
                     </div>
 
                     <p className="text-xs text-slate-600 leading-relaxed font-normal">
