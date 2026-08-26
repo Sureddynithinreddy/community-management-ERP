@@ -560,19 +560,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
             </button>
           </div>
 
-          {/* Society Financial & Occupancy Telemetry Box */}
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-sm space-y-3 text-xs">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 block">
+          {/* Society Financial & Occupancy Telemetry Box - Light Theme */}
+          <div className="bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 border border-indigo-100 text-slate-800 p-5 rounded-3xl shadow-xs space-y-3 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-700 block">
               Society Financial Health
             </span>
             <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="bg-white/10 p-3 rounded-2xl">
-                <span className="text-[10px] text-slate-300 block">Dues Collected</span>
-                <span className="text-lg font-black text-emerald-300">₹ 14.8 L</span>
+              <div className="bg-white p-3 rounded-2xl border border-indigo-100/80 shadow-xs">
+                <span className="text-[10px] text-slate-400 block font-bold">Dues Collected</span>
+                <span className="text-lg font-black text-emerald-600">₹ 14.8 L</span>
               </div>
-              <div className="bg-white/10 p-3 rounded-2xl">
-                <span className="text-[10px] text-slate-300 block">Occupancy</span>
-                <span className="text-lg font-black text-white">96.4%</span>
+              <div className="bg-white p-3 rounded-2xl border border-indigo-100/80 shadow-xs">
+                <span className="text-[10px] text-slate-400 block font-bold">Occupancy</span>
+                <span className="text-lg font-black text-slate-900">96.4%</span>
               </div>
             </div>
           </div>
@@ -624,35 +624,35 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
           {activePage === 'dashboard' && (
             <div className="space-y-6 animate-fade-in">
               
-              {/* Top Hero Banner */}
-              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              {/* Top Hero Banner - Modern Light Theme */}
+              <div className="bg-gradient-to-br from-indigo-50/80 via-white to-sky-50/60 text-slate-900 p-8 rounded-3xl border border-indigo-100 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div className="flex items-center gap-5 relative z-10">
-                  <div className="w-16 h-16 rounded-3xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner shrink-0">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 shadow-xs">
                     <Building2 className="w-8 h-8" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="font-black text-2xl text-white">Society Executive Command & Governance</h2>
-                      <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                      <h2 className="font-black text-2xl text-slate-900">Society Executive Command & Governance</h2>
+                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                         FY 2026-27 Active
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 mt-1">Real-time financial audits, security rosters, resident accounts, AMC contracts, and facilities governance</p>
+                    <p className="text-xs text-slate-500 mt-1">Real-time financial audits, security rosters, resident accounts, AMC contracts, and facilities governance</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 relative z-10">
                   <button
                     onClick={() => setActivePage('billing_fees')}
-                    className="px-5 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                    className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow-xs flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
                   >
-                    <Receipt className="w-4 h-4 fill-slate-950" />
+                    <Receipt className="w-4 h-4 text-white" />
                     <span>Manage Billing & Dues</span>
                   </button>
 
                   <button
                     onClick={() => setActivePage('notices')}
-                    className="px-5 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                    className="px-5 py-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold rounded-2xl text-xs shadow-xs flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
                   >
                     <Megaphone className="w-4 h-4 text-indigo-600" />
                     <span>Broadcast Notice</span>
@@ -2148,7 +2148,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
             </button>
 
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-950 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-800 flex items-center justify-center text-3xl shadow-xs shrink-0 border border-indigo-200">
                 👩‍💼
               </div>
               <div>
@@ -2224,11 +2224,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: CONTRACTOR DIGITAL ID BADGE MODAL */}
+      {/* MODAL: CONTRACTOR DIGITAL ID BADGE MODAL - Light Theme */}
       {/* ========================================================================= */}
       {selectedStaffPassModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-6 shadow-2xl relative border border-slate-200">
             <button
               onClick={() => setSelectedStaffPassModal(null)}
               className="absolute right-5 top-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer"
@@ -2236,42 +2236,42 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onExit }) => {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Printable Digital ID Card */}
-            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl shadow-xl space-y-4 text-center relative overflow-hidden">
-              <div className="flex justify-between items-center border-b border-white/10 pb-3 text-left">
+            {/* Printable Digital ID Card - Clean Light Aesthetic */}
+            <div className="bg-gradient-to-br from-indigo-50/70 via-white to-slate-50 text-slate-900 p-6 rounded-3xl border border-indigo-200 shadow-sm space-y-4 text-center relative overflow-hidden">
+              <div className="flex justify-between items-center border-b border-indigo-100 pb-3 text-left">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 block">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 block">
                     ASBL Springs ERP
                   </span>
-                  <span className="font-bold text-xs text-white">Authorized Contractor Pass</span>
+                  <span className="font-bold text-xs text-slate-800">Authorized Contractor Pass</span>
                 </div>
-                <span className="bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded text-[10px]">
+                <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold px-2 py-0.5 rounded text-[10px]">
                   ACTIVE PASS
                 </span>
               </div>
 
-              <div className="w-20 h-20 mx-auto rounded-2xl bg-white/10 border-2 border-white/30 flex items-center justify-center text-4xl shadow-inner">
+              <div className="w-20 h-20 mx-auto rounded-2xl bg-indigo-100 text-indigo-900 border border-indigo-200 flex items-center justify-center text-4xl shadow-xs">
                 👷
               </div>
 
               <div>
-                <h4 className="font-black text-xl text-white">{selectedStaffPassModal.name}</h4>
-                <p className="text-xs text-indigo-200 font-medium">{selectedStaffPassModal.role}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{selectedStaffPassModal.company}</p>
+                <h4 className="font-black text-xl text-slate-900">{selectedStaffPassModal.name}</h4>
+                <p className="text-xs text-indigo-600 font-bold">{selectedStaffPassModal.role}</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">{selectedStaffPassModal.company}</p>
               </div>
 
-              <div className="bg-white/10 p-3 rounded-2xl border border-white/10 text-left space-y-1 text-xs">
+              <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 text-left space-y-1.5 text-xs shadow-2xs">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Passcode:</span>
-                  <span className="font-mono font-bold text-amber-300">{selectedStaffPassModal.passCode}</span>
+                  <span className="font-mono font-black text-indigo-700">{selectedStaffPassModal.passCode}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Gate Zone:</span>
-                  <span className="font-bold text-white truncate max-w-[170px]">{selectedStaffPassModal.gateAccess}</span>
+                  <span className="font-bold text-slate-900 truncate max-w-[170px]">{selectedStaffPassModal.gateAccess}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Aadhaar KYC:</span>
-                  <span className="text-emerald-300 font-bold">Verified ✓</span>
+                  <span className="text-emerald-700 font-bold">Verified ✓</span>
                 </div>
               </div>
 

@@ -90,28 +90,28 @@ export const App: React.FC = () => {
         {activeView === 'gateway' && (
           <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-12">
             
-            {/* HERO BANNER CARD */}
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 sm:p-14 rounded-3xl shadow-xl relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* HERO BANNER CARD - Modern Light Theme */}
+            <div className="bg-gradient-to-br from-indigo-50/80 via-white to-sky-50/60 text-slate-900 p-8 sm:p-12 rounded-3xl border border-indigo-100 shadow-xs relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               
-              {/* Background ambient glow */}
-              <div className="absolute -right-20 -top-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+              {/* Subtle ambient light accents */}
+              <div className="absolute -right-20 -top-20 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl pointer-events-none" />
 
               {/* Left Hero Details */}
               <div className="lg:col-span-7 space-y-6 z-10">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-indigo-200 text-xs font-bold tracking-wide">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-indigo-200/80 text-indigo-700 text-xs font-bold tracking-wide shadow-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   <span>Next-Generation Gated Community Operating System</span>
                 </div>
 
-                <h1 className="font-black text-4xl sm:text-6xl text-white leading-[1.08] tracking-tight">
+                <h1 className="font-black text-4xl sm:text-6xl text-slate-900 leading-[1.08] tracking-tight">
                   ASBL Springs <br />
-                  <span className="bg-gradient-to-r from-indigo-200 via-white to-emerald-200 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-indigo-600 via-indigo-800 to-slate-900 bg-clip-text text-transparent">
                     Community ERP
                   </span>
                 </h1>
 
-                <p className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed font-medium">
+                <p className="text-sm sm:text-base text-slate-600 max-w-xl leading-relaxed font-medium">
                   Welcome to ASBL Springs ERP. Unified digital infrastructure connecting <strong>250 Luxury Residences</strong>, <strong>24/7 Gate Security</strong>, and the <strong>RWA Management Committee</strong>.
                 </p>
 
@@ -119,61 +119,61 @@ export const App: React.FC = () => {
                 <div className="pt-2 flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => setActiveView('resident_portal')}
-                    className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-black text-xs rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
+                    className="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl shadow-sm transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
                   >
-                    <Smartphone className="w-4 h-4 text-indigo-600" />
+                    <Smartphone className="w-4 h-4 text-white" />
                     <span>1. Residents Portal</span>
                   </button>
 
                   <button
                     onClick={() => setActiveView('guard_portal')}
-                    className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
+                    className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl shadow-sm transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
                   >
-                    <ShieldCheck className="w-4 h-4 fill-slate-950" />
+                    <ShieldCheck className="w-4 h-4 text-white" />
                     <span>2. Security Portal</span>
                   </button>
 
                   <button
                     onClick={() => setActiveView('admin_portal')}
-                    className="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
+                    className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-sm transition-transform active:scale-95 cursor-pointer flex items-center gap-2"
                   >
-                    <Building2 className="w-4 h-4" />
+                    <Building2 className="w-4 h-4 text-indigo-400" />
                     <span>3. Admin Portal</span>
                   </button>
                 </div>
               </div>
 
-              {/* Right Telemetry Box */}
+              {/* Right Telemetry Box - Crisp Light Card */}
               <div className="lg:col-span-5 flex justify-center items-center z-10">
-                <div className="w-full bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl space-y-4 text-xs text-white">
-                  <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                    <span className="font-bold text-slate-200">Society Live Telemetry</span>
-                    <span className="bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded text-[10px]">Real-Time Active</span>
+                <div className="w-full bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-indigo-100 shadow-xs space-y-4 text-xs">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <span className="font-bold text-slate-800">Society Live Telemetry</span>
+                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2.5 py-0.5 rounded-full text-[10px]">Real-Time Active</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3.5 bg-black/20 rounded-2xl border border-white/10">
+                    <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
                       <span className="text-[10px] text-slate-400 block font-bold uppercase">Community Scale</span>
-                      <span className="font-black text-lg text-white">250 Flats</span>
-                      <span className="text-[10px] text-slate-300 block">740 Residents</span>
+                      <span className="font-black text-lg text-slate-900">250 Flats</span>
+                      <span className="text-[10px] text-slate-500 block">740 Residents</span>
                     </div>
 
-                    <div className="p-3.5 bg-black/20 rounded-2xl border border-white/10">
+                    <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
                       <span className="text-[10px] text-slate-400 block font-bold uppercase">Security On Duty</span>
-                      <span className="font-black text-lg text-emerald-300">8 Guards</span>
-                      <span className="text-[10px] text-slate-300 block">Gate 1 & Gate 2</span>
+                      <span className="font-black text-lg text-emerald-700">8 Guards</span>
+                      <span className="text-[10px] text-slate-500 block">Gate 1 & Gate 2</span>
                     </div>
 
-                    <div className="p-3.5 bg-black/20 rounded-2xl border border-white/10">
+                    <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
                       <span className="text-[10px] text-slate-400 block font-bold uppercase">August Dues</span>
-                      <span className="font-black text-lg text-amber-300">₹ 14.8 L</span>
-                      <span className="text-[10px] text-slate-300 block">92% Collected</span>
+                      <span className="font-black text-lg text-indigo-700">₹ 14.8 L</span>
+                      <span className="text-[10px] text-slate-500 block">92% Collected</span>
                     </div>
 
-                    <div className="p-3.5 bg-black/20 rounded-2xl border border-white/10">
+                    <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
                       <span className="text-[10px] text-slate-400 block font-bold uppercase">ANPR AI Camera</span>
-                      <span className="font-black text-lg text-indigo-300">100% OCR</span>
-                      <span className="text-[10px] text-slate-300 block">Boom Automated</span>
+                      <span className="font-black text-lg text-slate-900">100% OCR</span>
+                      <span className="text-[10px] text-slate-500 block">Boom Automated</span>
                     </div>
                   </div>
                 </div>

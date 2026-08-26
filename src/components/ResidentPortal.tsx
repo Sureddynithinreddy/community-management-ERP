@@ -755,23 +755,23 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
             </div>
           </div>
 
-          {/* Quick Emergency Facility Dial Strip */}
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-4 rounded-3xl shadow-sm space-y-2 text-xs">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 block">
+          {/* Quick Emergency Facility Dial Strip - Light Theme */}
+          <div className="bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 border border-indigo-100 text-slate-800 p-4 rounded-3xl shadow-xs space-y-2 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-700 block">
               24/7 Facility Emergency Desk
             </span>
             <div className="space-y-1.5 pt-1 text-[11px]">
-              <div className="flex justify-between items-center text-slate-300">
+              <div className="flex justify-between items-center text-slate-600">
                 <span>⚡ Electrician:</span>
-                <span className="font-mono font-bold text-white">98123 44556</span>
+                <span className="font-mono font-bold text-slate-900">98123 44556</span>
               </div>
-              <div className="flex justify-between items-center text-slate-300">
+              <div className="flex justify-between items-center text-slate-600">
                 <span>🚰 Plumber:</span>
-                <span className="font-mono font-bold text-white">98765 99887</span>
+                <span className="font-mono font-bold text-slate-900">98765 99887</span>
               </div>
-              <div className="flex justify-between items-center text-slate-300">
+              <div className="flex justify-between items-center text-slate-600">
                 <span>👮 Gate 1 Desk:</span>
-                <span className="font-mono font-bold text-white">Ext: 101</span>
+                <span className="font-mono font-bold text-indigo-700">Ext: 101</span>
               </div>
             </div>
           </div>
@@ -826,24 +826,24 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           {activeSection === 'profile' && (
             <div className="space-y-6 animate-fade-in">
               
-              {/* Profile Hero Header Banner */}
-              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              {/* Profile Hero Header Banner - Light Theme */}
+              <div className="bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 text-slate-900 p-8 rounded-3xl border border-indigo-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div className="flex items-center gap-5 relative z-10">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 to-purple-500 p-1 shadow-lg shrink-0 flex items-center justify-center">
-                    <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-4xl">
+                  <div className="w-20 h-20 rounded-3xl bg-indigo-100 border border-indigo-200 p-1 shadow-xs shrink-0 flex items-center justify-center">
+                    <div className="w-full h-full rounded-2xl bg-indigo-50 flex items-center justify-center text-4xl">
                       👩‍💼
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2.5">
-                      <h2 className="font-black text-2xl text-white">{residentProfile.name}</h2>
-                      <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <h2 className="font-black text-2xl text-slate-900">{residentProfile.name}</h2>
+                      <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
                         <BadgeCheck className="w-3.5 h-3.5" /> Aadhaar Verified
                       </span>
                     </div>
 
-                    <div className="text-xs text-slate-300 font-medium mt-1">
+                    <div className="text-xs text-slate-600 font-medium mt-1">
                       {residentProfile.role} • {residentProfile.flatNo} ({residentProfile.unitType}) • {residentProfile.society}
                     </div>
 
@@ -855,7 +855,7 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
                 <button
                   onClick={() => alert('Profile and KYC details updated successfully!')}
-                  className="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl text-xs shadow-md transition-transform active:scale-95 cursor-pointer relative z-10"
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs shadow-xs transition-transform active:scale-95 cursor-pointer relative z-10"
                 >
                   Save Profile Changes
                 </button>
@@ -1453,19 +1453,19 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           {activeSection === 'payments' && (
             <div className="space-y-6">
               
-              {/* Top Hero Bill Header Card */}
-              <div className="bg-gradient-to-tr from-slate-900 via-slate-800 to-indigo-950 text-white p-8 rounded-3xl shadow-xl space-y-6 relative overflow-hidden">
+              {/* Top Hero Bill Header Card - Modern Light Theme */}
+              <div className="bg-gradient-to-br from-indigo-50/90 via-white to-emerald-50/50 text-slate-900 p-8 rounded-3xl border border-indigo-200 shadow-xs space-y-6 relative overflow-hidden">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
                   <div className="space-y-1">
-                    <span className="text-xs font-bold text-indigo-300 uppercase tracking-widest block">
+                    <span className="text-xs font-bold text-indigo-700 uppercase tracking-widest block">
                       August 2026 Society Maintenance Statement
                     </span>
                     <div className="flex items-baseline gap-3">
-                      <span className="text-4xl sm:text-5xl font-black tracking-tight text-white">
+                      <span className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900">
                         ₹ {billStatus === 'Paid' ? '0.00' : totalPayable.toFixed(2)}
                       </span>
                       {billStatus === 'Unpaid' && earlyBirdApplied && (
-                        <span className="text-xs text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-500/40">
+                        <span className="text-xs text-emerald-800 font-bold bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-300">
                           - ₹ 238.30 Early Bird 5% OFF
                         </span>
                       )}
@@ -1474,15 +1474,15 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
 
                   <div className="flex flex-col items-start sm:items-end gap-2">
                     <span className={`px-4 py-1.5 rounded-full font-black text-xs tracking-wider uppercase ${
-                      billStatus === 'Paid' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-amber-400 text-slate-950 font-extrabold'
+                      billStatus === 'Paid' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-amber-400 text-slate-950 font-extrabold'
                     }`}>
                       {billStatus === 'Paid' ? '✓ Dues Paid & Cleared' : 'Due by 31 Aug 2026'}
                     </span>
-                    <span className="text-xs text-slate-400 font-medium">Invoice #GST-9021-AUG26</span>
+                    <span className="text-xs text-slate-500 font-medium">Invoice #GST-9021-AUG26</span>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-4 relative z-10">
+                <div className="pt-4 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-4 relative z-10">
                   <div className="flex items-center gap-4 text-xs text-slate-300">
                     <span className="flex items-center gap-1.5"><SecureIcon className="w-4 h-4 text-emerald-400" /> 256-Bit SSL Encrypted</span>
                     <span className="flex items-center gap-1.5"><Smartphone className="w-4 h-4 text-indigo-400" /> 0% Surcharge on UPI</span>
@@ -1723,19 +1723,20 @@ export const ResidentPortal: React.FC<ResidentPortalProps> = ({ onExit }) => {
           {activeSection === 'helpdesk' && (
             <div className="space-y-6">
               
-              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+              {/* Raise Complaints Hero Banner - Light Theme */}
+              <div className="bg-gradient-to-br from-indigo-50/80 via-white to-sky-50/60 text-slate-900 p-8 rounded-3xl border border-indigo-100 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
-                  <div className="w-16 h-16 rounded-3xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner shrink-0">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 shadow-xs">
                     <Headphones className="w-8 h-8" />
                   </div>
                   <div>
-                    <h2 className="font-black text-2xl text-white">Raise Complaints & Helpdesk Service</h2>
-                    <p className="text-xs text-slate-300 mt-1">Book certified community technicians with real-time dispatch tracking & SLA resolution</p>
+                    <h2 className="font-black text-2xl text-slate-900">Raise Complaints & Helpdesk Service</h2>
+                    <p className="text-xs text-slate-500 mt-1">Book certified community technicians with real-time dispatch tracking & SLA resolution</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-4 py-2 rounded-2xl text-xs font-bold">
+                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-2xl text-xs font-bold">
                     ⚡ Guaranteed &lt; 2-Hour SLA
                   </span>
                 </div>

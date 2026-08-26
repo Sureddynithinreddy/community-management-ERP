@@ -906,19 +906,19 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
             </button>
           </div>
 
-          {/* Gate Telemetry Stats */}
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-sm space-y-3 text-xs">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 block">
+          {/* Gate Telemetry Stats - Light Theme */}
+          <div className="bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 border border-indigo-100 text-slate-800 p-5 rounded-3xl shadow-xs space-y-3 text-xs">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-700 block">
               Gate 1 Live Telemetry
             </span>
             <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="bg-white/10 p-3 rounded-2xl">
-                <span className="text-[10px] text-slate-300 block">Visitors Inside</span>
-                <span className="text-xl font-black text-white">{insideCount}</span>
+              <div className="bg-white p-3 rounded-2xl border border-indigo-100/80 shadow-xs">
+                <span className="text-[10px] text-slate-400 block font-bold">Visitors Inside</span>
+                <span className="text-xl font-black text-slate-900">{insideCount}</span>
               </div>
-              <div className="bg-white/10 p-3 rounded-2xl">
-                <span className="text-[10px] text-slate-300 block">Shelf Parcels</span>
-                <span className="text-xl font-black text-amber-300">{awaitingParcelsCount}</span>
+              <div className="bg-white p-3 rounded-2xl border border-indigo-100/80 shadow-xs">
+                <span className="text-[10px] text-slate-400 block font-bold">Shelf Parcels</span>
+                <span className="text-xl font-black text-amber-600">{awaitingParcelsCount}</span>
               </div>
             </div>
           </div>
@@ -970,20 +970,20 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
           {activeSection === 'dashboard' && (
             <div className="space-y-6 animate-fade-in">
               
-              {/* Top Hero Gate Command Banner */}
-              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              {/* Top Hero Gate Command Banner - Modern Light Theme */}
+              <div className="bg-gradient-to-br from-indigo-50/80 via-white to-sky-50/60 text-slate-900 p-8 rounded-3xl border border-indigo-100 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div className="flex items-center gap-5 relative z-10">
-                  <div className="w-16 h-16 rounded-3xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner shrink-0">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 shadow-xs">
                     <Shield className="w-8 h-8" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="font-black text-2xl text-white">Security Command & Gate Operations</h2>
-                      <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                      <h2 className="font-black text-2xl text-slate-900">Security Command & Gate Operations</h2>
+                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                         Gate 1 Boom Active
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 mt-1">Real-time visitor processing, ANPR neural plate OCR, parcel shelves, and emergency dispatch</p>
+                    <p className="text-xs text-slate-500 mt-1">Real-time visitor processing, ANPR neural plate OCR, parcel shelves, and emergency dispatch</p>
                   </div>
                 </div>
 
@@ -1707,23 +1707,23 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
               {selectedDossier && (
                 <div className="space-y-6">
                   
-                  {/* Hero Dossier Header */}
-                  <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+                  {/* Hero Dossier Header - Light Theme */}
+                  <div className="bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 text-slate-900 p-8 rounded-3xl border border-indigo-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-5">
-                      <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 to-purple-500 p-1 shrink-0 flex items-center justify-center">
-                        <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-4xl">
+                      <div className="w-20 h-20 rounded-3xl bg-indigo-100 border border-indigo-200 p-1 shrink-0 flex items-center justify-center">
+                        <div className="w-full h-full rounded-2xl bg-indigo-50 flex items-center justify-center text-4xl">
                           👩‍💼
                         </div>
                       </div>
 
                       <div>
                         <div className="flex items-center gap-2.5">
-                          <h3 className="font-black text-2xl text-white">{selectedDossier.owner}</h3>
-                          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          <h3 className="font-black text-2xl text-slate-900">{selectedDossier.owner}</h3>
+                          <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
                             <BadgeCheck className="w-3.5 h-3.5" /> Aadhaar Verified
                           </span>
                         </div>
-                        <div className="text-xs text-slate-300 mt-1">
+                        <div className="text-xs text-slate-600 mt-1">
                           {selectedDossier.flat} • {selectedDossier.tower} ({selectedDossier.floor}) • {selectedDossier.unitType}
                         </div>
                         <div className="text-[11px] text-slate-400 font-mono mt-0.5">
@@ -3070,7 +3070,7 @@ export const SecurityPortal: React.FC<SecurityPortalProps> = ({ onExit }) => {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-950 text-white flex items-center justify-center mx-auto text-2xl shadow-md">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center justify-center mx-auto text-2xl shadow-xs">
               🛡️
             </div>
 
