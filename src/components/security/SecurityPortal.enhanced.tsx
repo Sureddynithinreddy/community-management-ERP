@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SecurityPageId } from '../types/portalTypes';
+import { SecurityPageId } from '../../types/portalTypes';
 import { 
   ShieldCheck, UserCheck, Package, Car, Search, Flame, AlertTriangle, 
   Clock, HelpCircle, LayoutDashboard, ArrowLeft, Wifi, WifiOff, Camera, 
@@ -8,7 +8,7 @@ import {
 import { 
   Card, Badge, Button, Input, StatCard, Table, EmptyState, SearchBar,
   Modal, Tabs, PageHeader, Alert, ChartContainer, SimpleBarChart
-} from './shared';
+} from '../shared';
 
 interface SecurityPortalProps {
   onExit: () => void;

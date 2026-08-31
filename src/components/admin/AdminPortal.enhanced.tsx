@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AdminPageId } from '../types/portalTypes';
+import { AdminPageId } from '../../types/portalTypes';
 import { 
   LayoutDashboard, ShieldCheck, Users, FileText, TrendingUp, UserCheck, 
   AlertTriangle, Flame, Calendar, Wrench, Megaphone, Receipt, Shield, 
@@ -11,8 +11,8 @@ import {
   Card, Badge, Button, Input, StatCard, Table, EmptyState, SearchBar,
   Modal, Tabs, PageHeader, Alert, ChartContainer, SimpleLineChart,
   SimpleBarChart, SimplePieChart
-} from './shared';
-import { generateMockData, mockResidents, mockGuards, mockComplaints, mockVisitors, mockVehicles, mockIncidents, mockNotices, mockAmenities } from '../utils/mockData';
+} from '../shared';
+import { generateMockData, mockResidents, mockGuards, mockComplaints, mockVisitors, mockVehicles, mockIncidents, mockNotices, mockAmenities } from '../../utils/mockData';
 
 interface AdminPortalProps {
   onExit: () => void;

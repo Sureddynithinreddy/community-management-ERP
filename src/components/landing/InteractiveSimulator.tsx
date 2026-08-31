@@ -4,7 +4,7 @@ import {
   Clock, Camera, QrCode, Wifi, WifiOff, FileText, Download, Send, CreditCard, 
   Calendar, UserCheck, Flame, Bell, Sparkles, RefreshCw, Lock, ShieldAlert, Award
 } from 'lucide-react';
-import { VisitorApprovalDemo, MaintenanceBillDemo, TicketDemo } from '../types/prd';
+import { VisitorApprovalDemo, MaintenanceBillDemo, TicketDemo } from '../../types/prd';
 
 interface InteractiveSimulatorProps {
   activeSurface: 'Resident' | 'Guard' | 'Admin';

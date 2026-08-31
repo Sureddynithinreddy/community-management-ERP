@@ -5,9 +5,9 @@ import {
   Lock, Eye, ArrowUpRight, Radio, Flame, Calendar, Wrench, Megaphone,
   UserCheck, AlertCircle, Compass, HelpCircle
 } from 'lucide-react';
-import { ResidentPortal } from './components/ResidentPortal';
-import { SecurityPortal } from './components/SecurityPortal';
-import { AdminPortal } from './components/AdminPortal';
+import { ResidentPortal } from './components/resident/ResidentPortal';
+import { SecurityPortal } from './components/security/SecurityPortal';
+import { AdminPortal } from './components/admin/AdminPortal';
 
 type ActivePortalView = 'gateway' | 'resident_portal' | 'guard_portal' | 'admin_portal';
 

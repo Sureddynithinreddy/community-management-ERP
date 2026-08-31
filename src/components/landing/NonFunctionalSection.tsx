@@ -1,5 +1,4 @@
-import React from 'react';
-import { NON_FUNCTIONAL_REQUIREMENTS } from '../data/prdData';
+import { NON_FUNCTIONAL_REQUIREMENTS } from '../../data/prdData';
 import { ShieldCheck, UserCheck, WifiOff, Zap, Lock, TrendingUp, Languages, Award, CheckCircle2 } from 'lucide-react';
 
 interface NonFunctionalSectionProps {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ResidentPageId } from '../types/portalTypes';
+import { ResidentPageId } from '../../types/portalTypes';
 import { 
   Home, CreditCard, ShieldCheck, Wrench, Calendar, Megaphone, 
   Flame, CheckCircle2, XCircle, Clock, Camera, FileText, ArrowLeft, Send,
@@ -9,7 +9,7 @@ import {
 import { 
   Card, Badge, Button, Input, StatCard, Table, EmptyState, SearchBar,
   Modal, Tabs, PageHeader, Alert, ChartContainer, SimpleBarChart
-} from './shared';
+} from '../shared';
 
 interface ResidentPortalProps {
   onExit: () => void;

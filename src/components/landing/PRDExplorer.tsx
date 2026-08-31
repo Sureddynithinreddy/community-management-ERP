@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { PRD_FEATURES, PRD_MODULES } from '../data/prdData';
-import { PRDFeature, PriorityLevel, SurfaceType } from '../types/prd';
+import { PRD_FEATURES, PRD_MODULES } from '../../data/prdData';
+import { PRDFeature, PriorityLevel, SurfaceType } from '../../types/prd';
 import { Search, Filter, ShieldCheck, Receipt, Wrench, Megaphone, Building2, LayoutDashboard, ChevronRight, CheckCircle2, Star, Sparkles, Layers } from 'lucide-react';
 
 export const PRDExplorer: React.FC = () => {
